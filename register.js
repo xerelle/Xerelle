@@ -1,45 +1,31 @@
 import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/http.js";
 
-// Step 1 of model onboarding: basic account creation.
-// Room type, Discover/Private visibility, and verification are
-// separate follow-up steps — see verify.js and the profile update route.
-export async function handleModelRegister(request, env) {
+// Registering gets a subscriber an account and nothing else — no feed,
+// no discovery, no browsing. It only unlocks the ability to (a) reach a
+// model via her direct link, or (b) search her exact username.
+export async function handleSubscriberRegister(request, env) {
   const body = await request.json();
-  const { username, display_name, phone, email, password } = body;
+  const { phone, email, password } = body;
 
-  if (!username || !display_name || !phone || !password) {
-    return badRequest("username, display_name, phone, and password are required");
+  if (!phone || !password) {
+    return badRequest("phone and password are required");
   }
 
-  // usernames are matched EXACTLY elsewhere (search feature) — enforce a
-  // simple, predictable character set here so that guarantee holds
-  if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
-    return badRequest(
-      "username must be 3-30 characters, lowercase letters/numbers/dots/dashes/underscores only"
-    );
-  }
-
-  const existing = await env.DB.prepare("SELECT id FROM models WHERE username = ?")
-    .bind(username)
+  const existing = await env.DB.prepare("SELECT id FROM subscribers WHERE phone = ?")
+    .bind(phone)
     .first();
   if (existing) {
-    return badRequest("that username is already taken");
+    return badRequest("an account with that phone number already exists");
   }
 
   const id = generateId();
   const password_hash = await hashPassword(password);
 
   await env.DB.prepare(
-    `INSERT INTO models (id, username, display_name, phone, email, password_hash)
-     VALUES (?, ?, ?, ?, ?, ?)`
+    `INSERT INTO subscribers (id, phone, email, password_hash) VALUES (?, ?, ?, ?)`
   )
-    .bind(id, username, display_name, phone, email ?? null, password_hash)
+    .bind(id, phone, email ?? null, password_hash)
     .run();
 
-  return jsonResponse({
-    id,
-    username,
-    verification_status: "pending",
-    next_step: "verification", // frontend should route to the ID/liveness flow next
-  });
+  return jsonResponse({ id, phone });
 }
