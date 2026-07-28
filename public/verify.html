@@ -14,117 +14,48 @@
     padding: 40px 20px;
     margin: 0;
   }
-  .card {
-    max-width: 420px;
-    width: 100%;
-  }
-  h1 {
-    font-size: 24px;
-    margin-bottom: 6px;
-  }
-  p.sub {
-    color: #9C8791;
-    font-size: 14px;
-    margin-bottom: 28px;
-    line-height: 1.5;
-  }
+  .card { max-width: 420px; width: 100%; }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
   label {
-    display: block;
-    font-size: 13px;
-    color: #C9B8BF;
-    margin-bottom: 6px;
-    margin-top: 16px;
-  }
-  input[type="text"] {
-    width: 100%;
-    box-sizing: border-box;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
-    border-radius: 8px;
-    padding: 12px 14px;
-    color: #F7F0E6;
-    font-size: 15px;
-  }
-  input[type="text"]:focus {
-    outline: none;
-    border-color: #D4A24C;
+    display: block; font-size: 13px; color: #C9B8BF;
+    margin-bottom: 6px; margin-top: 16px;
   }
   .file-drop {
-    width: 100%;
-    box-sizing: border-box;
-    background: #3A1029;
-    border: 1.5px dashed #4A1E36;
-    border-radius: 12px;
-    padding: 24px 14px;
-    text-align: center;
-    color: #9C8791;
-    font-size: 13.5px;
-    cursor: pointer;
+    width: 100%; box-sizing: border-box;
+    background: #3A1029; border: 1.5px dashed #4A1E36; border-radius: 12px;
+    padding: 24px 14px; text-align: center; color: #9C8791;
+    font-size: 13.5px; cursor: pointer;
   }
-  .file-drop.has-file {
-    border-color: #4E9C82;
-    color: #4E9C82;
-    border-style: solid;
-  }
-  input[type="file"] {
-    display: none;
-  }
+  .file-drop.has-file { border-color: #4E9C82; color: #4E9C82; border-style: solid; }
+  input[type="file"] { display: none; }
   button {
-    width: 100%;
-    margin-top: 26px;
-    background: #D4A24C;
-    color: #2B0A1F;
-    font-weight: 600;
-    padding: 14px;
-    border-radius: 10px;
-    border: none;
-    font-size: 15px;
-    cursor: pointer;
+    width: 100%; margin-top: 26px;
+    background: #D4A24C; color: #2B0A1F; font-weight: 600;
+    padding: 14px; border-radius: 10px; border: none;
+    font-size: 15px; cursor: pointer;
   }
-  button:disabled {
-    background: #4A1E36;
-    color: #9C8791;
-    cursor: not-allowed;
-  }
+  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
   #message {
-    margin-top: 18px;
-    padding: 12px 14px;
-    border-radius: 8px;
-    font-size: 14px;
-    display: none;
-    line-height: 1.5;
+    margin-top: 18px; padding: 12px 14px; border-radius: 8px;
+    font-size: 14px; display: none; line-height: 1.5;
   }
-  #message.success {
-    background: rgba(27,77,62,0.2);
-    color: #4E9C82;
-    display: block;
-  }
-  #message.error {
-    background: rgba(232,139,155,0.15);
-    color: #E88B9B;
-    display: block;
-  }
+  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
+  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
   .privacy-note {
-    background: #3A1029;
-    border: 1px solid #4A1E36;
-    border-radius: 12px;
-    padding: 14px;
-    margin-top: 20px;
-    font-size: 12px;
-    color: #9C8791;
-    line-height: 1.5;
+    background: #3A1029; border: 1px solid #4A1E36; border-radius: 12px;
+    padding: 14px; margin-top: 20px; font-size: 12px; color: #9C8791; line-height: 1.5;
   }
+  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 20px; }
 </style>
 </head>
 <body>
   <div class="card">
     <h1>Verify your account</h1>
     <p class="sub">Your Room won't go live until this clears. Usually takes a few hours.</p>
+    <div id="whoami"></div>
 
     <form id="verifyForm">
-      <label for="model_id">Your Model ID (from registration)</label>
-      <input type="text" id="model_id" required placeholder="paste the ID you were given">
-
       <label>Government ID</label>
       <div class="file-drop" id="idDrop">Tap to upload a photo of your NIN, driver's license, or passport</div>
       <input type="file" id="id_document" accept="image/*" required>
@@ -144,6 +75,16 @@
   </div>
 
   <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const whoami = document.getElementById('whoami');
+
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/login.html" style="color:#D4A24C;">log in</a> first.';
+      document.getElementById('verifyForm').style.display = 'none';
+    } else {
+      whoami.textContent = `Verifying as: ${session.display_name} (@${session.username})`;
+    }
+
     const form = document.getElementById('verifyForm');
     const messageBox = document.getElementById('message');
     const submitBtn = document.getElementById('submitBtn');
@@ -170,7 +111,7 @@
       messageBox.textContent = '';
 
       const formData = new FormData();
-      formData.append('model_id', document.getElementById('model_id').value.trim());
+      formData.append('model_id', session.id);
       formData.append('id_document', document.getElementById('id_document').files[0]);
       formData.append('liveness_selfie', document.getElementById('liveness_selfie').files[0]);
 
