@@ -1,5 +1,6 @@
 import { handleModelRegister } from "./routes/models/register.js";
 import { handleModelVerify } from "./routes/models/verify.js";
+import { handleModelLogin } from "./routes/models/login.js";
 import { handleModelProfile } from "./routes/models/profile.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -20,6 +21,10 @@ export default {
       if (pathname === "/api/models/verify" && method === "POST") {
         return await handleModelVerify(request, env);
       }
+            if (pathname === "/api/models/login" && method === "POST") {
+        return await handleModelLogin(request, env);
+      }
+
       if (pathname.match(/^\/api\/models\/[\w.-]+$/) && method === "GET") {
         const username = pathname.split("/").pop();
         return await handleModelProfile(username, env);
