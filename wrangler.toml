@@ -1,0 +1,20 @@
+name = "xerelle"
+main = "src/index.js"
+compatibility_date = "2026-07-28"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "xerelle-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "xerelle-media"
+
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
