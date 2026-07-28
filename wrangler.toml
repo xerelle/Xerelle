@@ -14,7 +14,8 @@ bucket_name = "xerelle-media"
 
 [[kv_namespaces]]
 binding = "SESSIONS"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "ccf869e22f33449dba34066b76765f8e"
+
 
 [assets]
 directory = "./public"
