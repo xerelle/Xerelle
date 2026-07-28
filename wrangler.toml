@@ -5,7 +5,8 @@ compatibility_date = "2026-07-28"
 [[d1_databases]]
 binding = "DB"
 database_name = "xerelle-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "7ac14e50-89a7-423e-996d-b7de4dc5faaf"
+
 
 [[r2_buckets]]
 binding = "MEDIA"
