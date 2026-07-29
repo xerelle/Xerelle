@@ -120,10 +120,7 @@
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.textContent = 'Creating...';
-      messageBox.className = '';
-                messageBox.innerHTML = `Welcome, @${data.username}! Account created. <a href="/login.html" style="color:#4E9C82;">Log in</a> to continue to verification.`;
-
-
+      messageBox.className = '';          
       const body = {
         username: document.getElementById('username').value.trim(),
         display_name: document.getElementById('display_name').value.trim(),
