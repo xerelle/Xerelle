@@ -1,5 +1,6 @@
 import { jsonResponse, notFound } from "../../lib/http.js";
 import { getSubscriberIdFromSession } from "../subscribers/login.js";
+import { getGalleryPhotoUrls } from "./gallery.js";
 
 // Public data for a model's landing page. Includes follower/like COUNTS
 // (public, aggregate) and — only if the requester is logged in — whether
@@ -30,6 +31,8 @@ export async function handleModelProfile(username, request, env) {
     .bind(model.id)
     .first();
 
+  const galleryPhotos = await getGalleryPhotoUrls(model.id, env);
+
   let viewer_is_following = false;
   let viewer_has_liked = false;
 
@@ -55,6 +58,7 @@ export async function handleModelProfile(username, request, env) {
     username: model.username,
     display_name: model.display_name,
     teaser_media_url: model.teaser_media_url,
+    gallery_photos: galleryPhotos,
     subscription_price_kobo: 1000000,
     follower_count: followerCountRow.count,
     like_count: likeCountRow.count,
