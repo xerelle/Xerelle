@@ -5,38 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Xerelle — Room</title>
 <style>
+  * { box-sizing: border-box; }
   body {
     background: #0F0509;
     color: #F7F0E6;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
-    padding: 20px 0 0;
+    padding: 32px 0 0;
     margin: 0;
   }
   .card { max-width: 460px; width: 100%; }
-  .teaser {
-    width: 100%;
-    aspect-ratio: 1 / 1;
+  .content { padding: 0 20px; text-align: center; }
+
+  .avatar {
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
     background: #3A1029;
+    border: 2px solid #4A1E36;
     object-fit: cover;
     display: block;
+    margin: 0 auto 16px;
   }
-  .content { padding: 24px 20px; }
-  h1 { font-size: 22px; margin: 0 0 4px; }
+
+  h1 { font-size: 20px; margin: 0 0 2px; }
   .username { color: #9C8791; font-size: 14px; margin-bottom: 18px; }
+
   .stats {
     display: flex;
-    gap: 20px;
-    margin-bottom: 20px;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 22px;
     font-size: 14px;
     color: #C9B8BF;
   }
-  .stats b { color: #F7F0E6; }
+  .stats b { color: #F7F0E6; display: block; font-size: 16px; }
+
   .action-row {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   .btn-secondary {
     flex: 1;
@@ -53,6 +62,20 @@
   .btn-secondary.active {
     border-color: #D4A24C;
     color: #D4A24C;
+  }
+  .btn-message {
+    display: block;
+    width: 100%;
+    background: #3A1029;
+    border: 1px solid #D4A24C;
+    color: #D4A24C;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 12px;
   }
   .btn-primary {
     width: 100%;
@@ -87,17 +110,17 @@
 <body>
   <div class="card">
     <div id="loading">Loading...</div>
-    <div id="notfound" style="display:none;">This Room doesn't exist, or isn't verified yet.</div>
+    <div id="notfound" style="display:none;"></div>
 
     <div id="profileContent" style="display:none;">
-      <img class="teaser" id="teaserImg" src="" alt="">
       <div class="content">
+        <img class="avatar" id="teaserImg" src="" alt="">
         <h1 id="displayName"></h1>
         <div class="username" id="usernameLabel"></div>
 
         <div class="stats">
-          <span><b id="followerCount">0</b> followers</span>
-          <span><b id="likeCount">0</b> likes</span>
+          <span><b id="followerCount">0</b>followers</span>
+          <span><b id="likeCount">0</b>likes</span>
         </div>
 
         <div class="action-row">
@@ -105,6 +128,7 @@
           <button class="btn-secondary" id="likeBtn">Like</button>
         </div>
 
+        <a class="btn-message" id="messageBtn" href="#">Send a message</a>
         <button class="btn-primary" id="subscribeBtn">Subscribe — ₦10,000/mo</button>
 
         <div id="message"></div>
@@ -146,12 +170,11 @@
         document.getElementById('usernameLabel').textContent = `@${data.username}`;
         document.getElementById('followerCount').textContent = data.follower_count;
         document.getElementById('likeCount').textContent = data.like_count;
+        document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
 
         const teaserImg = document.getElementById('teaserImg');
         if (data.teaser_media_url) {
           teaserImg.src = data.teaser_media_url;
-        } else {
-          teaserImg.style.background = '#3A1029';
         }
 
         const followBtn = document.getElementById('followBtn');
