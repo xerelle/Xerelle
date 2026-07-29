@@ -11,7 +11,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
-    padding: 0;
+    padding: 20px 0 0;
     margin: 0;
   }
   .card { max-width: 460px; width: 100%; }
@@ -150,6 +150,8 @@
         const teaserImg = document.getElementById('teaserImg');
         if (data.teaser_media_url) {
           teaserImg.src = data.teaser_media_url;
+        } else {
+          teaserImg.style.background = '#3A1029';
         }
 
         const followBtn = document.getElementById('followBtn');
