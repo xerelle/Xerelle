@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Gallery Photos</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+    margin: 0;
+  }
+  .card { max-width: 420px; width: 100%; }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 20px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .slot {
+    aspect-ratio: 1 / 1;
+    background: #3A1029;
+    border: 1.5px dashed #4A1E36;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+  }
+  .slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .slot .plus {
+    font-size: 28px;
+    color: #9C8791;
+  }
+  input[type="file"] { display: none; }
+
+  #message {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
+  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
+  a { color: #D4A24C; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Gallery photos</h1>
+    <p class="sub">Add up to 4 photos subscribers can browse from your Room, so they know exactly who they're talking to.</p>
+    <div id="whoami"></div>
+
+    <div class="grid" id="grid">
+      <div class="slot" data-index="0"><span class="plus">+</span></div>
+      <div class="slot" data-index="1"><span class="plus">+</span></div>
+      <div class="slot" data-index="2"><span class="plus">+</span></div>
+      <div class="slot" data-index="3"><span class="plus">+</span></div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const whoami = document.getElementById('whoami');
+    const grid = document.getElementById('grid');
+    const fileInput = document.getElementById('fileInput');
+    const messageBox = document.getElementById('message');
+
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/login.html">log in</a> first.';
+      grid.style.display = 'none';
+    } else {
+      whoami.textContent = `Uploading as: ${session.display_name} (@${session.username})`;
+    }
+
+    let activeSlotIndex = null;
+
+    document.querySelectorAll('.slot').forEach((slot) => {
+      slot.addEventListener('click', () => {
+        if (slot.classList.contains('filled')) return;
+        activeSlotIndex = slot.dataset.index;
+        fileInput.click();
+      });
+    });
+
+    fileInput.addEventListener('change', async () => {
+      if (!fileInput.files.length || activeSlotIndex === null) return;
+      const file = fileInput.files[0];
+      const slot = document.querySelector(`.slot[data-index="${activeSlotIndex}"]`);
+
+      messageBox.className = '';
+      messageBox.textContent = '';
+
+      const formData = new FormData();
+      formData.append('photo', file);
+
+      try {
+        const res = await fetch('/api/models/gallery/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = data.message || data.error || 'Upload failed.';
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          slot.innerHTML = `<img src="${e.target.result}" alt="">`;
+          slot.classList.add('filled');
+        };
+        reader.readAsDataURL(file);
+
+        messageBox.className = 'success';
+        messageBox.textContent = 'Photo uploaded.';
+      } catch (err) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Could not reach the server.';
+      } finally {
+        fileInput.value = '';
+        activeSlotIndex = null;
+      }
+    });
+  </script>
+</body>
+</html>
