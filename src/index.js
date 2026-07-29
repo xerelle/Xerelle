@@ -2,7 +2,9 @@ import { handleModelRegister } from "./routes/models/register.js";
 import { handleModelVerify } from "./routes/models/verify.js";
 import { handleModelLogin } from "./routes/models/login.js";
 import { handleModelProfile } from "./routes/models/profile.js";
+import { handleToggleFollow, handleToggleLike } from "./routes/models/follow.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
+import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
@@ -21,16 +23,26 @@ export default {
       if (pathname === "/api/models/verify" && method === "POST") {
         return await handleModelVerify(request, env);
       }
-            if (pathname === "/api/models/login" && method === "POST") {
+      if (pathname === "/api/models/login" && method === "POST") {
         return await handleModelLogin(request, env);
       }
-
+      if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
+        const username = pathname.split("/")[3];
+        return await handleToggleFollow(request, env, username);
+      }
+      if (pathname.match(/^\/api\/models\/[\w.-]+\/like$/) && method === "POST") {
+        const username = pathname.split("/")[3];
+        return await handleToggleLike(request, env, username);
+      }
       if (pathname.match(/^\/api\/models\/[\w.-]+$/) && method === "GET") {
         const username = pathname.split("/").pop();
-        return await handleModelProfile(username, env);
+        return await handleModelProfile(username, request, env);
       }
       if (pathname === "/api/subscribers/register" && method === "POST") {
         return await handleSubscriberRegister(request, env);
+      }
+      if (pathname === "/api/subscribers/login" && method === "POST") {
+        return await handleSubscriberLogin(request, env);
       }
       if (pathname === "/api/checkout/start" && method === "POST") {
         return await handleCheckoutStart(request, env);
