@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Home</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    min-height: 100vh;
+  }
+  .card {
+    max-width: 460px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #4A1E36;
+  }
+  .header h1 { font-size: 20px; margin: 0; }
+
+  .tab-content { flex: 1; overflow-y: auto; }
+
+  /* Message tab */
+  .thread-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #2B0A1F;
+    text-decoration: none;
+    color: inherit;
+  }
+  .thread-item:active { background: #1A0710; }
+  .avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    flex-shrink: 0;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #D4A24C;
+    overflow: hidden;
+  }
+  .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+  .thread-left { min-width: 0; flex: 1; }
+  .thread-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .thread-preview {
+    font-size: 13px; color: #9C8791;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .thread-preview.you { color: #C9B8BF; }
+  .thread-time { font-size: 11.5px; color: #9C8791; flex-shrink: 0; margin-left: 12px; }
+
+  /* Profile tab */
+  .profile-block { padding: 30px 20px; text-align: center; }
+  .profile-avatar {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: #3A1029; border: 2px solid #4A1E36;
+    margin: 0 auto 16px; object-fit: cover; display: block;
+  }
+  .profile-name { font-size: 19px; margin-bottom: 2px; }
+  .profile-sub { color: #9C8791; font-size: 13.5px; margin-bottom: 24px; }
+  .profile-link {
+    display: block; width: 100%; max-width: 280px; margin: 0 auto 12px;
+    background: #3A1029; border: 1px solid #4A1E36; color: #F7F0E6;
+    padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+  }
+  .profile-link.danger { border-color: #E88B9B; color: #E88B9B; }
+
+  .placeholder-tab {
+    padding: 60px 20px; text-align: center; color: #9C8791; font-size: 14px;
+  }
+
+  #loading, #empty, #notfound {
+    padding: 60px 20px; text-align: center; color: #9C8791;
+  }
+
+  /* Nav bar */
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0 24px;
+    border-top: 1px solid #4A1E36;
+    background: #0F0509;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: #9C8791; text-decoration: none; font-size: 11px;
+    background: none; border: none; cursor: pointer;
+  }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-item.active { color: #D4A24C; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="header"><h1 id="tabTitle">Messages</h1></div>
+
+    <div class="tab-content">
+      <div id="messageTab">
+        <div id="loading">Loading...</div>
+        <div id="notfound" style="display:none;"></div>
+        <div id="empty" style="display:none;">No conversations yet. Message a model from her Room to start one.</div>
+        <div id="threadList"></div>
+      </div>
+
+      <div id="updateTab" class="placeholder-tab" style="display:none;">
+        Stories from models you follow will show up here — coming soon.
+      </div>
+
+      <div id="callTab" class="placeholder-tab" style="display:none;">
+        Video calls — coming soon.
+      </div>
+
+      <div id="profileTab" style="display:none;">
+        <div class="profile-block">
+          <img class="profile-avatar" id="profileAvatarImg" src="" alt="" style="display:none;">
+          <div class="profile-avatar" id="profileAvatarInitial" style="display:none; align-items:center; justify-content:center; font-size:34px; color:#D4A24C; font-weight:600;"></div>
+          <div class="profile-name" id="profileName"></div>
+          <div class="profile-sub" id="profilePhone"></div>
+          <a class="profile-link" href="/subscriber-avatar.html">Change photo</a>
+          <a class="profile-link danger" href="#" id="logoutBtn">Log out</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="nav-item active" id="navMessage" data-tab="message">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Message
+      </button>
+      <button class="nav-item" id="navUpdate" data-tab="update">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
+        Update
+      </button>
+      <button class="nav-item" id="navCall" data-tab="call">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        Call
+      </button>
+      <button class="nav-item" id="navProfile" data-tab="profile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        Profile
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+
+    const tabs = {
+      message: { el: document.getElementById('messageTab'), title: 'Messages', nav: document.getElementById('navMessage') },
+      update: { el: document.getElementById('updateTab'), title: 'Updates', nav: document.getElementById('navUpdate') },
+      call: { el: document.getElementById('callTab'), title: 'Calls', nav: document.getElementById('navCall') },
+      profile: { el: document.getElementById('profileTab'), title: 'Profile', nav: document.getElementById('navProfile') },
+    };
+
+    function switchTab(name) {
+      Object.entries(tabs).forEach(([key, tab]) => {
+        tab.el.style.display = key === name ? 'block' : 'none';
+        tab.nav.classList.toggle('active', key === name);
+      });
+      document.getElementById('tabTitle').textContent = tabs[name].title;
+      if (name === 'profile') loadProfile();
+    }
+
+    Object.entries(tabs).forEach(([key, tab]) => {
+      tab.nav.addEventListener('click', () => switchTab(key));
+    });
+
+    function formatTime(unixSeconds) {
+      const date = new Date(unixSeconds * 1000);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      if (isToday) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    async function loadMessages() {
+      const loading = document.getElementById('loading');
+      const notfound = document.getElementById('notfound');
+      const empty = document.getElementById('empty');
+      const threadList = document.getElementById('threadList');
+
+      if (!session) {
+        loading.style.display = 'none';
+        notfound.textContent = 'Log in first.';
+        notfound.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/subscribers/inbox', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          loading.style.display = 'none';
+          notfound.textContent = data.message || data.error || 'Something went wrong.';
+          notfound.style.display = 'block';
+          return;
+        }
+
+        loading.style.display = 'none';
+
+        if (!data.threads || data.threads.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        data.threads.forEach((thread) => {
+          const item = document.createElement('a');
+          item.className = 'thread-item';
+          item.href = `/chat.html?u=${encodeURIComponent(thread.model_username)}`;
+
+          const prefix = thread.last_sender_type === 'subscriber' ? 'You: ' : '';
+          const initial = thread.model_display_name.trim().charAt(0).toUpperCase();
+          const avatarContent = thread.teaser_media_url
+            ? `<img src="${thread.teaser_media_url}" alt="">`
+            : initial;
+
+          item.innerHTML = `
+            <div class="avatar-circle">${avatarContent}</div>
+            <div class="thread-left">
+              <div class="thread-name">${thread.model_display_name}</div>
+              <div class="thread-preview">${prefix}${thread.last_message}</div>
+            </div>
+            <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
+          `;
+          threadList.appendChild(item);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        notfound.textContent = 'Could not reach the server.';
+        notfound.style.display = 'block';
+      }
+    }
+
+    function loadProfile() {
+      if (!session) return;
+      document.getElementById('profileName').textContent = session.display_name || 'You';
+      document.getElementById('profilePhone').textContent = session.phone ? `@${session.username || ''} · ${session.phone}` : '';
+
+      const avatarImg = document.getElementById('profileAvatarImg');
+      const avatarInitial = document.getElementById('profileAvatarInitial');
+      if (session.avatar_url) {
+        avatarImg.src = session.avatar_url;
+        avatarImg.style.display = 'block';
+      } else {
+        avatarInitial.textContent = (session.display_name || '?').trim().charAt(0).toUpperCase();
+        avatarInitial.style.display = 'flex';
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('xerelle_subscriber_session');
+      window.location.href = '/subscriber-login.html';
+    });
+
+    loadMessages();
+  </script>
+</body>
+</html>
