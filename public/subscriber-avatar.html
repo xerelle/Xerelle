@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Your Photo</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+    margin: 0;
+  }
+  .card { max-width: 380px; width: 100%; text-align: center; }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 24px; }
+
+  .avatar-drop {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: #3A1029;
+    border: 1.5px dashed #4A1E36;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    margin: 0 auto 24px;
+    color: #9C8791;
+    font-size: 13px;
+    text-align: center;
+    padding: 10px;
+  }
+  .avatar-drop img { width: 100%; height: 100%; object-fit: cover; }
+  input[type="file"] { display: none; }
+
+  button {
+    width: 100%;
+    background: #D4A24C;
+    color: #2B0A1F;
+    font-weight: 600;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+
+  #message {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
+  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
+  a { color: #D4A24C; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Your photo</h1>
+    <p class="sub">Add a photo so models know it's really you.</p>
+    <div id="whoami"></div>
+
+    <div id="uploadArea">
+      <div class="avatar-drop" id="avatarDrop">Tap to choose a photo</div>
+      <input type="file" id="photoInput" accept="image/*">
+      <button id="uploadBtn">Save photo</button>
+    </div>
+
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    const whoami = document.getElementById('whoami');
+    const uploadArea = document.getElementById('uploadArea');
+    const avatarDrop = document.getElementById('avatarDrop');
+    const photoInput = document.getElementById('photoInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const messageBox = document.getElementById('message');
+
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/subscriber-login.html">log in</a> first.';
+      uploadArea.style.display = 'none';
+    } else {
+      whoami.textContent = `${session.display_name} (@${session.username})`;
+    }
+
+    avatarDrop.addEventListener('click', () => photoInput.click());
+
+    photoInput.addEventListener('change', () => {
+      if (!photoInput.files.length) return;
+      const url = URL.createObjectURL(photoInput.files[0]);
+      avatarDrop.innerHTML = `<img src="${url}" alt="">`;
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!photoInput.files.length) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Choose a photo first.';
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Saving...';
+      messageBox.className = '';
+      messageBox.textContent = '';
+
+      const formData = new FormData();
+      formData.append('photo', photoInput.files[0]);
+
+      try {
+        const res = await fetch('/api/subscribers/avatar/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = data.message || data.error || 'Upload failed.';
+          return;
+        }
+
+        messageBox.className = 'success';
+        messageBox.textContent = 'Photo saved!';
+      } catch (err) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Could not reach the server.';
+      } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Save photo';
+      }
+    });
+  </script>
+</body>
+</html>
