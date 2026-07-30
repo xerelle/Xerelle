@@ -9,6 +9,7 @@ import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
+import { handleServeMedia } from "./routes/media.js";
 import { jsonResponse } from "./lib/http.js";
 
 export default {
@@ -60,6 +61,10 @@ export default {
       if (pathname.match(/^\/api\/messages\/[\w-]+\/[\w-]+$/) && method === "GET") {
         const [, , , subscriberId, modelId] = pathname.split("/");
         return await handleGetMessages(subscriberId, modelId, env);
+      }
+      if (pathname.startsWith("/media/") && method === "GET") {
+        const key = pathname.replace("/media/", "");
+        return await handleServeMedia(key, env);
       }
 
       return env.ASSETS.fetch(request);
