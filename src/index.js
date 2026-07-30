@@ -8,6 +8,7 @@ import { handlePostStory } from "./routes/models/stories.js";
 import { handleGetModelInbox } from "./routes/models/inbox.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
+import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
@@ -56,6 +57,9 @@ export default {
       }
       if (pathname === "/api/subscribers/login" && method === "POST") {
         return await handleSubscriberLogin(request, env);
+      }
+      if (pathname === "/api/subscribers/avatar/upload" && method === "POST") {
+        return await handleUploadSubscriberAvatar(request, env);
       }
       if (pathname === "/api/checkout/start" && method === "POST") {
         return await handleCheckoutStart(request, env);
