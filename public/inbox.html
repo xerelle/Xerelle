@@ -35,6 +35,27 @@
     color: inherit;
   }
   .thread-item:active { background: #1A0710; }
+  .avatar-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    flex-shrink: 0;
+    margin-right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #D4A24C;
+    overflow: hidden;
+  }
+  .avatar-circle img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
   .thread-left { min-width: 0; flex: 1; }
   .thread-phone {
     font-size: 15px;
@@ -127,16 +148,22 @@
         data.threads.forEach((thread) => {
           const item = document.createElement('a');
           item.className = 'thread-item';
-          item.href = `/model-chat.html?subscriber=${encodeURIComponent(thread.subscriber_id)}`;
 
           const prefix = thread.last_sender_type === 'model' ? 'You: ' : '';
+          const initial = thread.subscriber_label.trim().charAt(0).toUpperCase();
+          const avatarContent = thread.avatar_url
+            ? `<img src="${thread.avatar_url}" alt="">`
+            : initial;
+
           item.innerHTML = `
+            <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
               <div class="thread-phone">${thread.subscriber_label}</div>
               <div class="thread-preview ${thread.last_sender_type === 'model' ? 'you' : ''}">${prefix}${thread.last_message}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
           `;
+          item.href = `/model-chat.html?subscriber=${encodeURIComponent(thread.subscriber_id)}&name=${encodeURIComponent(thread.subscriber_label)}&avatar=${encodeURIComponent(thread.avatar_url || '')}`;
           threadList.appendChild(item);
         });
       } catch (err) {
@@ -150,3 +177,4 @@
   </script>
 </body>
 </html>
+
