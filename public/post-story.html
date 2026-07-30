@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Post a Story</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+    margin: 0;
+  }
+  .card { max-width: 420px; width: 100%; }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 20px; }
+
+  .file-drop {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #3A1029;
+    border: 1.5px dashed #4A1E36;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    margin-bottom: 16px;
+    color: #9C8791;
+    font-size: 13.5px;
+    text-align: center;
+    padding: 20px;
+  }
+  .file-drop img, .file-drop video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  input[type="file"] { display: none; }
+
+  label {
+    display: block;
+    font-size: 13px;
+    color: #C9B8BF;
+    margin-bottom: 6px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #F7F0E6;
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  input[type="text"]:focus { outline: none; border-color: #D4A24C; }
+
+  button {
+    width: 100%;
+    background: #D4A24C;
+    color: #2B0A1F;
+    font-weight: 600;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+
+  #message {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    line-height: 1.5;
+  }
+  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
+  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
+  a { color: #D4A24C; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Post a Story</h1>
+    <p class="sub">A free update visible to everyone on your Room for 24 hours — your best tool for daily engagement.</p>
+    <div id="whoami"></div>
+
+    <div id="postForm">
+      <div class="file-drop" id="fileDrop">Tap to choose a photo or video</div>
+      <input type="file" id="mediaInput" accept="image/*,video/*">
+
+      <label for="caption">Caption (optional)</label>
+      <input type="text" id="caption" placeholder="What's happening today?" maxlength="200">
+
+      <button id="postBtn">Post Story</button>
+    </div>
+
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const whoami = document.getElementById('whoami');
+    const postForm = document.getElementById('postForm');
+    const fileDrop = document.getElementById('fileDrop');
+    const mediaInput = document.getElementById('mediaInput');
+    const postBtn = document.getElementById('postBtn');
+    const messageBox = document.getElementById('message');
+
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/login.html">log in</a> first.';
+      postForm.style.display = 'none';
+    } else {
+      whoami.textContent = `Posting as: ${session.display_name} (@${session.username})`;
+    }
+
+    fileDrop.addEventListener('click', () => mediaInput.click());
+
+    mediaInput.addEventListener('change', () => {
+      if (!mediaInput.files.length) return;
+      const file = mediaInput.files[0];
+      const url = URL.createObjectURL(file);
+      if (file.type.startsWith('video')) {
+        fileDrop.innerHTML = `<video src="${url}" muted></video>`;
+      } else {
+        fileDrop.innerHTML = `<img src="${url}" alt="">`;
+      }
+    });
+
+    postBtn.addEventListener('click', async () => {
+      if (!mediaInput.files.length) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Choose a photo or video first.';
+        return;
+      }
+
+      postBtn.disabled = true;
+      postBtn.textContent = 'Posting...';
+      messageBox.className = '';
+      messageBox.textContent = '';
+
+      const formData = new FormData();
+      formData.append('media', mediaInput.files[0]);
+      const caption = document.getElementById('caption').value.trim();
+      if (caption) formData.append('caption', caption);
+
+      try {
+        const res = await fetch('/api/models/stories/post', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+
+        messageBox.className = 'success';
+        messageBox.textContent = 'Story posted! It will be visible on your Room for the next 24 hours.';
+      } catch (err) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Could not reach the server.';
+      } finally {
+        postBtn.disabled = false;
+        postBtn.textContent = 'Post Story';
+      }
+    });
+  </script>
+</body>
+</html>
