@@ -49,6 +49,12 @@
     <p class="sub">Free to join — you'll still need a model's exact link or username to actually enter her Room.</p>
 
     <form id="registerForm">
+      <label for="username">Username</label>
+      <input type="text" id="username" required placeholder="yourusername" pattern="[a-z0-9._-]{3,30}">
+
+      <label for="display_name">Name</label>
+      <input type="text" id="display_name" required placeholder="Your name">
+
       <label for="phone">Phone number</label>
       <input type="tel" id="phone" required placeholder="+2348012345678">
 
@@ -77,6 +83,8 @@
       messageBox.textContent = '';
 
       const body = {
+        username: document.getElementById('username').value.trim(),
+        display_name: document.getElementById('display_name').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         email: document.getElementById('email').value.trim() || undefined,
         password: document.getElementById('password').value,
