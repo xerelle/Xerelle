@@ -4,6 +4,7 @@ import { handleModelLogin } from "./routes/models/login.js";
 import { handleModelProfile } from "./routes/models/profile.js";
 import { handleToggleFollow, handleToggleLike } from "./routes/models/follow.js";
 import { handleUploadGalleryPhoto } from "./routes/models/gallery.js";
+import { handlePostStory } from "./routes/models/stories.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -30,6 +31,9 @@ export default {
       }
       if (pathname === "/api/models/gallery/upload" && method === "POST") {
         return await handleUploadGalleryPhoto(request, env);
+      }
+      if (pathname === "/api/models/stories/post" && method === "POST") {
+        return await handlePostStory(request, env);
       }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
