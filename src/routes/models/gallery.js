@@ -29,16 +29,22 @@ export async function handleUploadGalleryPhoto(request, env) {
   }
 
   const key = `gallery/${modelId}/${generateId()}`;
-  await env.MEDIA.put(key, await photo.arrayBuffer());
+  await env.MEDIA.put(key, await photo.arrayBuffer(), {
+    httpMetadata: { contentType: photo.type || "image/jpeg" },
+  });
+
+  // Store a real, working URL (served via our /media/ route) rather than
+  // the raw R2 storage key — the key alone isn't a loadable image URL.
+  const mediaUrl = `/media/${key}`;
 
   await env.DB.prepare(
     `INSERT INTO model_gallery_photos (id, model_id, media_url, position)
      VALUES (?, ?, ?, ?)`
   )
-    .bind(generateId(), modelId, key, countRow.count)
+    .bind(generateId(), modelId, mediaUrl, countRow.count)
     .run();
 
-  return jsonResponse({ message: "Photo uploaded.", position: countRow.count });
+  return jsonResponse({ message: "Photo uploaded.", position: countRow.count, media_url: mediaUrl });
 }
 
 // Returns the list of gallery photo URLs for a model, ordered by
