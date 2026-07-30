@@ -40,14 +40,43 @@
     margin: 0 auto 8px;
     cursor: pointer;
   }
+  .avatar.has-story {
+    border: 3px solid #D4A24C;
+    padding: 2px;
+  }
   .view-photos-hint {
     color: #9C8791;
     font-size: 12px;
+    margin-bottom: 12px;
+  }
+
+  .story-banner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #3A1029;
+    border: 1px solid #D4A24C;
+    border-radius: 10px;
+    padding: 10px 14px;
     margin-bottom: 20px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .story-banner .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #D4A24C;
+    flex-shrink: 0;
+  }
+  .story-banner .label {
+    font-size: 13.5px;
+    color: #F7F0E6;
+    font-weight: 600;
   }
 
   h1 { font-size: 20px; margin: 0 0 2px; }
-  .username { color: #9C8791; font-size: 14px; margin-bottom: 28px; }
+  .username { color: #9C8791; font-size: 14px; margin-bottom: 20px; }
 
   .stats {
     display: flex;
@@ -137,7 +166,7 @@
     color: #9C8791;
   }
 
-  /* Photo viewer overlay */
+  /* Photo viewer overlay (gallery) */
   .viewer-overlay {
     display: none;
     position: fixed;
@@ -185,6 +214,47 @@
     font-size: 28px;
     cursor: pointer;
   }
+
+  /* Story overlay */
+  .story-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 11;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .story-overlay.open { display: flex; }
+  .story-overlay img, .story-overlay video {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+  }
+  .story-caption {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    right: 20px;
+    color: #F7F0E6;
+    font-size: 14px;
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+  .story-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: none;
+    border: none;
+    color: #F7F0E6;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 12;
+  }
 </style>
 </head>
 <body>
@@ -196,6 +266,12 @@
       <div class="top-section">
         <img class="avatar" id="teaserImg" src="" alt="">
         <div class="view-photos-hint" id="photoHint" style="display:none;">Tap photo to view more</div>
+
+        <div class="story-banner" id="storyBanner">
+          <span class="dot"></span>
+          <span class="label">She posted a new Story — tap to view</span>
+        </div>
+
         <h1 id="displayName"></h1>
         <div class="username" id="usernameLabel"></div>
 
@@ -230,6 +306,12 @@
     </div>
   </div>
 
+  <div class="story-overlay" id="storyOverlay">
+    <button class="story-close" id="storyClose">&times;</button>
+    <div id="storyMediaContainer"></div>
+    <div class="story-caption" id="storyCaption" style="display:none;"></div>
+  </div>
+
   <script>
     const username = new URLSearchParams(window.location.search).get('u');
     const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
@@ -242,6 +324,7 @@
     let currentModelUsername = username;
     let allPhotos = [];
     let currentPhotoIndex = 0;
+    let activeStory = null;
 
     if (!username) {
       loading.style.display = 'none';
@@ -276,6 +359,12 @@
         allPhotos = [data.teaser_media_url, ...(data.gallery_photos || [])].filter(Boolean);
         if (allPhotos.length > 0) {
           document.getElementById('photoHint').style.display = 'block';
+        }
+
+        activeStory = data.active_story || null;
+        if (activeStory) {
+          teaserImg.classList.add('has-story');
+          document.getElementById('storyBanner').style.display = 'flex';
         }
 
         const followBtn = document.getElementById('followBtn');
@@ -343,7 +432,7 @@
       messageBox.textContent = 'Checkout isn\'t wired up on this page yet — coming soon.';
     });
 
-    // Photo viewer
+    // Gallery photo viewer
     const viewerOverlay = document.getElementById('viewerOverlay');
     const viewerImg = document.getElementById('viewerImg');
     const viewerCounter = document.getElementById('viewerCounter');
@@ -374,6 +463,37 @@
     });
     viewerOverlay.addEventListener('click', (e) => {
       if (e.target === viewerOverlay) closeViewer();
+    });
+
+    // Story viewer
+    const storyOverlay = document.getElementById('storyOverlay');
+    const storyMediaContainer = document.getElementById('storyMediaContainer');
+    const storyCaption = document.getElementById('storyCaption');
+
+    function openStory() {
+      if (!activeStory) return;
+      storyMediaContainer.innerHTML = activeStory.media_type === 'video'
+        ? `<video src="${activeStory.media_url}" autoplay controls></video>`
+        : `<img src="${activeStory.media_url}" alt="">`;
+
+      if (activeStory.caption) {
+        storyCaption.textContent = activeStory.caption;
+        storyCaption.style.display = 'block';
+      } else {
+        storyCaption.style.display = 'none';
+      }
+
+      storyOverlay.classList.add('open');
+    }
+    function closeStory() {
+      storyOverlay.classList.remove('open');
+      storyMediaContainer.innerHTML = '';
+    }
+
+    document.getElementById('storyBanner').addEventListener('click', openStory);
+    document.getElementById('storyClose').addEventListener('click', closeStory);
+    storyOverlay.addEventListener('click', (e) => {
+      if (e.target === storyOverlay) closeStory();
     });
 
     if (username) {
