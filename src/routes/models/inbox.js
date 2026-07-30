@@ -3,9 +3,8 @@ import { getModelIdFromSession } from "./login.js";
 
 // Returns a list of the logged-in model's conversation threads — one
 // entry per subscriber who has an active thread with her, each with a
-// preview of the most recent message. Shows the subscriber's name if
-// she has one set; falls back to her phone number for older test
-// accounts created before the name field existed.
+// preview of the most recent message, her name (falling back to phone
+// for older accounts), and her avatar photo if she's uploaded one.
 export async function handleGetModelInbox(request, env) {
   const modelId = await getModelIdFromSession(request, env);
   if (!modelId) {
@@ -16,6 +15,7 @@ export async function handleGetModelInbox(request, env) {
     `SELECT
        m.subscriber_id,
        COALESCE(s.display_name, s.phone) AS subscriber_label,
+       s.avatar_url,
        m.body AS last_message,
        m.sender_type AS last_sender_type,
        m.sent_at AS last_sent_at
