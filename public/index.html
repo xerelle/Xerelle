@@ -7,12 +7,13 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: #FFFFFF;
+    color: #5C2A3E;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
   .container { max-width: 480px; margin: 0 auto; padding: 0 20px; }
 
+  /* Nav */
   nav {
     display: flex;
     align-items: center;
@@ -23,14 +24,33 @@
   }
   nav img { height: 32px; width: auto; }
   nav a {
-    color: #C9B8BF;
+    color: #8A6B76;
     text-decoration: none;
     font-size: 14px;
   }
 
+  /* Hero */
   .hero {
     text-align: center;
-    padding: 20px 0 40px;
+    padding: 20px 0 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-image {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 340px;
+    max-width: 85%;
+    height: auto;
+    opacity: 0.16;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-content {
+    position: relative;
+    z-index: 1;
   }
   .badge {
     display: inline-flex;
@@ -47,7 +67,7 @@
     margin-bottom: 28px;
   }
   .tagline {
-    color: #D4A24C;
+    color: #A8762F;
     font-size: 12.5px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -57,12 +77,12 @@
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 38px;
     line-height: 1.15;
-    color: #F7F0E6;
+    color: #5C2A3E;
     margin-bottom: 18px;
   }
-  h1 .gold { color: #D4A24C; }
+  h1 .gold { color: #A8762F; }
   .subhead {
-    color: #C9B8BF;
+    color: #8A6B76;
     font-size: 15.5px;
     line-height: 1.6;
     margin-bottom: 20px;
@@ -71,7 +91,7 @@
   .emotional-line {
     font-family: Georgia, 'Times New Roman', serif;
     font-style: italic;
-    color: #D4A24C;
+    color: #A8762F;
     font-size: 15px;
     line-height: 1.6;
     margin-bottom: 32px;
@@ -87,7 +107,7 @@
   .btn-primary {
     display: block;
     background: linear-gradient(135deg, #F3DFB0, #D4A24C 45%, #A8762F);
-    color: #2B0A1F;
+    color: #4A1030;
     font-weight: 700;
     padding: 16px;
     border-radius: 12px;
@@ -98,8 +118,8 @@
   .btn-secondary {
     display: block;
     background: transparent;
-    border: 1px solid #4A1E36;
-    color: #F7F0E6;
+    border: 1px solid #F0C7D9;
+    color: #5C2A3E;
     font-weight: 600;
     padding: 15px;
     border-radius: 12px;
@@ -108,31 +128,32 @@
     text-align: center;
   }
   .launch-note {
-    color: #D4A24C;
+    color: #A8762F;
     font-size: 12.5px;
     margin-top: 16px;
     line-height: 1.5;
   }
 
+  /* Centerpiece statement */
   .centerpiece {
     text-align: center;
     padding: 44px 16px 48px;
     margin: 8px 0 8px;
-    border-top: 1px solid #2B0A1F;
-    border-bottom: 1px solid #2B0A1F;
+    border-top: 1px solid #F3D6E2;
+    border-bottom: 1px solid #F3D6E2;
   }
   .centerpiece-line {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 19px;
     line-height: 1.5;
-    color: #C9B8BF;
+    color: #8A6B76;
     margin-bottom: 10px;
   }
   .centerpiece-why {
     font-family: Georgia, 'Times New Roman', serif;
     font-style: italic;
     font-size: 20px;
-    color: #D4A24C;
+    color: #A8762F;
     margin: 22px 0 26px;
   }
   .pillars {
@@ -143,19 +164,21 @@
     font-size: 11.5px;
     letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: #9C8791;
+    color: #A67C8C;
   }
-  .pillars .dot { color: #4A1E36; }
+  .pillars .dot { color: #F0C7D9; }
 
+  /* Section divider */
   .section-label {
     text-align: center;
-    color: #9C8791;
+    color: #A67C8C;
     font-size: 11.5px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     margin: 56px 0 28px;
   }
 
+  /* How it works */
   .steps { display: flex; flex-direction: column; gap: 22px; margin-bottom: 20px; }
   .step {
     display: flex;
@@ -167,9 +190,9 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
-    color: #D4A24C;
+    background: #FDF1F6;
+    border: 1px solid #F0C7D9;
+    color: #A8762F;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -180,14 +203,15 @@
     font-weight: 600;
     font-size: 15px;
     margin-bottom: 4px;
-    color: #F7F0E6;
+    color: #5C2A3E;
   }
   .step-text {
     font-size: 13.5px;
-    color: #9C8791;
+    color: #A67C8C;
     line-height: 1.5;
   }
 
+  /* Feature strip */
   .feature-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -195,14 +219,14 @@
     margin-bottom: 20px;
   }
   .feature-card {
-    background: #1A0710;
-    border: 1px solid #2B0A1F;
+    background: #FFF6F9;
+    border: 1px solid #F3D6E2;
     border-radius: 12px;
     padding: 18px 16px;
   }
   .feature-icon { font-size: 20px; margin-bottom: 10px; }
   .feature-title { font-size: 13.5px; font-weight: 600; margin-bottom: 4px; }
-  .feature-text { font-size: 12px; color: #9C8791; line-height: 1.4; }
+  .feature-text { font-size: 12px; color: #A67C8C; line-height: 1.4; }
 
   .trust-list {
     display: flex;
@@ -213,12 +237,12 @@
   }
   .trust-item {
     font-size: 14px;
-    color: #C9B8BF;
+    color: #8A6B76;
     line-height: 1.4;
   }
 
   footer {
-    border-top: 1px solid #2B0A1F;
+    border-top: 1px solid #F3D6E2;
     padding: 28px 20px 40px;
     text-align: center;
   }
@@ -230,12 +254,12 @@
     flex-wrap: wrap;
   }
   .footer-links a {
-    color: #9C8791;
+    color: #A67C8C;
     font-size: 12.5px;
     text-decoration: none;
   }
   .footer-copy {
-    color: #6B5A62;
+    color: #C79AAB;
     font-size: 11.5px;
   }
 </style>
@@ -248,17 +272,20 @@
 
   <div class="container">
     <div class="hero">
-      <div class="badge">🛡 Every Room is ID-verified</div>
-      <div class="tagline">Your Audience. Your Power. Your Income.</div>
-      <h1>Your attention is <span class="gold">valuable.</span><br>Stop giving it away for free.</h1>
-      <p class="subhead">Invite the people who matter into your private Room, and earn from genuine access — not endless DMs.</p>
-      <p class="emotional-line">Every day, creators receive hundreds of messages. Most deserve attention. Few deserve access. Xerelle helps you decide the difference.</p>
+      <img src="/a443dbea-7fb2-4948-aba6-13953ed2b78b.jpeg" alt="" class="hero-image">
+      <div class="hero-content">
+        <div class="badge">🛡 Every Room is ID-verified</div>
+        <div class="tagline">Your Audience. Your Power. Your Income.</div>
+        <h1>Your attention is <span class="gold">valuable.</span><br>Stop giving it away for free.</h1>
+        <p class="subhead">Invite the people who matter into your private Room, and earn from genuine access — not endless DMs.</p>
+        <p class="emotional-line">Every day, creators receive hundreds of messages. Most deserve attention. Few deserve access. Xerelle helps you decide the difference.</p>
 
-      <div class="cta-row">
-        <a href="/register.html" class="btn-primary">Claim Your Room</a>
-        <a href="/subscriber-register.html" class="btn-secondary">I have a model's Room link →</a>
+        <div class="cta-row">
+          <a href="/register.html" class="btn-primary">Claim Your Room</a>
+          <a href="/subscriber-register.html" class="btn-secondary">I have a model's Room link →</a>
+        </div>
+        <p class="launch-note">Launch now, and earn an extra ₦1,000 for each of your first 10 subscribers — up to ₦10,000, on us.</p>
       </div>
-      <p class="launch-note">Launch now, and earn an extra ₦1,000 for each of your first 10 subscribers — up to ₦10,000, on us.</p>
     </div>
 
     <div class="centerpiece">
