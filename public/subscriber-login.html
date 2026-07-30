@@ -46,11 +46,11 @@
 <body>
   <div class="card">
     <h1>Welcome back</h1>
-    <p class="sub">Log in with your phone number.</p>
+    <p class="sub">Log in with your username or phone number.</p>
 
     <form id="loginForm">
-      <label for="phone">Phone number</label>
-      <input type="tel" id="phone" required placeholder="+2348012345678">
+      <label for="identifier">Username or phone number</label>
+      <input type="text" id="identifier" required placeholder="yourusername or +2348012345678">
 
       <label for="password">Password</label>
       <input type="password" id="password" required>
@@ -75,7 +75,7 @@
       messageBox.textContent = '';
 
       const body = {
-        phone: document.getElementById('phone').value.trim(),
+        identifier: document.getElementById('identifier').value.trim(),
         password: document.getElementById('password').value,
       };
 
@@ -93,7 +93,7 @@
         } else {
           localStorage.setItem('xerelle_subscriber_session', JSON.stringify(data));
           messageBox.className = 'success';
-          messageBox.textContent = 'Logged in! You can now follow, like, and subscribe.';
+          messageBox.textContent = `Welcome back, ${data.display_name}! You're logged in.`;
           form.reset();
         }
       } catch (err) {
@@ -107,3 +107,4 @@
   </script>
 </body>
 </html>
+
