@@ -2,24 +2,24 @@ import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/ht
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-// Logs a subscriber in with phone + password. Subscribers don't have a
-// username (only models do), so phone is the only identifier here.
+// Logs a subscriber in with EITHER her username OR her phone number,
+// plus her password. Same pattern as model login.
 export async function handleSubscriberLogin(request, env) {
   const body = await request.json();
-  const { phone, password } = body;
+  const { identifier, password } = body;
 
-  if (!phone || !password) {
-    return badRequest("phone and password are required");
+  if (!identifier || !password) {
+    return badRequest("username/phone and password are required");
   }
 
   const subscriber = await env.DB.prepare(
-    "SELECT id, phone, password_hash FROM subscribers WHERE phone = ?"
+    "SELECT id, username, display_name, phone, password_hash FROM subscribers WHERE username = ? OR phone = ?"
   )
-    .bind(phone)
+    .bind(identifier, identifier)
     .first();
 
   if (!subscriber) {
-    return badRequest("no account found with that phone number");
+    return badRequest("no account found with that username or phone number");
   }
 
   const password_hash = await hashPassword(password);
@@ -34,13 +34,17 @@ export async function handleSubscriberLogin(request, env) {
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
-  return jsonResponse({ token, id: subscriber.id, phone: subscriber.phone });
+  return jsonResponse({
+    token,
+    id: subscriber.id,
+    username: subscriber.username,
+    display_name: subscriber.display_name,
+    phone: subscriber.phone,
+  });
 }
 
 // Looks up a subscriber session token in KV. Returns null if missing,
-// expired, or invalid — callers should treat that as "not logged in"
-// rather than erroring, since Follow/Like/viewing a landing page should
-// still work for logged-out visitors where sensible.
+// expired, or invalid.
 export async function getSubscriberIdFromSession(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
@@ -55,3 +59,4 @@ export async function getSubscriberIdFromSession(request, env) {
     return null;
   }
 }
+
