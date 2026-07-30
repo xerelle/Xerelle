@@ -3,10 +3,9 @@ import { getModelIdFromSession } from "./login.js";
 
 // Returns a list of the logged-in model's conversation threads — one
 // entry per subscriber who has an active thread with her, each with a
-// preview of the most recent message and the subscriber's phone number
-// (subscribers don't have display names, so phone is what she'll
-// recognize them by). Used by inbox.html so she can see who's messaged
-// her and pick a conversation to open.
+// preview of the most recent message. Shows the subscriber's name if
+// she has one set; falls back to her phone number for older test
+// accounts created before the name field existed.
 export async function handleGetModelInbox(request, env) {
   const modelId = await getModelIdFromSession(request, env);
   if (!modelId) {
@@ -16,7 +15,7 @@ export async function handleGetModelInbox(request, env) {
   const { results } = await env.DB.prepare(
     `SELECT
        m.subscriber_id,
-       s.phone AS subscriber_phone,
+       COALESCE(s.display_name, s.phone) AS subscriber_label,
        m.body AS last_message,
        m.sender_type AS last_sender_type,
        m.sent_at AS last_sent_at
