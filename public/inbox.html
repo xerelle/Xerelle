@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Inbox</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+  }
+  .card { max-width: 460px; width: 100%; }
+  .header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid #4A1E36;
+  }
+  .header h1 { font-size: 20px; margin: 0 0 2px; }
+  .header .sub { color: #9C8791; font-size: 13px; }
+
+  .thread-list { padding: 0 0 20px; }
+  .thread-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid #2B0A1F;
+    text-decoration: none;
+    color: inherit;
+  }
+  .thread-item:active { background: #1A0710; }
+  .thread-left { min-width: 0; flex: 1; }
+  .thread-phone {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .thread-preview {
+    font-size: 13px;
+    color: #9C8791;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .thread-preview.you { color: #C9B8BF; }
+  .thread-time {
+    font-size: 11.5px;
+    color: #9C8791;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  #loading, #empty, #notfound {
+    padding: 60px 20px;
+    text-align: center;
+    color: #9C8791;
+  }
+  a.plain { color: #D4A24C; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>Inbox</h1>
+      <div class="sub" id="whoami"></div>
+    </div>
+
+    <div id="loading">Loading...</div>
+    <div id="notfound" style="display:none;"></div>
+    <div id="empty" style="display:none;">No messages yet. Once a subscriber messages you, their conversation will show up here.</div>
+    <div class="thread-list" id="threadList"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const loading = document.getElementById('loading');
+    const notfound = document.getElementById('notfound');
+    const empty = document.getElementById('empty');
+    const threadList = document.getElementById('threadList');
+    const whoami = document.getElementById('whoami');
+
+    function formatTime(unixSeconds) {
+      const date = new Date(unixSeconds * 1000);
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+      if (isToday) {
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      }
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    async function loadInbox() {
+      if (!session) {
+        loading.style.display = 'none';
+        notfound.textContent = 'Log in first.';
+        notfound.style.display = 'block';
+        return;
+      }
+      whoami.textContent = `${session.display_name} (@${session.username})`;
+
+      try {
+        const res = await fetch('/api/models/inbox', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          loading.style.display = 'none';
+          notfound.textContent = data.message || data.error || 'Something went wrong.';
+          notfound.style.display = 'block';
+          return;
+        }
+
+        loading.style.display = 'none';
+
+        if (!data.threads || data.threads.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        data.threads.forEach((thread) => {
+          const item = document.createElement('a');
+          item.className = 'thread-item';
+          item.href = `/model-chat.html?subscriber=${encodeURIComponent(thread.subscriber_id)}`;
+
+          const prefix = thread.last_sender_type === 'model' ? 'You: ' : '';
+          item.innerHTML = `
+            <div class="thread-left">
+              <div class="thread-phone">${thread.subscriber_label}</div>
+              <div class="thread-preview ${thread.last_sender_type === 'model' ? 'you' : ''}">${prefix}${thread.last_message}</div>
+            </div>
+            <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
+          `;
+          threadList.appendChild(item);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        notfound.textContent = 'Could not reach the server.';
+        notfound.style.display = 'block';
+      }
+    }
+
+    loadInbox();
+  </script>
+</body>
+</html>
