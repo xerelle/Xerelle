@@ -2,9 +2,12 @@ import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/ht
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
-// Logs a subscriber in with EITHER her username OR her phone number,
-// plus her password. Same pattern as model login.
-export async function handleSubscriberLogin(request, env) {
+// Logs a model in with EITHER her username OR her phone number, plus her
+// password. On success, creates a session token stored in KV (mapping
+// token -> model_id) and returns it to the client, which should store it
+// (e.g. localStorage) and send it back as an "Authorization: Bearer
+// <token>" header on future requests.
+export async function handleModelLogin(request, env) {
   const body = await request.json();
   const { identifier, password } = body;
 
@@ -12,50 +15,49 @@ export async function handleSubscriberLogin(request, env) {
     return badRequest("username/phone and password are required");
   }
 
-  const subscriber = await env.DB.prepare(
-    "SELECT id, username, display_name, phone, avatar_url, password_hash FROM subscribers WHERE username = ? OR phone = ?"
+  const model = await env.DB.prepare(
+    "SELECT id, username, display_name, password_hash FROM models WHERE username = ? OR phone = ?"
   )
     .bind(identifier, identifier)
     .first();
 
-  if (!subscriber) {
+  if (!model) {
     return badRequest("no account found with that username or phone number");
   }
 
   const password_hash = await hashPassword(password);
-  if (password_hash !== subscriber.password_hash) {
+  if (password_hash !== model.password_hash) {
     return badRequest("incorrect password");
   }
 
   const token = generateId();
   await env.SESSIONS.put(
-    `subscriber_session:${token}`,
-    JSON.stringify({ subscriber_id: subscriber.id }),
+    `model_session:${token}`,
+    JSON.stringify({ model_id: model.id }),
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
   return jsonResponse({
     token,
-    id: subscriber.id,
-    username: subscriber.username,
-    display_name: subscriber.display_name,
-    phone: subscriber.phone,
-    avatar_url: subscriber.avatar_url,
+    id: model.id,
+    username: model.username,
+    display_name: model.display_name,
   });
 }
 
-// Looks up a subscriber session token in KV. Returns null if missing,
-// expired, or invalid.
-export async function getSubscriberIdFromSession(request, env) {
+// Looks up a session token in KV and returns the associated model_id, or
+// null if the token is missing/expired/invalid. Use this at the top of
+// any route that needs to know "which model is making this request?"
+export async function getModelIdFromSession(request, env) {
   const authHeader = request.headers.get("Authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (!token) return null;
 
-  const raw = await env.SESSIONS.get(`subscriber_session:${token}`);
+  const raw = await env.SESSIONS.get(`model_session:${token}`);
   if (!raw) return null;
 
   try {
-    return JSON.parse(raw).subscriber_id;
+    return JSON.parse(raw).model_id;
   } catch {
     return null;
   }
