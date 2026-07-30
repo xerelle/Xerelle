@@ -265,10 +265,10 @@
       </div>
 
       <div class="nav-bar" id="navBar">
-        <button class="nav-item" onclick="alert('Inbox — coming soon')">
+        <a class="nav-item" href="/inbox.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           Message
-        </button>
+        </a>
         <a class="nav-item" href="/post-story.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
           Update
@@ -348,9 +348,14 @@
         }
 
         if (isOwnPage) {
-          // Self-view: show upload button and nav bar, hide subscriber-only actions
+          // Self-view: this is a lightweight control panel, not a mirror
+          // of her public stats page — just the avatar (with upload),
+          // and the nav bar. Name/stats/actions are all hidden here.
           document.getElementById('avatarPlus').style.display = 'flex';
           document.getElementById('navBar').style.display = 'flex';
+          document.getElementById('displayName').style.display = 'none';
+          document.getElementById('usernameLabel').style.display = 'none';
+          document.querySelector('.stats').style.display = 'none';
           document.getElementById('actionRow').style.display = 'none';
           document.getElementById('bottomSection').style.display = 'none';
         } else {
