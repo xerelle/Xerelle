@@ -12,6 +12,8 @@ import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
 import { handleGetSubscriberInbox } from "./routes/subscribers/inbox.js";
 import { handleGetFollowedStories } from "./routes/subscribers/followed-stories.js";
+import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
+import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
@@ -73,6 +75,19 @@ export default {
       if (pathname === "/api/subscribers/stories-feed" && method === "GET") {
         return await handleGetFollowedStories(request, env);
       }
+      if (pathname === "/api/block" && method === "POST") {
+        return await handleCreateBlock(request, env);
+      }
+      if (pathname === "/api/block" && method === "GET") {
+        return await handleListBlocks(request, env);
+      }
+      if (pathname.match(/^\/api\/block\/[\w-]+$/) && method === "DELETE") {
+        const blockId = pathname.split("/").pop();
+        return await handleRemoveBlock(request, env, blockId);
+      }
+      if (pathname === "/api/report" && method === "POST") {
+        return await handleCreateReport(request, env);
+      }
       if (pathname === "/api/checkout/start" && method === "POST") {
         return await handleCheckoutStart(request, env);
       }
@@ -98,4 +113,3 @@ export default {
     }
   },
 };
-
