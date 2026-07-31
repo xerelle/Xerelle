@@ -7,6 +7,7 @@ import { handleUploadGalleryPhoto } from "./routes/models/gallery.js";
 import { handlePostStory } from "./routes/models/stories.js";
 import { handleGetModelInbox } from "./routes/models/inbox.js";
 import { handleUpdateSubscriptionPrice } from "./routes/models/update-price.js";
+import { handleUpdateRoomSettings } from "./routes/models/room-toggles.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
@@ -47,6 +48,9 @@ export default {
       }
       if (pathname === "/api/models/price" && method === "POST") {
         return await handleUpdateSubscriptionPrice(request, env);
+      }
+      if (pathname === "/api/models/room-settings" && method === "POST") {
+        return await handleUpdateRoomSettings(request, env);
       }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
