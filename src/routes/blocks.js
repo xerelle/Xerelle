@@ -1,5 +1,5 @@
 import { jsonResponse, badRequest, generateId } from "../lib/http.js";
-import { getActorFromSession } from "../lib/actor.js";
+import { getActorFromSession } from "./lib/actor.js";
 
 // Blocks always require a reason — a model can't cut off a paying
 // subscriber arbitrarily, and this creates an accountable record either
@@ -102,3 +102,4 @@ export async function isBlocked(typeA, idA, typeB, idB, env) {
 
   return !!row;
 }
+
