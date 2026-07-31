@@ -29,7 +29,7 @@ export async function handleGetDiscoverModels(request, env) {
   }
 
   const { results: models } = await env.DB.prepare(
-    `SELECT m.username, m.display_name, m.teaser_media_url, m.subscription_price_kobo
+    `SELECT m.username, m.display_name, m.age, m.teaser_media_url, m.subscription_price_kobo
      FROM models m
      WHERE m.discoverable = 1
        AND m.verification_status = 'verified'
