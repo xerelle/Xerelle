@@ -20,6 +20,7 @@ export async function handleGetFollowedStories(request, env) {
        s.posted_at,
        m.username AS model_username,
        m.display_name AS model_display_name,
+       m.age AS model_age,
        m.teaser_media_url
      FROM stories s
      INNER JOIN model_follows f ON f.model_id = s.model_id
