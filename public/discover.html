@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Discover</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
+  }
+  .card { max-width: 460px; width: 100%; }
+  .header {
+    padding: 24px 20px 8px;
+  }
+  .header h1 { font-size: 20px; margin: 0 0 4px; }
+  .header p { color: #9C8791; font-size: 13px; margin: 0; }
+
+  .model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 20px;
+  }
+  .model-card {
+    background: #1A0710;
+    border: 1px solid #2B0A1F;
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+  }
+  .model-photo {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #3A1029;
+    object-fit: cover;
+    display: block;
+  }
+  .model-photo-fallback {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #3A1029;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 600;
+    color: #D4A24C;
+  }
+  .model-info { padding: 10px 12px 14px; }
+  .model-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+
+  #loading, #locked, #empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: #9C8791;
+  }
+  .locked-box {
+    background: rgba(212,162,76,0.1);
+    border: 1px solid #D4A24C;
+    border-radius: 12px;
+    padding: 20px;
+    color: #D4A24C;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>Discover</h1>
+      <p>Other Rooms you might like.</p>
+    </div>
+
+    <div id="loading">Loading...</div>
+    <div id="locked" style="display:none; padding: 20px;">
+      <div class="locked-box"></div>
+    </div>
+    <div id="empty" style="display:none;">No suggestions right now — check back soon.</div>
+    <div class="model-grid" id="modelGrid"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    const loading = document.getElementById('loading');
+    const locked = document.getElementById('locked');
+    const empty = document.getElementById('empty');
+    const modelGrid = document.getElementById('modelGrid');
+
+    async function loadDiscover() {
+      if (!session) {
+        loading.style.display = 'none';
+        locked.style.display = 'block';
+        locked.querySelector('.locked-box').textContent = 'Log in first.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/subscribers/discover', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (res.status === 403) {
+          locked.style.display = 'block';
+          locked.querySelector('.locked-box').textContent =
+            data.message || 'Discover unlocks once you have an active subscription.';
+          return;
+        }
+
+        if (!res.ok) {
+          locked.style.display = 'block';
+          locked.querySelector('.locked-box').textContent = data.error || 'Something went wrong.';
+          return;
+        }
+
+        if (!data.models || data.models.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        data.models.forEach((model) => {
+          const card = document.createElement('a');
+          card.className = 'model-card';
+          card.href = `/room.html?u=${encodeURIComponent(model.username)}`;
+
+          const initial = model.display_name.trim().charAt(0).toUpperCase();
+          const nameLabel = model.age ? `${model.display_name}, ${model.age}` : model.display_name;
+          const photoHtml = model.teaser_media_url
+            ? `<img class="model-photo" src="${model.teaser_media_url}" alt="">`
+            : `<div class="model-photo-fallback">${initial}</div>`;
+
+          card.innerHTML = `
+            ${photoHtml}
+            <div class="model-info">
+              <div class="model-name">${nameLabel}</div>
+            </div>
+          `;
+          modelGrid.appendChild(card);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        locked.style.display = 'block';
+        locked.querySelector('.locked-box').textContent = 'Could not reach the server.';
+      }
+    }
+
+    loadDiscover();
+  </script>
+</body>
+</html>
