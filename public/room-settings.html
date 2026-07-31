@@ -53,6 +53,47 @@
     line-height: 1.5;
   }
 
+  .toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid #2B0A1F;
+  }
+  .toggle-row:last-of-type { border-bottom: 1px solid #2B0A1F; }
+  .toggle-label { font-size: 14.5px; font-weight: 600; }
+  .toggle-hint { font-size: 12.5px; color: #9C8791; margin-top: 3px; max-width: 260px; line-height: 1.4; }
+  .switch {
+    position: relative;
+    width: 46px;
+    height: 26px;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-track {
+    position: absolute;
+    inset: 0;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .switch-track::before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    top: 3px;
+    background: #9C8791;
+    border-radius: 50%;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .switch input:checked + .switch-track { background: rgba(212,162,76,0.25); border-color: #D4A24C; }
+  .switch input:checked + .switch-track::before { transform: translateX(20px); background: #D4A24C; }
+
   button {
     width: 100%;
     margin-top: 26px;
@@ -83,7 +124,7 @@
 <body>
   <div class="card">
     <h1>Room settings</h1>
-    <p class="sub">Set your own monthly subscription price.</p>
+    <p class="sub">Your price and how members can find you.</p>
     <div id="whoami"></div>
 
     <div id="settingsArea">
@@ -94,7 +135,29 @@
       </div>
       <div class="price-hint">Minimum ₦10,000. Set it higher if you believe your access is worth more — you're always in control.</div>
 
-      <button id="saveBtn">Save price</button>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Appear in Discover</div>
+          <div class="toggle-hint">Shown as a suggestion only to members who already have an active subscription elsewhere on Xerelle — never a public listing.</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="discoverableToggle">
+          <span class="switch-track"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Accept video calls</div>
+          <div class="toggle-hint">Lets members request a paid video call with you, once that feature is live.</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="videoCallsToggle">
+          <span class="switch-track"></span>
+        </label>
+      </div>
+
+      <button id="saveBtn">Save settings</button>
     </div>
 
     <div id="message"></div>
@@ -124,6 +187,8 @@
           const data = await res.json();
           const currentPriceNaira = (data.subscription_price_kobo || 1000000) / 100;
           priceInput.value = currentPriceNaira;
+          document.getElementById('discoverableToggle').checked = !!data.discoverable;
+          document.getElementById('videoCallsToggle').checked = !!data.video_calls_enabled;
         }
       } catch (err) {
         // If this fails, the input just stays blank — she can still type a new price.
@@ -144,31 +209,51 @@
       messageBox.className = '';
       messageBox.textContent = '';
 
-      try {
-        const res = await fetch('/api/models/price', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.token}`,
-          },
-          body: JSON.stringify({ subscription_price_kobo: priceNaira * 100 }),
-        });
-        const data = await res.json();
+      const discoverable = document.getElementById('discoverableToggle').checked;
+      const videoCallsEnabled = document.getElementById('videoCallsToggle').checked;
 
-        if (!res.ok) {
+      try {
+        const [priceRes, settingsRes] = await Promise.all([
+          fetch('/api/models/price', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({ subscription_price_kobo: priceNaira * 100 }),
+          }),
+          fetch('/api/models/room-settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.token}`,
+            },
+            body: JSON.stringify({ discoverable, video_calls_enabled: videoCallsEnabled }),
+          }),
+        ]);
+
+        const priceData = await priceRes.json();
+        const settingsData = await settingsRes.json();
+
+        if (!priceRes.ok) {
           messageBox.className = 'error';
-          messageBox.textContent = data.message || data.error || 'Something went wrong.';
+          messageBox.textContent = priceData.message || priceData.error || 'Something went wrong with the price.';
+          return;
+        }
+        if (!settingsRes.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = settingsData.message || settingsData.error || 'Something went wrong with your settings.';
           return;
         }
 
         messageBox.className = 'success';
-        messageBox.textContent = `Price updated to ₦${priceNaira.toLocaleString()}/mo.`;
+        messageBox.textContent = `Saved — ₦${priceNaira.toLocaleString()}/mo, Discover ${discoverable ? 'on' : 'off'}, video calls ${videoCallsEnabled ? 'on' : 'off'}.`;
       } catch (err) {
         messageBox.className = 'error';
         messageBox.textContent = 'Could not reach the server.';
       } finally {
         saveBtn.disabled = false;
-        saveBtn.textContent = 'Save price';
+        saveBtn.textContent = 'Save settings';
       }
     });
 
@@ -176,3 +261,4 @@
   </script>
 </body>
 </html>
+
