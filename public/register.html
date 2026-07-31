@@ -102,6 +102,9 @@
       <label for="display_name">Display name</label>
       <input type="text" id="display_name" required placeholder="Amara">
 
+      <label for="age">Age</label>
+      <input type="number" id="age" required min="18" placeholder="23">
+
       <label for="phone">Phone number</label>
       <input type="tel" id="phone" required placeholder="+2348012345678">
 
@@ -132,6 +135,7 @@
       const body = {
         username: document.getElementById('username').value.trim(),
         display_name: document.getElementById('display_name').value.trim(),
+        age: document.getElementById('age').value.trim(),
         phone: document.getElementById('phone').value.trim(),
         email: document.getElementById('email').value.trim() || undefined,
         password: document.getElementById('password').value,
