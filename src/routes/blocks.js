@@ -1,19 +1,14 @@
 import { jsonResponse, badRequest, generateId } from "../lib/http.js";
 import { getActorFromSession } from "../lib/actor.js";
 
-// Looks up an id by username for the given type ('model' or 'subscriber').
-async function lookupIdByUsername(type, username, env) {
-  const table = type === "model" ? "models" : "subscribers";
-  const row = await env.DB.prepare(`SELECT id FROM ${table} WHERE username = ?`)
-    .bind(username)
-    .first();
-  return row ? row.id : null;
-}
-
 // Blocks always require a reason — a model can't cut off a paying
 // subscriber arbitrarily, and this creates an accountable record either
 // direction. Blocking is mutual in effect: once blocked, messaging is
 // prevented both ways (enforced in the messages route).
+//
+// Takes blocked_id directly rather than a username — in practice, blocking
+// happens from within an existing conversation (model-chat.html,
+// chat.html), where the other party's id is already known.
 export async function handleCreateBlock(request, env) {
   const actor = await getActorFromSession(request, env);
   if (!actor) {
@@ -21,24 +16,18 @@ export async function handleCreateBlock(request, env) {
   }
 
   const body = await request.json();
-  const { blocked_type, blocked_username, reason } = body;
+  const { blocked_type, blocked_id, reason } = body;
 
   if (!blocked_type || !["model", "subscriber"].includes(blocked_type)) {
     return badRequest("blocked_type must be 'model' or 'subscriber'");
   }
-  if (!blocked_username) {
-    return badRequest("blocked_username is required");
+  if (!blocked_id) {
+    return badRequest("blocked_id is required");
   }
   if (!reason || !reason.trim()) {
     return badRequest("A reason is required to block someone.");
   }
-
-  const blockedId = await lookupIdByUsername(blocked_type, blocked_username, env);
-  if (!blockedId) {
-    return badRequest("No account found with that username.");
-  }
-
-  if (blockedId === actor.id && blocked_type === actor.type) {
+  if (blocked_id === actor.id && blocked_type === actor.type) {
     return badRequest("You can't block yourself.");
   }
 
@@ -48,7 +37,7 @@ export async function handleCreateBlock(request, env) {
       `INSERT INTO blocks (id, blocker_type, blocker_id, blocked_type, blocked_id, reason)
        VALUES (?, ?, ?, ?, ?, ?)`
     )
-      .bind(id, actor.type, actor.id, blocked_type, blockedId, reason.trim())
+      .bind(id, actor.type, actor.id, blocked_type, blocked_id, reason.trim())
       .run();
   } catch (err) {
     // UNIQUE constraint — already blocked. Not an error from the user's
