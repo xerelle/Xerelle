@@ -2,10 +2,15 @@ import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/ht
 
 export async function handleModelRegister(request, env) {
   const body = await request.json();
-  const { username, display_name, phone, email, password } = body;
+  const { username, display_name, phone, email, password, age } = body;
 
-  if (!username || !display_name || !phone || !password) {
-    return badRequest("username, display_name, phone, and password are required");
+  if (!username || !display_name || !phone || !password || !age) {
+    return badRequest("username, display_name, phone, age, and password are required");
+  }
+
+  const ageNumber = parseInt(age, 10);
+  if (!Number.isInteger(ageNumber) || ageNumber < 18) {
+    return badRequest("You must be at least 18 years old to register.");
   }
 
   if (!/^[a-z0-9._-]{3,30}$/.test(username)) {
@@ -14,21 +19,28 @@ export async function handleModelRegister(request, env) {
     );
   }
 
-  const existing = await env.DB.prepare("SELECT id FROM models WHERE username = ?")
+  const existingUsername = await env.DB.prepare("SELECT id FROM models WHERE username = ?")
     .bind(username)
     .first();
-  if (existing) {
+  if (existingUsername) {
     return badRequest("that username is already taken");
+  }
+
+  const existingPhone = await env.DB.prepare("SELECT id FROM models WHERE phone = ?")
+    .bind(phone)
+    .first();
+  if (existingPhone) {
+    return badRequest("an account with that phone number already exists");
   }
 
   const id = generateId();
   const password_hash = await hashPassword(password);
 
   await env.DB.prepare(
-    `INSERT INTO models (id, username, display_name, phone, email, password_hash)
-     VALUES (?, ?, ?, ?, ?, ?)`
+    `INSERT INTO models (id, username, display_name, phone, email, password_hash, age)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(id, username, display_name, phone, email ?? null, password_hash)
+    .bind(id, username, display_name, phone, email ?? null, password_hash, ageNumber)
     .run();
 
   return jsonResponse({
