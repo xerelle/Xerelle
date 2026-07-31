@@ -260,7 +260,7 @@
 
       <div class="bottom-section" id="bottomSection">
         <a class="btn-message" id="messageBtn" href="#">Send a message</a>
-        <button class="btn-primary" id="subscribeBtn">Subscribe — ₦10,000/mo</button>
+        <button class="btn-primary" id="subscribeBtn">Subscribe</button>
         <div id="message"></div>
       </div>
 
@@ -334,6 +334,9 @@
         document.getElementById('displayName').textContent = data.display_name;
         document.getElementById('usernameLabel').textContent = `@${data.username}`;
         document.getElementById('followerCount').textContent = data.follower_count;
+
+        const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
+        document.getElementById('subscribeBtn').textContent = `Subscribe — ₦${priceNaira}/mo`;
         document.getElementById('likeCount').textContent = data.like_count;
         document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
 
