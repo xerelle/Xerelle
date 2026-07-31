@@ -13,6 +13,7 @@ import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
 import { handleGetSubscriberInbox } from "./routes/subscribers/inbox.js";
 import { handleGetFollowedStories } from "./routes/subscribers/followed-stories.js";
+import { handleGetDiscoverModels } from "./routes/subscribers/discover.js";
 import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
 import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -78,6 +79,9 @@ export default {
       }
       if (pathname === "/api/subscribers/stories-feed" && method === "GET") {
         return await handleGetFollowedStories(request, env);
+      }
+      if (pathname === "/api/subscribers/discover" && method === "GET") {
+        return await handleGetDiscoverModels(request, env);
       }
       if (pathname === "/api/block" && method === "POST") {
         return await handleCreateBlock(request, env);
