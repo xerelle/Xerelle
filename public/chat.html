@@ -412,7 +412,9 @@
         modelId = profile.id;
         activeStory = profile.active_story || null;
 
-        document.getElementById('modelName').textContent = profile.display_name;
+        document.getElementById('modelName').textContent = profile.age
+          ? `${profile.display_name}, ${profile.age}`
+          : profile.display_name;
         document.getElementById('modelUsername').textContent = `@${profile.username}`;
 
         const avatarCircle = document.getElementById('avatarCircle');
@@ -604,3 +606,4 @@
   </script>
 </body>
 </html>
+
