@@ -30,9 +30,75 @@
   }
   .header h1 { font-size: 20px; margin: 0; }
 
+  /* Persistent Stories row */
+  .story-row {
+    display: flex;
+    gap: 16px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    border-bottom: 1px solid #2B0A1F;
+  }
+  .story-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 68px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .story-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #3A1029;
+    border: 3px solid #D4A24C;
+    padding: 2px;
+    object-fit: cover;
+  }
+  .story-name {
+    font-size: 11px;
+    color: #C9B8BF;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+  .story-row-empty {
+    padding: 16px 20px;
+    color: #9C8791;
+    font-size: 12.5px;
+    border-bottom: 1px solid #2B0A1F;
+  }
+
+  /* Menu bar (Chats / Notifications / Profile) */
+  .menu-bar {
+    display: flex;
+    border-bottom: 1px solid #4A1E36;
+  }
+  .menu-item {
+    flex: 1;
+    text-align: center;
+    padding: 13px 0;
+    background: none;
+    border: none;
+    color: #9C8791;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .menu-item.active {
+    color: #D4A24C;
+    border-bottom: 2px solid #D4A24C;
+  }
+
   .tab-content { flex: 1; overflow-y: auto; }
 
-  /* Message tab */
+  /* Chats */
   .thread-item {
     display: flex;
     justify-content: space-between;
@@ -69,7 +135,7 @@
   .thread-preview.you { color: #C9B8BF; }
   .thread-time { font-size: 11.5px; color: #9C8791; flex-shrink: 0; margin-left: 12px; }
 
-  /* Profile tab */
+  /* Profile */
   .profile-block { padding: 30px 20px; text-align: center; }
   .profile-avatar {
     width: 100px; height: 100px; border-radius: 50%;
@@ -85,46 +151,12 @@
     text-decoration: none; cursor: pointer;
   }
   .profile-link.danger { border-color: #E88B9B; color: #E88B9B; }
+  .profile-divider {
+    max-width: 280px; margin: 20px auto; border-top: 1px solid #2B0A1F;
+  }
 
   .placeholder-tab {
     padding: 60px 20px; text-align: center; color: #9C8791; font-size: 14px;
-  }
-
-  /* Update tab (Stories feed) */
-  .story-row {
-    display: flex;
-    gap: 16px;
-    padding: 16px 20px;
-    overflow-x: auto;
-  }
-  .story-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    width: 68px;
-    cursor: pointer;
-    background: none;
-    border: none;
-  }
-  .story-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #3A1029;
-    border: 3px solid #D4A24C;
-    padding: 2px;
-    object-fit: cover;
-  }
-  .story-name {
-    font-size: 11px;
-    color: #C9B8BF;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
   }
 
   /* Story overlay (full screen viewer) */
@@ -179,45 +211,33 @@
   #loading, #empty, #notfound {
     padding: 60px 20px; text-align: center; color: #9C8791;
   }
-
-  /* Nav bar */
-  .nav-bar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 12px 0 24px;
-    border-top: 1px solid #4A1E36;
-    background: #0F0509;
-  }
-  .nav-item {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    color: #9C8791; text-decoration: none; font-size: 11px;
-    background: none; border: none; cursor: pointer;
-  }
-  .nav-item svg { width: 22px; height: 22px; }
-  .nav-item.active { color: #D4A24C; }
 </style>
 </head>
 <body>
   <div class="card">
-    <div class="header"><h1 id="tabTitle">Messages</h1></div>
+    <div class="header"><h1>Xerelle</h1></div>
+
+    <!-- Persistent Stories row -->
+    <div id="storiesLoading" style="padding:16px 20px; color:#9C8791; font-size:12.5px;">Loading updates...</div>
+    <div class="story-row-empty" id="storiesEmpty" style="display:none;">No updates right now. Follow a model to see her Stories here.</div>
+    <div class="story-row" id="storyRow" style="display:none;"></div>
+
+    <div class="menu-bar">
+      <button class="menu-item active" id="menuChats" data-tab="chats">Chats</button>
+      <button class="menu-item" id="menuNotifications" data-tab="notifications">Notifications</button>
+      <button class="menu-item" id="menuProfile" data-tab="profile">Profile</button>
+    </div>
 
     <div class="tab-content">
-      <div id="messageTab">
+      <div id="chatsTab">
         <div id="loading">Loading...</div>
         <div id="notfound" style="display:none;"></div>
         <div id="empty" style="display:none;">No conversations yet. Message a model from her Room to start one.</div>
         <div id="threadList"></div>
       </div>
 
-      <div id="updateTab" style="display:none;">
-        <div id="storiesLoading" style="padding:60px 20px; text-align:center; color:#9C8791;">Loading...</div>
-        <div id="storiesEmpty" class="placeholder-tab" style="display:none;">No updates right now. Follow a model to see her Stories here.</div>
-        <div class="story-row" id="storyRow"></div>
-      </div>
-
-      <div id="callTab" class="placeholder-tab" style="display:none;">
-        Video calls — coming soon.
+      <div id="notificationsTab" class="placeholder-tab" style="display:none;">
+        No notifications yet.
       </div>
 
       <div id="profileTab" style="display:none;">
@@ -227,28 +247,13 @@
           <div class="profile-name" id="profileName"></div>
           <div class="profile-sub" id="profilePhone"></div>
           <a class="profile-link" href="/subscriber-avatar.html">Change photo</a>
+          <div class="profile-divider"></div>
+          <a class="profile-link" href="#" onclick="alert('Settings — coming soon'); return false;">Settings</a>
+          <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">Payment methods</a>
+          <div class="profile-divider"></div>
           <a class="profile-link danger" href="#" id="logoutBtn">Log out</a>
         </div>
       </div>
-    </div>
-
-    <div class="nav-bar">
-      <button class="nav-item active" id="navMessage" data-tab="message">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Message
-      </button>
-      <button class="nav-item" id="navUpdate" data-tab="update">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
-        Update
-      </button>
-      <button class="nav-item" id="navCall" data-tab="call">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-        Call
-      </button>
-      <button class="nav-item" id="navProfile" data-tab="profile">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
-        Profile
-      </button>
     </div>
   </div>
 
@@ -263,10 +268,9 @@
     const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
 
     const tabs = {
-      message: { el: document.getElementById('messageTab'), title: 'Messages', nav: document.getElementById('navMessage') },
-      update: { el: document.getElementById('updateTab'), title: 'Updates', nav: document.getElementById('navUpdate') },
-      call: { el: document.getElementById('callTab'), title: 'Calls', nav: document.getElementById('navCall') },
-      profile: { el: document.getElementById('profileTab'), title: 'Profile', nav: document.getElementById('navProfile') },
+      chats: { el: document.getElementById('chatsTab'), nav: document.getElementById('menuChats') },
+      notifications: { el: document.getElementById('notificationsTab'), nav: document.getElementById('menuNotifications') },
+      profile: { el: document.getElementById('profileTab'), nav: document.getElementById('menuProfile') },
     };
 
     function switchTab(name) {
@@ -274,9 +278,7 @@
         tab.el.style.display = key === name ? 'block' : 'none';
         tab.nav.classList.toggle('active', key === name);
       });
-      document.getElementById('tabTitle').textContent = tabs[name].title;
       if (name === 'profile') loadProfile();
-      if (name === 'update') loadStories();
     }
 
     Object.entries(tabs).forEach(([key, tab]) => {
@@ -352,15 +354,16 @@
       }
     }
 
-    let storiesLoaded = false;
-
+    // Stories row now loads immediately on page load (persistent, not a tab)
     async function loadStories() {
-      if (storiesLoaded) return; // only fetch once per visit, not every tab switch
-      if (!session) return;
-
       const loading = document.getElementById('storiesLoading');
       const empty = document.getElementById('storiesEmpty');
       const storyRow = document.getElementById('storyRow');
+
+      if (!session) {
+        loading.style.display = 'none';
+        return;
+      }
 
       try {
         const res = await fetch('/api/subscribers/stories-feed', {
@@ -369,13 +372,13 @@
         const data = await res.json();
 
         loading.style.display = 'none';
-        storiesLoaded = true;
 
         if (!data.stories || data.stories.length === 0) {
           empty.style.display = 'block';
           return;
         }
 
+        storyRow.style.display = 'flex';
         data.stories.forEach((story) => {
           const item = document.createElement('button');
           item.className = 'story-item';
@@ -446,6 +449,7 @@
     });
 
     loadMessages();
+    loadStories();
   </script>
 </body>
 </html>
