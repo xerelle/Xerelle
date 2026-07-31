@@ -73,10 +73,15 @@
   .stats {
     display: flex;
     justify-content: center;
-    gap: 44px;
-    margin-bottom: 28px;
+    gap: 10px;
+    max-width: 340px;
+    margin: 0 auto 28px;
     font-size: 13px;
     color: #C9B8BF;
+  }
+  .stats span {
+    flex: 1;
+    text-align: center;
   }
   .stats b {
     color: #F7F0E6;
@@ -331,7 +336,9 @@
 
         isOwnPage = modelSession && modelSession.username === data.username;
 
-        document.getElementById('displayName').textContent = data.display_name;
+        document.getElementById('displayName').textContent = data.age
+          ? `${data.display_name}, ${data.age}`
+          : data.display_name;
         document.getElementById('usernameLabel').textContent = `@${data.username}`;
         document.getElementById('followerCount').textContent = data.follower_count;
 
