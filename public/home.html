@@ -155,6 +155,70 @@
     max-width: 280px; margin: 20px auto; border-top: 1px solid #2B0A1F;
   }
 
+  .discover-caption {
+    padding: 18px 20px 12px;
+    color: #9C8791;
+    font-size: 13.5px;
+    margin: 0;
+  }
+  .discover-row {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 20px;
+    overflow-x: auto;
+  }
+  .discover-item {
+    flex-shrink: 0;
+    width: 70px;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+  }
+  .discover-photo {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: #3A1029;
+    object-fit: cover;
+    display: block;
+  }
+  .discover-photo-fallback {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: #3A1029;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: #D4A24C;
+  }
+  .discover-name {
+    font-size: 11px;
+    color: #C9B8BF;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .discover-more {
+    flex-shrink: 0;
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #D4A24C;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+  }
+
   .placeholder-tab {
     padding: 60px 20px; text-align: center; color: #9C8791; font-size: 14px;
   }
@@ -234,6 +298,11 @@
         <div id="notfound" style="display:none;"></div>
         <div id="empty" style="display:none;">No conversations yet. Message a model from her Room to start one.</div>
         <div id="threadList"></div>
+
+        <div id="discoverTeaser" style="display:none;">
+          <p class="discover-caption">Looking for someone else?</p>
+          <div class="discover-row" id="discoverRow"></div>
+        </div>
       </div>
 
       <div id="notificationsTab" class="placeholder-tab" style="display:none;">
@@ -333,6 +402,7 @@
 
           const prefix = thread.last_sender_type === 'subscriber' ? 'You: ' : '';
           const initial = thread.model_display_name.trim().charAt(0).toUpperCase();
+          const nameLabel = thread.model_age ? `${thread.model_display_name}, ${thread.model_age}` : thread.model_display_name;
           const avatarContent = thread.teaser_media_url
             ? `<img src="${thread.teaser_media_url}" alt="">`
             : initial;
@@ -340,7 +410,7 @@
           item.innerHTML = `
             <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
-              <div class="thread-name">${thread.model_display_name}</div>
+              <div class="thread-name">${nameLabel}</div>
               <div class="thread-preview">${prefix}${thread.last_message}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
@@ -383,9 +453,10 @@
           const item = document.createElement('button');
           item.className = 'story-item';
           const initial = story.model_display_name.trim().charAt(0).toUpperCase();
+          const storyNameLabel = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
           item.innerHTML = `
             <img class="story-avatar" src="${story.teaser_media_url || ''}" onerror="this.style.display='none'" alt="">
-            <div class="story-name">${story.model_display_name}</div>
+            <div class="story-name">${storyNameLabel}</div>
           `;
           item.addEventListener('click', () => openStory(story));
           storyRow.appendChild(item);
@@ -403,7 +474,7 @@
     const storyNameTag = document.getElementById('storyNameTag');
 
     function openStory(story) {
-      storyNameTag.textContent = story.model_display_name;
+      storyNameTag.textContent = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
       storyMediaContainer.innerHTML = story.media_type === 'video'
         ? `<video src="${story.media_url}" autoplay controls></video>`
         : `<img src="${story.media_url}" alt="">`;
@@ -448,8 +519,56 @@
       window.location.href = '/subscriber-login.html';
     });
 
+    // Discover teaser: a small preview row on the Chats tab. If she
+    // doesn't have an active subscription yet, Discover isn't unlocked —
+    // in that case we just quietly hide this section rather than showing
+    // an error on the main dashboard.
+    async function loadDiscoverTeaser() {
+      if (!session) return;
+
+      try {
+        const res = await fetch('/api/subscribers/discover', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return; // locked or no models — just stay hidden
+
+        const data = await res.json();
+        if (!data.models || data.models.length === 0) return;
+
+        const discoverTeaser = document.getElementById('discoverTeaser');
+        const discoverRow = document.getElementById('discoverRow');
+        discoverTeaser.style.display = 'block';
+
+        data.models.slice(0, 8).forEach((model) => {
+          const item = document.createElement('a');
+          item.className = 'discover-item';
+          item.href = `/room.html?u=${encodeURIComponent(model.username)}`;
+
+          const initial = model.display_name.trim().charAt(0).toUpperCase();
+          const photoHtml = model.teaser_media_url
+            ? `<img class="discover-photo" src="${model.teaser_media_url}" alt="">`
+            : `<div class="discover-photo-fallback">${initial}</div>`;
+
+          const discoverNameLabel = model.age ? `${model.display_name}, ${model.age}` : model.display_name;
+          item.innerHTML = `${photoHtml}<div class="discover-name">${discoverNameLabel}</div>`;
+          discoverRow.appendChild(item);
+        });
+
+        const moreLink = document.createElement('a');
+        moreLink.className = 'discover-more';
+        moreLink.href = '/discover.html';
+        moreLink.textContent = 'See all';
+        discoverRow.appendChild(moreLink);
+      } catch (err) {
+        // Quietly do nothing — this is a secondary feature, not worth
+        // showing an error for on the main dashboard.
+      }
+    }
+
     loadMessages();
     loadStories();
+    loadDiscoverTeaser();
   </script>
 </body>
 </html>
+
