@@ -1,5 +1,5 @@
 import { jsonResponse, badRequest, generateId } from "../lib/http.js";
-import { getActorFromSession } from "../lib/actor.js";
+import { getActorFromSession } from "./lib/actor.js";
 
 // Files a report against a model or subscriber. Unlike a block, this
 // doesn't restrict anything automatically — it just creates a record
@@ -36,3 +36,4 @@ export async function handleCreateReport(request, env) {
 
   return jsonResponse({ message: "Report submitted. Our team will review it." });
 }
+
