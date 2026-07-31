@@ -54,6 +54,94 @@
   .avatar-circle.has-story { border: 2px solid #D4A24C; }
   .header h1 { font-size: 17px; margin: 0; }
   .header .sub { color: #9C8791; font-size: 12.5px; margin-top: 2px; }
+  .header-menu-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: #9C8791;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+  .header-dropdown {
+    display: none;
+    position: absolute;
+    top: 56px;
+    right: 20px;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 3;
+  }
+  .header-dropdown.open { display: block; }
+  .header-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 18px;
+    background: none;
+    border: none;
+    color: #F7F0E6;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .header-dropdown button.danger { color: #E88B9B; }
+  .header-dropdown button:active { background: #4A1E36; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #1A0710;
+    border: 1px solid #4A1E36;
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 380px;
+    width: 100%;
+  }
+  .modal-box h2 { font-size: 16px; margin: 0 0 8px; }
+  .modal-box p { font-size: 13px; color: #9C8791; margin: 0 0 14px; line-height: 1.5; }
+  .modal-box textarea {
+    width: 100%;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #F7F0E6;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 70px;
+  }
+  .modal-box textarea:focus { outline: none; border-color: #D4A24C; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-actions .cancel-btn { background: #3A1029; color: #F7F0E6; border: 1px solid #4A1E36; }
+  .modal-actions .confirm-btn { background: #E88B9B; color: #2B0A1F; }
+  .modal-actions .confirm-btn:disabled { background: #4A1E36; color: #9C8791; }
 
   .thread {
     flex: 1;
@@ -218,6 +306,11 @@
           <h1 id="modelName"></h1>
           <div class="sub" id="modelUsername"></div>
         </div>
+        <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
+      </div>
+      <div class="header-dropdown" id="headerDropdown">
+        <button id="blockOptionBtn">Block model</button>
+        <button class="danger" id="reportOptionBtn">Report model</button>
       </div>
 
       <div class="thread" id="thread">
@@ -254,6 +347,18 @@
     <button class="story-close" id="storyClose">&times;</button>
     <div id="storyMediaContainer"></div>
     <div class="story-caption" id="storyCaption" style="display:none;"></div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <textarea id="modalReason" placeholder="Reason (required)..."></textarea>
+      <div class="modal-actions">
+        <button class="cancel-btn" id="modalCancelBtn">Cancel</button>
+        <button class="confirm-btn" id="modalConfirmBtn">Confirm</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -418,6 +523,81 @@
     document.getElementById('storyClose').addEventListener('click', closeStory);
     document.getElementById('storyOverlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('storyOverlay')) closeStory();
+    });
+
+    // Header menu (Block / Report)
+    const headerMenuBtn = document.getElementById('headerMenuBtn');
+    const headerDropdown = document.getElementById('headerDropdown');
+    headerMenuBtn.addEventListener('click', () => {
+      headerDropdown.classList.toggle('open');
+    });
+
+    let pendingAction = null; // 'block' or 'report'
+
+    function openModal(action) {
+      pendingAction = action;
+      headerDropdown.classList.remove('open');
+      document.getElementById('modalTitle').textContent =
+        action === 'block' ? 'Block this model?' : 'Report this model';
+      document.getElementById('modalDesc').textContent =
+        action === 'block'
+          ? "You won't be able to message her again, and she won't be able to message you. This requires a reason."
+          : "Let us know what's going on. Our team will review it.";
+      document.getElementById('modalReason').value = '';
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    document.getElementById('blockOptionBtn').addEventListener('click', () => openModal('block'));
+    document.getElementById('reportOptionBtn').addEventListener('click', () => openModal('report'));
+
+    document.getElementById('modalCancelBtn').addEventListener('click', () => {
+      document.getElementById('modalOverlay').classList.remove('open');
+    });
+
+    document.getElementById('modalConfirmBtn').addEventListener('click', async () => {
+      const reason = document.getElementById('modalReason').value.trim();
+      if (!reason) {
+        alert('A reason is required.');
+        return;
+      }
+
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      confirmBtn.disabled = true;
+
+      try {
+        const endpoint = pendingAction === 'block' ? '/api/block' : '/api/report';
+        const payload = pendingAction === 'block'
+          ? { blocked_type: 'model', blocked_id: modelId, reason }
+          : { reported_type: 'model', reported_id: modelId, reason };
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || data.message || 'Something went wrong.');
+          return;
+        }
+
+        document.getElementById('modalOverlay').classList.remove('open');
+
+        if (pendingAction === 'block') {
+          alert('Model blocked.');
+          window.location.href = '/home.html';
+        } else {
+          alert(data.message || 'Report submitted.');
+        }
+      } catch (err) {
+        alert('Could not reach the server.');
+      } finally {
+        confirmBtn.disabled = false;
+      }
     });
 
     init();
