@@ -1,4 +1,5 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
+import { isBlocked } from "../blocks.js";
 
 export async function handleSendMessage(request, env) {
   const body = await request.json();
@@ -6,6 +7,17 @@ export async function handleSendMessage(request, env) {
 
   if (!sender_type || !subscriber_id || !model_id || !message_body) {
     return badRequest("sender_type, subscriber_id, model_id, and message_body are required");
+  }
+
+  // If either side has blocked the other, messaging is prevented both
+  // ways — checked before anything else, so a block always takes effect
+  // immediately regardless of subscription status.
+  const blocked = await isBlocked("subscriber", subscriber_id, "model", model_id, env);
+  if (blocked) {
+    return jsonResponse(
+      { error: "blocked", message: "This conversation is no longer available." },
+      403
+    );
   }
 
   if (sender_type === "subscriber") {
