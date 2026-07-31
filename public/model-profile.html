@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Profile</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0F0509;
+    color: #F7F0E6;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 32px 20px;
+    margin: 0;
+  }
+  .card { max-width: 420px; width: 100%; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 28px; }
+
+  .section-label {
+    color: #9C8791;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 24px 0 10px;
+  }
+  .profile-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: #3A1029;
+    border: 1px solid #4A1E36;
+    color: #F7F0E6;
+    padding: 14px 16px;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    margin-bottom: 10px;
+  }
+  .profile-link .arrow { color: #9C8791; font-weight: 400; }
+  .profile-link.danger { border-color: #E88B9B; color: #E88B9B; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Profile</h1>
+    <div id="whoami"></div>
+
+    <div class="section-label">Room</div>
+    <a class="profile-link" href="/room-settings.html">
+      Room settings <span class="arrow">›</span>
+    </a>
+
+    <div class="section-label">Account</div>
+    <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">
+      Payment methods <span class="arrow">›</span>
+    </a>
+    <a class="profile-link" href="#" onclick="alert('Privacy & safety — coming soon'); return false;">
+      Privacy &amp; safety <span class="arrow">›</span>
+    </a>
+    <a class="profile-link" href="#" onclick="alert('Appearance (light/dark mode) — coming soon'); return false;">
+      Appearance <span class="arrow">›</span>
+    </a>
+    <a class="profile-link" href="#" onclick="alert('Change password — coming soon'); return false;">
+      Change password <span class="arrow">›</span>
+    </a>
+
+    <div class="section-label">&nbsp;</div>
+    <a class="profile-link danger" href="#" id="logoutBtn">Log out</a>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const whoami = document.getElementById('whoami');
+
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/login.html" style="color:#D4A24C;">log in</a> first.';
+    } else {
+      whoami.textContent = `${session.display_name} (@${session.username})`;
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('xerelle_model_session');
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>
