@@ -16,6 +16,7 @@ export async function handleGetSubscriberInbox(request, env) {
        m.model_id,
        mo.username AS model_username,
        mo.display_name AS model_display_name,
+       mo.age AS model_age,
        mo.teaser_media_url,
        m.body AS last_message,
        m.sender_type AS last_sender_type,
@@ -38,3 +39,4 @@ export async function handleGetSubscriberInbox(request, env) {
 
   return jsonResponse({ threads: results });
 }
+
