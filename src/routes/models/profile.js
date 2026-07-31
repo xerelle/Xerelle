@@ -10,7 +10,7 @@ import { getActiveStory } from "./stories.js";
 // circumstance.
 export async function handleModelProfile(username, request, env) {
   const model = await env.DB.prepare(
-    `SELECT id, username, display_name, teaser_media_url, verification_status, subscription_price_kobo, discoverable, video_calls_enabled
+    `SELECT id, username, display_name, age, teaser_media_url, verification_status, subscription_price_kobo, discoverable, video_calls_enabled
      FROM models WHERE username = ?`
   )
     .bind(username)
@@ -63,6 +63,7 @@ export async function handleModelProfile(username, request, env) {
     gallery_photos: galleryPhotos,
     active_story: activeStory,
     subscription_price_kobo: model.subscription_price_kobo || 1000000,
+    age: model.age,
     discoverable: !!model.discoverable,
     video_calls_enabled: !!model.video_calls_enabled,
     follower_count: followerCountRow.count,
