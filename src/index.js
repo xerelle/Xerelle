@@ -16,6 +16,7 @@ import { handleGetSubscriberInbox } from "./routes/subscribers/inbox.js";
 import { handleGetFollowedStories } from "./routes/subscribers/followed-stories.js";
 import { handleGetDiscoverModels } from "./routes/subscribers/discover.js";
 import { handleSubscriberChangePassword } from "./routes/subscribers/change-password.js";
+import { handleGetNotifications, handleMarkNotificationRead } from "./routes/subscribers/notifications.js";
 import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
 import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -90,6 +91,13 @@ export default {
       }
       if (pathname === "/api/subscribers/change-password" && method === "POST") {
         return await handleSubscriberChangePassword(request, env);
+      }
+      if (pathname === "/api/subscribers/notifications" && method === "GET") {
+        return await handleGetNotifications(request, env);
+      }
+      if (pathname.match(/^\/api\/subscribers\/notifications\/[\w-]+\/read$/) && method === "POST") {
+        const notificationId = pathname.split("/")[4];
+        return await handleMarkNotificationRead(request, env, notificationId);
       }
       if (pathname === "/api/block" && method === "POST") {
         return await handleCreateBlock(request, env);
