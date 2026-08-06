@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Inbox</title>
 <style>
   * { box-sizing: border-box; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -19,10 +20,10 @@
   .card { max-width: 460px; width: 100%; }
   .header {
     padding: 24px 20px 16px;
-    border-bottom: 1px solid #4A1E36;
+    border-bottom: 1px solid var(--border);
   }
   .header h1 { font-size: 20px; margin: 0 0 2px; }
-  .header .sub { color: #9C8791; font-size: 13px; }
+  .header .sub { color: var(--text-secondary); font-size: 13px; }
 
   .thread-list { padding: 0 0 20px; }
   .thread-item {
@@ -30,17 +31,17 @@
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
-    border-bottom: 1px solid #2B0A1F;
+    border-bottom: 1px solid var(--border-subtle);
     text-decoration: none;
     color: inherit;
   }
-  .thread-item:active { background: #1A0710; }
+  .thread-item:active { background: var(--bg-surface-alt); }
   .avatar-circle {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     flex-shrink: 0;
     margin-right: 12px;
     display: flex;
@@ -48,7 +49,7 @@
     justify-content: center;
     font-size: 16px;
     font-weight: 600;
-    color: #D4A24C;
+    color: var(--accent-gold);
     overflow: hidden;
   }
   .avatar-circle img {
@@ -64,15 +65,15 @@
   }
   .thread-preview {
     font-size: 13px;
-    color: #9C8791;
+    color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .thread-preview.you { color: #C9B8BF; }
+  .thread-preview.you { color: var(--text-tertiary); }
   .thread-time {
     font-size: 11.5px;
-    color: #9C8791;
+    color: var(--text-secondary);
     flex-shrink: 0;
     margin-left: 12px;
   }
@@ -80,9 +81,9 @@
   #loading, #empty, #notfound {
     padding: 60px 20px;
     text-align: center;
-    color: #9C8791;
+    color: var(--text-secondary);
   }
-  a.plain { color: #D4A24C; }
+  a.plain { color: var(--accent-gold); }
 </style>
 </head>
 <body>
@@ -175,6 +176,6 @@
 
     loadInbox();
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
