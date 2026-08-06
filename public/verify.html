@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Verification</title>
 <style>
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -16,37 +17,37 @@
   }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 24px; margin-bottom: 6px; }
-  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
   label {
-    display: block; font-size: 13px; color: #C9B8BF;
+    display: block; font-size: 13px; color: var(--text-tertiary);
     margin-bottom: 6px; margin-top: 16px;
   }
   .file-drop {
     width: 100%; box-sizing: border-box;
-    background: #3A1029; border: 1.5px dashed #4A1E36; border-radius: 12px;
-    padding: 24px 14px; text-align: center; color: #9C8791;
+    background: var(--bg-surface); border: 1.5px dashed var(--border); border-radius: 12px;
+    padding: 24px 14px; text-align: center; color: var(--text-secondary);
     font-size: 13.5px; cursor: pointer;
   }
-  .file-drop.has-file { border-color: #4E9C82; color: #4E9C82; border-style: solid; }
+  .file-drop.has-file { border-color: var(--accent-green); color: var(--accent-green); border-style: solid; }
   input[type="file"] { display: none; }
   button {
     width: 100%; margin-top: 26px;
-    background: #D4A24C; color: #2B0A1F; font-weight: 600;
+    background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
     padding: 14px; border-radius: 10px; border: none;
     font-size: 15px; cursor: pointer;
   }
-  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  button:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
   #message {
     margin-top: 18px; padding: 12px 14px; border-radius: 8px;
     font-size: 14px; display: none; line-height: 1.5;
   }
-  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
-  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
+  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
+  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
   .privacy-note {
-    background: #3A1029; border: 1px solid #4A1E36; border-radius: 12px;
-    padding: 14px; margin-top: 20px; font-size: 12px; color: #9C8791; line-height: 1.5;
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-top: 20px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;
   }
-  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 20px; }
+  #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -79,7 +80,7 @@
     const whoami = document.getElementById('whoami');
 
     if (!session) {
-      whoami.innerHTML = 'You need to <a href="/login.html" style="color:#D4A24C;">log in</a> first.';
+      whoami.innerHTML = 'You need to <a href="/login.html" style="color:var(--accent-gold);">log in</a> first.';
       document.getElementById('verifyForm').style.display = 'none';
     } else {
       whoami.textContent = `Verifying as: ${session.display_name} (@${session.username})`;
@@ -143,5 +144,7 @@
       }
     });
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
