@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Chat</title>
 <style>
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -26,10 +27,10 @@
   }
   .header {
     padding: 14px 20px;
-    border-bottom: 1px solid #4A1E36;
+    border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    background: #0F0509;
+    background: var(--bg-primary);
     z-index: 2;
     display: flex;
     align-items: center;
@@ -39,26 +40,26 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 15px;
     font-weight: 600;
-    color: #D4A24C;
+    color: var(--accent-gold);
     overflow: hidden;
   }
   .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-  .avatar-circle.has-story { border: 2px solid #D4A24C; }
+  .avatar-circle.has-story { border: 2px solid var(--accent-gold); }
   .header h1 { font-size: 17px; margin: 0; }
-  .header .sub { color: #9C8791; font-size: 12.5px; margin-top: 2px; }
+  .header .sub { color: var(--text-secondary); font-size: 12.5px; margin-top: 2px; }
   .header-menu-btn {
     margin-left: auto;
     background: none;
     border: none;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 22px;
     cursor: pointer;
     padding: 4px 8px;
@@ -69,8 +70,8 @@
     position: absolute;
     top: 56px;
     right: 20px;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 10px;
     overflow: hidden;
     z-index: 3;
@@ -83,13 +84,13 @@
     padding: 12px 18px;
     background: none;
     border: none;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14px;
     cursor: pointer;
     white-space: nowrap;
   }
-  .header-dropdown button.danger { color: #E88B9B; }
-  .header-dropdown button:active { background: #4A1E36; }
+  .header-dropdown button.danger { color: var(--danger); }
+  .header-dropdown button:active { background: var(--border); }
 
   .modal-overlay {
     display: none;
@@ -103,28 +104,28 @@
   }
   .modal-overlay.open { display: flex; }
   .modal-box {
-    background: #1A0710;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface-alt);
+    border: 1px solid var(--border);
     border-radius: 14px;
     padding: 20px;
     max-width: 380px;
     width: 100%;
   }
   .modal-box h2 { font-size: 16px; margin: 0 0 8px; }
-  .modal-box p { font-size: 13px; color: #9C8791; margin: 0 0 14px; line-height: 1.5; }
+  .modal-box p { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.5; }
   .modal-box textarea {
     width: 100%;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 10px 12px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
     min-height: 70px;
   }
-  .modal-box textarea:focus { outline: none; border-color: #D4A24C; }
+  .modal-box textarea:focus { outline: none; border-color: var(--accent-gold); }
   .modal-actions {
     display: flex;
     gap: 10px;
@@ -139,9 +140,9 @@
     font-weight: 600;
     cursor: pointer;
   }
-  .modal-actions .cancel-btn { background: #3A1029; color: #F7F0E6; border: 1px solid #4A1E36; }
-  .modal-actions .confirm-btn { background: #E88B9B; color: #2B0A1F; }
-  .modal-actions .confirm-btn:disabled { background: #4A1E36; color: #9C8791; }
+  .modal-actions .cancel-btn { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); }
+  .modal-actions .confirm-btn { background: var(--danger); color: var(--border-subtle); }
+  .modal-actions .confirm-btn:disabled { background: var(--border); color: var(--text-secondary); }
 
   .thread {
     flex: 1;
@@ -160,18 +161,18 @@
   }
   .bubble.subscriber {
     align-self: flex-end;
-    background: #D4A24C;
-    color: #2B0A1F;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
     border-bottom-right-radius: 4px;
   }
   .bubble.model {
     align-self: flex-start;
-    background: #3A1029;
-    color: #F7F0E6;
+    background: var(--bg-surface);
+    color: var(--text-primary);
     border-bottom-left-radius: 4px;
   }
   .empty-state {
-    color: #9C8791;
+    color: var(--text-secondary);
     text-align: center;
     margin-top: 40px;
     font-size: 14px;
@@ -182,9 +183,9 @@
     margin: 10px 20px;
     padding: 14px;
     background: rgba(212,162,76,0.12);
-    border: 1px solid #D4A24C;
+    border: 1px solid var(--accent-gold);
     border-radius: 12px;
-    color: #D4A24C;
+    color: var(--accent-gold);
     font-size: 13.5px;
     text-align: center;
     display: none;
@@ -194,21 +195,21 @@
     display: flex;
     gap: 8px;
     padding: 14px 20px;
-    border-top: 1px solid #4A1E36;
+    border-top: 1px solid var(--border);
   }
   .input-row input {
     flex: 1;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
     padding: 12px 16px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14.5px;
   }
-  .input-row input:focus { outline: none; border-color: #D4A24C; }
+  .input-row input:focus { outline: none; border-color: var(--accent-gold); }
   .input-row button {
-    background: #D4A24C;
-    color: #2B0A1F;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
     font-weight: 600;
     padding: 0 20px;
     border-radius: 20px;
@@ -217,8 +218,8 @@
     cursor: pointer;
   }
   .input-row button:disabled {
-    background: #4A1E36;
-    color: #9C8791;
+    background: var(--border);
+    color: var(--text-secondary);
     cursor: not-allowed;
   }
 
@@ -228,15 +229,15 @@
     justify-content: space-around;
     align-items: center;
     padding: 10px 0 20px;
-    border-top: 1px solid #4A1E36;
-    background: #0F0509;
+    border-top: 1px solid var(--border);
+    background: var(--bg-primary);
   }
   .nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 3px;
-    color: #9C8791;
+    color: var(--text-secondary);
     text-decoration: none;
     font-size: 11px;
     background: none;
@@ -244,12 +245,12 @@
     cursor: pointer;
   }
   .nav-item svg { width: 21px; height: 21px; }
-  .nav-item.active { color: #D4A24C; }
+  .nav-item.active { color: var(--accent-gold); }
 
   #loading, #notfound {
     padding: 60px 20px;
     text-align: center;
-    color: #9C8791;
+    color: var(--text-secondary);
   }
 
   /* Story overlay (for the Update button) */
@@ -274,7 +275,7 @@
     bottom: 40px;
     left: 20px;
     right: 20px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14px;
     text-align: center;
     background: rgba(0,0,0,0.5);
@@ -287,7 +288,7 @@
     right: 24px;
     background: none;
     border: none;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 28px;
     cursor: pointer;
     z-index: 12;
@@ -604,6 +605,6 @@
 
     init();
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
