@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Your Photo</title>
 <style>
   * { box-sizing: border-box; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -17,22 +18,22 @@
   }
   .card { max-width: 380px; width: 100%; text-align: center; }
   h1 { font-size: 22px; margin-bottom: 6px; }
-  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
-  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 24px; }
+  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 24px; }
 
   .avatar-drop {
     width: 140px;
     height: 140px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 1.5px dashed #4A1E36;
+    background: var(--bg-surface);
+    border: 1.5px dashed var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     cursor: pointer;
     margin: 0 auto 24px;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 13px;
     text-align: center;
     padding: 10px;
@@ -42,8 +43,8 @@
 
   button {
     width: 100%;
-    background: #D4A24C;
-    color: #2B0A1F;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
     font-weight: 600;
     padding: 14px;
     border-radius: 10px;
@@ -51,7 +52,7 @@
     font-size: 15px;
     cursor: pointer;
   }
-  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  button:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
 
   #message {
     margin-top: 18px;
@@ -61,9 +62,9 @@
     display: none;
     line-height: 1.5;
   }
-  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
-  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
-  a { color: #D4A24C; }
+  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
+  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
+  a { color: var(--accent-gold); }
 </style>
 </head>
 <body>
@@ -136,6 +137,13 @@
 
         messageBox.className = 'success';
         messageBox.textContent = 'Photo saved!';
+
+        // Update the cached session so the new photo shows immediately
+        // elsewhere (like the Profile tab) without needing to log out and back in.
+        if (session && data.avatar_url) {
+          session.avatar_url = data.avatar_url;
+          localStorage.setItem('xerelle_subscriber_session', JSON.stringify(session));
+        }
       } catch (err) {
         messageBox.className = 'error';
         messageBox.textContent = 'Could not reach the server.';
@@ -145,5 +153,7 @@
       }
     });
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
