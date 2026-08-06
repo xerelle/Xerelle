@@ -9,6 +9,7 @@ import { handleGetModelInbox } from "./routes/models/inbox.js";
 import { handleUpdateSubscriptionPrice } from "./routes/models/update-price.js";
 import { handleUpdateRoomSettings } from "./routes/models/room-toggles.js";
 import { handleModelChangePassword } from "./routes/models/change-password.js";
+import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
@@ -58,6 +59,13 @@ export default {
       }
       if (pathname === "/api/models/change-password" && method === "POST") {
         return await handleModelChangePassword(request, env);
+      }
+      if (pathname === "/api/models/notifications" && method === "GET") {
+        return await handleGetModelNotifications(request, env);
+      }
+      if (pathname.match(/^\/api\/models\/notifications\/[\w-]+\/read$/) && method === "POST") {
+        const notificationId = pathname.split("/")[4];
+        return await handleMarkModelNotificationRead(request, env, notificationId);
       }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
@@ -137,3 +145,4 @@ export default {
     }
   },
 };
+
