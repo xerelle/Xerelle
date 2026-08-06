@@ -1,4 +1,5 @@
 import { jsonResponse, generateId } from "../../lib/http.js";
+import { createNotification } from "../lib/notifications.js";
 
 const THIRTY_DAYS_SECONDS = 30 * 24 * 60 * 60;
 
@@ -33,6 +34,30 @@ export async function handlePaystackWebhook(request, env) {
       )
         .bind(generateId(), subscriber_id, model_id, nowSeconds + THIRTY_DAYS_SECONDS)
         .run();
+
+      // Notify the model that someone subscribed. Best-effort — the
+      // subscription itself is already saved above, so a notification
+      // failure here shouldn't affect the payment outcome at all.
+      try {
+        const subscriber = await env.DB.prepare(
+          "SELECT display_name, phone FROM subscribers WHERE id = ?"
+        )
+          .bind(subscriber_id)
+          .first();
+
+        const label = subscriber.display_name || subscriber.phone;
+
+        await createNotification({
+          recipientType: "model",
+          recipientId: model_id,
+          type: "new_subscriber",
+          message: `${label} just subscribed to your Room.`,
+          link: `/inbox.html`,
+          env,
+        });
+      } catch (err) {
+        console.error("Failed to create subscription notification:", err);
+      }
     }
   }
 
@@ -55,3 +80,4 @@ async function verifyPaystackSignature(rawBody, signature, secretKey) {
     .join("");
   return hex === signature;
 }
+
