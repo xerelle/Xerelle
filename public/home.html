@@ -220,6 +220,28 @@
     text-decoration: none;
   }
 
+  .notif-item {
+    display: block;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+  .notif-item.unread { background: rgba(212,162,76,0.06); }
+  .notif-item.unread::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 20px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+  }
+  .notif-message { font-size: 14px; padding-left: 14px; margin-bottom: 3px; }
+  .notif-time { font-size: 11.5px; color: var(--text-secondary); padding-left: 14px; }
+
   .placeholder-tab {
     padding: 60px 20px; text-align: center; color: var(--text-secondary); font-size: 14px;
   }
@@ -306,8 +328,10 @@
         </div>
       </div>
 
-      <div id="notificationsTab" class="placeholder-tab" style="display:none;">
-        No notifications yet.
+      <div id="notificationsTab" style="display:none;">
+        <div id="notifLoading" style="padding:60px 20px; text-align:center; color:var(--text-secondary);">Loading...</div>
+        <div id="notifEmpty" class="placeholder-tab" style="display:none;">No notifications yet.</div>
+        <div id="notifList"></div>
       </div>
 
       <div id="profileTab" style="display:none;">
@@ -350,6 +374,7 @@
         tab.nav.classList.toggle('active', key === name);
       });
       if (name === 'profile') loadProfile();
+      if (name === 'notifications') loadNotifications();
     }
 
     Object.entries(tabs).forEach(([key, tab]) => {
@@ -498,6 +523,58 @@
     storyOverlay.addEventListener('click', (e) => {
       if (e.target === storyOverlay) closeStory();
     });
+
+    let notificationsLoaded = false;
+
+    async function loadNotifications() {
+      if (notificationsLoaded) return; // only fetch once per visit, not every tab switch
+      if (!session) return;
+
+      const loading = document.getElementById('notifLoading');
+      const empty = document.getElementById('notifEmpty');
+      const notifList = document.getElementById('notifList');
+
+      try {
+        const res = await fetch('/api/subscribers/notifications', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        loading.style.display = 'none';
+        notificationsLoaded = true;
+
+        if (!data.notifications || data.notifications.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        data.notifications.forEach((notif) => {
+          const item = document.createElement('a');
+          item.className = `notif-item ${notif.is_read ? '' : 'unread'}`;
+          item.href = notif.link || '#';
+
+          item.innerHTML = `
+            <div class="notif-message">${notif.message}</div>
+            <div class="notif-time">${formatTime(notif.created_at)}</div>
+          `;
+
+          if (!notif.is_read) {
+            item.addEventListener('click', () => {
+              fetch(`/api/subscribers/notifications/${notif.id}/read`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.token}` },
+              }).catch(() => {});
+            });
+          }
+
+          notifList.appendChild(item);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        empty.textContent = 'Could not load notifications.';
+        empty.style.display = 'block';
+      }
+    }
 
     function loadProfile() {
       if (!session) return;
