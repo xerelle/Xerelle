@@ -1,5 +1,6 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
+import { createNotification } from "../lib/notifications.js";
 
 const STORY_LIFETIME_SECONDS = 60 * 60 * 24; // 24 hours
 
@@ -38,6 +39,35 @@ export async function handlePostStory(request, env) {
   )
     .bind(generateId(), modelId, mediaType, mediaUrl, caption, expiresAt)
     .run();
+
+  // Notify every follower that she's posted a new update. Kept
+  // best-effort — if this fails for any reason, the Story itself has
+  // already been posted successfully, so we don't want a notification
+  // problem to make the whole request look like it failed.
+  try {
+    const model = await env.DB.prepare("SELECT username, display_name FROM models WHERE id = ?")
+      .bind(modelId)
+      .first();
+
+    const { results: followers } = await env.DB.prepare(
+      "SELECT subscriber_id FROM model_follows WHERE model_id = ?"
+    )
+      .bind(modelId)
+      .all();
+
+    for (const follower of followers) {
+      await createNotification({
+        recipientType: "subscriber",
+        recipientId: follower.subscriber_id,
+        type: "new_story",
+        message: `${model.display_name} posted a new update.`,
+        link: `/room.html?u=${model.username}`,
+        env,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to create story notifications:", err);
+  }
 
   return jsonResponse({ message: "Story posted.", media_url: mediaUrl, expires_at: expiresAt });
 }
