@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Room Settings</title>
 <style>
   * { box-sizing: border-box; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -17,23 +18,23 @@
   }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 22px; margin-bottom: 6px; }
-  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 28px; }
-  #whoami { color: #D4A24C; font-size: 13px; margin-bottom: 24px; }
+  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
+  #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 24px; }
 
   label {
-    display: block; font-size: 13px; color: #C9B8BF;
+    display: block; font-size: 13px; color: var(--text-tertiary);
     margin-bottom: 6px; margin-top: 16px;
   }
   .price-input-row {
     display: flex;
     align-items: center;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 0 14px;
   }
   .price-input-row span {
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 15px;
     margin-right: 4px;
   }
@@ -42,12 +43,12 @@
     background: none;
     border: none;
     padding: 12px 0;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 16px;
   }
   .price-input-row input:focus { outline: none; }
   .price-hint {
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 12.5px;
     margin-top: 8px;
     line-height: 1.5;
@@ -58,11 +59,11 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 0;
-    border-top: 1px solid #2B0A1F;
+    border-top: 1px solid var(--border-subtle);
   }
-  .toggle-row:last-of-type { border-bottom: 1px solid #2B0A1F; }
+  .toggle-row:last-of-type { border-bottom: 1px solid var(--border-subtle); }
   .toggle-label { font-size: 14.5px; font-weight: 600; }
-  .toggle-hint { font-size: 12.5px; color: #9C8791; margin-top: 3px; max-width: 260px; line-height: 1.4; }
+  .toggle-hint { font-size: 12.5px; color: var(--text-secondary); margin-top: 3px; max-width: 260px; line-height: 1.4; }
   .switch {
     position: relative;
     width: 46px;
@@ -74,8 +75,8 @@
   .switch-track {
     position: absolute;
     inset: 0;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
     cursor: pointer;
     transition: background 0.2s;
@@ -87,18 +88,18 @@
     height: 18px;
     left: 3px;
     top: 3px;
-    background: #9C8791;
+    background: var(--text-secondary);
     border-radius: 50%;
     transition: transform 0.2s, background 0.2s;
   }
-  .switch input:checked + .switch-track { background: rgba(212,162,76,0.25); border-color: #D4A24C; }
-  .switch input:checked + .switch-track::before { transform: translateX(20px); background: #D4A24C; }
+  .switch input:checked + .switch-track { background: rgba(212,162,76,0.25); border-color: var(--accent-gold); }
+  .switch input:checked + .switch-track::before { transform: translateX(20px); background: var(--accent-gold); }
 
   button {
     width: 100%;
     margin-top: 26px;
-    background: #D4A24C;
-    color: #2B0A1F;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
     font-weight: 600;
     padding: 14px;
     border-radius: 10px;
@@ -106,7 +107,7 @@
     font-size: 15px;
     cursor: pointer;
   }
-  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  button:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
 
   #message {
     margin-top: 18px;
@@ -116,9 +117,9 @@
     display: none;
     line-height: 1.5;
   }
-  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
-  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
-  a { color: #D4A24C; }
+  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
+  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
+  a { color: var(--accent-gold); }
 </style>
 </head>
 <body>
@@ -259,6 +260,7 @@
 
     init();
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
 
