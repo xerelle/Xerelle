@@ -24,4 +24,16 @@
     window.xerelleSetTheme(next);
     return next;
   };
+
+  // Shared "back" navigation — used by the back-arrow icon on every page.
+  // Goes to whatever page you actually came from (real browser history),
+  // falling back to the homepage only if there's genuinely nowhere to go
+  // back to (e.g. someone opened this page directly, not through the app).
+  window.xerelleGoBack = function () {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/index.html';
+    }
+  };
 })();
