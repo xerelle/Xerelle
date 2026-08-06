@@ -1,4 +1,4 @@
-import { generateId } from "./http.js";
+import { generateId } from "../../lib/http.js";
 
 // Creates a single notification row. Called from wherever a notification-
 // worthy event actually happens (a new Story posted, a model replying to
