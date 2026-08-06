@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Sign Up</title>
 <style>
   nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; margin: 0 auto; }
   nav img { height: 32px; width: auto; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     flex-direction: column;
@@ -19,31 +20,31 @@
   }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 24px; margin-bottom: 6px; }
-  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 28px; }
+  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
   label {
-    display: block; font-size: 13px; color: #C9B8BF;
+    display: block; font-size: 13px; color: var(--text-tertiary);
     margin-bottom: 6px; margin-top: 16px;
   }
   input {
     width: 100%; box-sizing: border-box;
-    background: #3A1029; border: 1px solid #4A1E36; border-radius: 8px;
-    padding: 12px 14px; color: #F7F0E6; font-size: 15px;
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; color: var(--text-primary); font-size: 15px;
   }
-  input:focus { outline: none; border-color: #D4A24C; }
+  input:focus { outline: none; border-color: var(--accent-gold); }
   button {
     width: 100%; margin-top: 26px;
-    background: #D4A24C; color: #2B0A1F; font-weight: 600;
+    background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
     padding: 14px; border-radius: 10px; border: none;
     font-size: 15px; cursor: pointer;
   }
-  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  button:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
   #message {
     margin-top: 18px; padding: 12px 14px; border-radius: 8px;
     font-size: 14px; display: none; line-height: 1.5;
   }
-  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
-  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
-  a { color: #4E9C82; }
+  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
+  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
+  a { color: var(--accent-green); }
 </style>
 </head>
 <body>
@@ -121,5 +122,6 @@
       }
     });
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
