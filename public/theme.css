@@ -1,0 +1,46 @@
+/* Xerelle shared theme tokens.
+   Every page links this file, then uses var(--token-name) instead of
+   hardcoded hex colors. Switching theme = just toggling the
+   [data-theme="light"] attribute on <html> — no page-specific CSS
+   needs to change.
+
+   Dark theme (default) is defined on :root.
+   Light theme overrides are defined under html[data-theme="light"]. */
+
+:root {
+  --bg-primary: #0F0509;
+  --bg-surface: #3A1029;
+  --bg-surface-alt: #1A0710;
+  --text-primary: #F7F0E6;
+  --text-secondary: #9C8791;
+  --text-tertiary: #C9B8BF;
+  --border: #4A1E36;
+  --border-subtle: #2B0A1F;
+  --accent-gold: #D4A24C;
+  --accent-gold-deep: #A8762F;
+  --accent-gold-light: #F3DFB0;
+  --accent-green: #4E9C82;
+  --danger: #E88B9B;
+  --danger-bg: rgba(232,139,155,0.15);
+  --success-bg: rgba(27,77,62,0.2);
+  --btn-primary-text: #2B0A1F;
+}
+
+html[data-theme="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-surface: #FDF1F6;
+  --bg-surface-alt: #FFF6F9;
+  --text-primary: #5C2A3E;
+  --text-secondary: #A67C8C;
+  --text-tertiary: #8A6B76;
+  --border: #F0C7D9;
+  --border-subtle: #F3D6E2;
+  --accent-gold: #A8762F;
+  --accent-gold-deep: #8A5F26;
+  --accent-gold-light: #D4A24C;
+  --accent-green: #2E8B57;
+  --danger: #C4536A;
+  --danger-bg: rgba(196,83,106,0.1);
+  --success-bg: rgba(46,139,87,0.12);
+  --btn-primary-text: #4A1030;
+}
