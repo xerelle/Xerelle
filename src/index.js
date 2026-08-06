@@ -8,12 +8,14 @@ import { handlePostStory } from "./routes/models/stories.js";
 import { handleGetModelInbox } from "./routes/models/inbox.js";
 import { handleUpdateSubscriptionPrice } from "./routes/models/update-price.js";
 import { handleUpdateRoomSettings } from "./routes/models/room-toggles.js";
+import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
 import { handleGetSubscriberInbox } from "./routes/subscribers/inbox.js";
 import { handleGetFollowedStories } from "./routes/subscribers/followed-stories.js";
 import { handleGetDiscoverModels } from "./routes/subscribers/discover.js";
+import { handleSubscriberChangePassword } from "./routes/subscribers/change-password.js";
 import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
 import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -53,6 +55,9 @@ export default {
       if (pathname === "/api/models/room-settings" && method === "POST") {
         return await handleUpdateRoomSettings(request, env);
       }
+      if (pathname === "/api/models/change-password" && method === "POST") {
+        return await handleModelChangePassword(request, env);
+      }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
         return await handleToggleFollow(request, env, username);
@@ -82,6 +87,9 @@ export default {
       }
       if (pathname === "/api/subscribers/discover" && method === "GET") {
         return await handleGetDiscoverModels(request, env);
+      }
+      if (pathname === "/api/subscribers/change-password" && method === "POST") {
+        return await handleSubscriberChangePassword(request, env);
       }
       if (pathname === "/api/block" && method === "POST") {
         return await handleCreateBlock(request, env);
