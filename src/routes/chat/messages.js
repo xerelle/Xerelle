@@ -1,5 +1,6 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { isBlocked } from "../blocks.js";
+import { createNotification } from "../lib/notifications.js";
 
 export async function handleSendMessage(request, env) {
   const body = await request.json();
@@ -58,6 +59,28 @@ export async function handleSendMessage(request, env) {
   )
     .bind(id, subscriber_id, model_id, sender_type, message_body)
     .run();
+
+  // Only notify when a MODEL sends a message — a subscriber's own
+  // message doesn't need to notify herself, and the model already sees
+  // new subscriber messages directly in her inbox list.
+  if (sender_type === "model") {
+    try {
+      const model = await env.DB.prepare("SELECT username, display_name FROM models WHERE id = ?")
+        .bind(model_id)
+        .first();
+
+      await createNotification({
+        recipientType: "subscriber",
+        recipientId: subscriber_id,
+        type: "new_message",
+        message: `${model.display_name} sent you a message.`,
+        link: `/chat.html?u=${model.username}`,
+        env,
+      });
+    } catch (err) {
+      console.error("Failed to create message notification:", err);
+    }
+  }
 
   return jsonResponse({ id, sent_at: Math.floor(Date.now() / 1000) });
 }
