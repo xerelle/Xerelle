@@ -60,9 +60,7 @@ export async function handleSendMessage(request, env) {
     .bind(id, subscriber_id, model_id, sender_type, message_body)
     .run();
 
-  // Only notify when a MODEL sends a message — a subscriber's own
-  // message doesn't need to notify herself, and the model already sees
-  // new subscriber messages directly in her inbox list.
+  // Notify whichever side DIDN'T send this message.
   if (sender_type === "model") {
     try {
       const model = await env.DB.prepare("SELECT username, display_name FROM models WHERE id = ?")
@@ -75,6 +73,29 @@ export async function handleSendMessage(request, env) {
         type: "new_message",
         message: `${model.display_name} sent you a message.`,
         link: `/chat.html?u=${model.username}`,
+        env,
+      });
+    } catch (err) {
+      console.error("Failed to create message notification:", err);
+    }
+  }
+
+  if (sender_type === "subscriber") {
+    try {
+      const subscriber = await env.DB.prepare(
+        "SELECT username, display_name, phone FROM subscribers WHERE id = ?"
+      )
+        .bind(subscriber_id)
+        .first();
+
+      const label = subscriber.display_name || subscriber.phone;
+
+      await createNotification({
+        recipientType: "model",
+        recipientId: model_id,
+        type: "new_message",
+        message: `${label} sent you a message.`,
+        link: `/inbox.html`,
         env,
       });
     } catch (err) {
@@ -96,3 +117,4 @@ export async function handleGetMessages(subscriberId, modelId, env) {
 
   return jsonResponse({ messages: results });
 }
+
