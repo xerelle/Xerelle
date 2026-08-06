@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Model Registration</title>
 <style>
   nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; margin: 0 auto; }
   nav img { height: 32px; width: auto; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     flex-direction: column;
@@ -26,36 +27,36 @@
     margin-bottom: 6px;
   }
   p.sub {
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 14px;
     margin-bottom: 28px;
   }
   label {
     display: block;
     font-size: 13px;
-    color: #C9B8BF;
+    color: var(--text-tertiary);
     margin-bottom: 6px;
     margin-top: 16px;
   }
   input {
     width: 100%;
     box-sizing: border-box;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 12px 14px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 15px;
   }
   input:focus {
     outline: none;
-    border-color: #D4A24C;
+    border-color: var(--accent-gold);
   }
   button {
     width: 100%;
     margin-top: 26px;
-    background: #D4A24C;
-    color: #2B0A1F;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
     font-weight: 600;
     padding: 14px;
     border-radius: 10px;
@@ -64,8 +65,8 @@
     cursor: pointer;
   }
   button:disabled {
-    background: #4A1E36;
-    color: #9C8791;
+    background: var(--border);
+    color: var(--text-secondary);
     cursor: not-allowed;
   }
   #message {
@@ -76,13 +77,13 @@
     display: none;
   }
   #message.success {
-    background: rgba(27,77,62,0.2);
-    color: #4E9C82;
+    background: var(--success-bg);
+    color: var(--accent-green);
     display: block;
   }
   #message.error {
-    background: rgba(232,139,155,0.15);
-    color: #E88B9B;
+    background: var(--danger-bg);
+    color: var(--danger);
     display: block;
   }
 </style>
@@ -154,7 +155,7 @@
           messageBox.textContent = data.error || 'Something went wrong. Please try again.';
         } else {
           messageBox.className = 'success';
-          messageBox.innerHTML = `Welcome, @${data.username}! Account created. <a href="/login.html" style="color:#4E9C82;">Log in</a> to continue to verification.`;
+          messageBox.innerHTML = `Welcome, @${data.username}! Account created. <a href="/login.html" style="color:var(--accent-green);">Log in</a> to continue to verification.`;
           form.reset();
         }
       } catch (err) {
@@ -166,6 +167,6 @@
       }
     });
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
