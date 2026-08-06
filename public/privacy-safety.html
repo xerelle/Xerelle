@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Privacy &amp; Safety</title>
 <style>
   * { box-sizing: border-box; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -21,11 +22,11 @@
     padding: 24px 20px 8px;
   }
   .header h1 { font-size: 20px; margin: 0 0 4px; }
-  .header p { color: #9C8791; font-size: 13px; margin: 0; }
+  .header p { color: var(--text-secondary); font-size: 13px; margin: 0; }
 
   .section-label {
     padding: 20px 20px 10px;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 11.5px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -36,30 +37,30 @@
     justify-content: space-between;
     align-items: flex-start;
     padding: 14px 20px;
-    border-bottom: 1px solid #2B0A1F;
+    border-bottom: 1px solid var(--border-subtle);
   }
   .block-left { min-width: 0; flex: 1; }
   .block-name { font-size: 14.5px; font-weight: 600; margin-bottom: 3px; }
-  .block-reason { font-size: 13px; color: #9C8791; line-height: 1.4; margin-bottom: 3px; }
-  .block-date { font-size: 11.5px; color: #6B5A62; }
+  .block-reason { font-size: 13px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 3px; }
+  .block-date { font-size: 11.5px; color: var(--text-secondary); }
   .unblock-btn {
     flex-shrink: 0;
     margin-left: 12px;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
-    color: #D4A24C;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    color: var(--accent-gold);
     padding: 8px 14px;
     border-radius: 8px;
     font-size: 12.5px;
     font-weight: 600;
     cursor: pointer;
   }
-  .unblock-btn:disabled { color: #9C8791; cursor: not-allowed; }
+  .unblock-btn:disabled { color: var(--text-secondary); cursor: not-allowed; }
 
   #loading, #empty, #notfound {
     padding: 60px 20px;
     text-align: center;
-    color: #9C8791;
+    color: var(--text-secondary);
   }
 </style>
 </head>
@@ -165,5 +166,6 @@
 
     loadBlocks();
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
