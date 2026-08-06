@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Home</title>
 <style>
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: #0F0509;
-    color: #F7F0E6;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
@@ -26,7 +27,7 @@
 
   .header {
     padding: 20px 20px 16px;
-    border-bottom: 1px solid #4A1E36;
+    border-bottom: 1px solid var(--border);
   }
   .header h1 { font-size: 20px; margin: 0; }
 
@@ -36,7 +37,7 @@
     gap: 16px;
     padding: 16px 20px;
     overflow-x: auto;
-    border-bottom: 1px solid #2B0A1F;
+    border-bottom: 1px solid var(--border-subtle);
   }
   .story-item {
     display: flex;
@@ -53,14 +54,14 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 3px solid #D4A24C;
+    background: var(--bg-surface);
+    border: 3px solid var(--accent-gold);
     padding: 2px;
     object-fit: cover;
   }
   .story-name {
     font-size: 11px;
-    color: #C9B8BF;
+    color: var(--text-tertiary);
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -69,15 +70,15 @@
   }
   .story-row-empty {
     padding: 16px 20px;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 12.5px;
-    border-bottom: 1px solid #2B0A1F;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   /* Menu bar (Chats / Notifications / Profile) */
   .menu-bar {
     display: flex;
-    border-bottom: 1px solid #4A1E36;
+    border-bottom: 1px solid var(--border);
   }
   .menu-item {
     flex: 1;
@@ -85,15 +86,15 @@
     padding: 13px 0;
     background: none;
     border: none;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 13.5px;
     font-weight: 600;
     cursor: pointer;
     border-bottom: 2px solid transparent;
   }
   .menu-item.active {
-    color: #D4A24C;
-    border-bottom: 2px solid #D4A24C;
+    color: var(--accent-gold);
+    border-bottom: 2px solid var(--accent-gold);
   }
 
   .tab-content { flex: 1; overflow-y: auto; }
@@ -104,17 +105,17 @@
     justify-content: space-between;
     align-items: center;
     padding: 14px 20px;
-    border-bottom: 1px solid #2B0A1F;
+    border-bottom: 1px solid var(--border-subtle);
     text-decoration: none;
     color: inherit;
   }
-  .thread-item:active { background: #1A0710; }
+  .thread-item:active { background: var(--bg-surface-alt); }
   .avatar-circle {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     flex-shrink: 0;
     margin-right: 12px;
     display: flex;
@@ -122,42 +123,42 @@
     justify-content: center;
     font-size: 16px;
     font-weight: 600;
-    color: #D4A24C;
+    color: var(--accent-gold);
     overflow: hidden;
   }
   .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
   .thread-left { min-width: 0; flex: 1; }
   .thread-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
   .thread-preview {
-    font-size: 13px; color: #9C8791;
+    font-size: 13px; color: var(--text-secondary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .thread-preview.you { color: #C9B8BF; }
-  .thread-time { font-size: 11.5px; color: #9C8791; flex-shrink: 0; margin-left: 12px; }
+  .thread-preview.you { color: var(--text-tertiary); }
+  .thread-time { font-size: 11.5px; color: var(--text-secondary); flex-shrink: 0; margin-left: 12px; }
 
   /* Profile */
   .profile-block { padding: 30px 20px; text-align: center; }
   .profile-avatar {
     width: 100px; height: 100px; border-radius: 50%;
-    background: #3A1029; border: 2px solid #4A1E36;
+    background: var(--bg-surface); border: 2px solid var(--border);
     margin: 0 auto 16px; object-fit: cover; display: block;
   }
   .profile-name { font-size: 19px; margin-bottom: 2px; }
-  .profile-sub { color: #9C8791; font-size: 13.5px; margin-bottom: 24px; }
+  .profile-sub { color: var(--text-secondary); font-size: 13.5px; margin-bottom: 24px; }
   .profile-link {
     display: block; width: 100%; max-width: 280px; margin: 0 auto 12px;
-    background: #3A1029; border: 1px solid #4A1E36; color: #F7F0E6;
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
     padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600;
     text-decoration: none; cursor: pointer;
   }
-  .profile-link.danger { border-color: #E88B9B; color: #E88B9B; }
+  .profile-link.danger { border-color: var(--danger); color: var(--danger); }
   .profile-divider {
-    max-width: 280px; margin: 20px auto; border-top: 1px solid #2B0A1F;
+    max-width: 280px; margin: 20px auto; border-top: 1px solid var(--border-subtle);
   }
 
   .discover-caption {
     padding: 18px 20px 12px;
-    color: #9C8791;
+    color: var(--text-secondary);
     font-size: 13.5px;
     margin: 0;
   }
@@ -178,7 +179,7 @@
     width: 70px;
     height: 70px;
     border-radius: 12px;
-    background: #3A1029;
+    background: var(--bg-surface);
     object-fit: cover;
     display: block;
   }
@@ -186,17 +187,17 @@
     width: 70px;
     height: 70px;
     border-radius: 12px;
-    background: #3A1029;
+    background: var(--bg-surface);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     font-weight: 600;
-    color: #D4A24C;
+    color: var(--accent-gold);
   }
   .discover-name {
     font-size: 11px;
-    color: #C9B8BF;
+    color: var(--text-tertiary);
     margin-top: 5px;
     white-space: nowrap;
     overflow: hidden;
@@ -207,12 +208,12 @@
     width: 70px;
     height: 70px;
     border-radius: 12px;
-    background: #3A1029;
-    border: 1px solid #4A1E36;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #D4A24C;
+    color: var(--accent-gold);
     font-size: 12px;
     font-weight: 600;
     text-align: center;
@@ -220,7 +221,7 @@
   }
 
   .placeholder-tab {
-    padding: 60px 20px; text-align: center; color: #9C8791; font-size: 14px;
+    padding: 60px 20px; text-align: center; color: var(--text-secondary); font-size: 14px;
   }
 
   /* Story overlay (full screen viewer) */
@@ -245,7 +246,7 @@
     bottom: 40px;
     left: 20px;
     right: 20px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14px;
     text-align: center;
     background: rgba(0,0,0,0.5);
@@ -256,7 +257,7 @@
     position: absolute;
     top: 24px;
     left: 24px;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 14px;
     font-weight: 600;
   }
@@ -266,14 +267,14 @@
     right: 24px;
     background: none;
     border: none;
-    color: #F7F0E6;
+    color: var(--text-primary);
     font-size: 28px;
     cursor: pointer;
     z-index: 12;
   }
 
   #loading, #empty, #notfound {
-    padding: 60px 20px; text-align: center; color: #9C8791;
+    padding: 60px 20px; text-align: center; color: var(--text-secondary);
   }
 </style>
 </head>
@@ -282,7 +283,7 @@
     <div class="header"><h1>Xerelle</h1></div>
 
     <!-- Persistent Stories row -->
-    <div id="storiesLoading" style="padding:16px 20px; color:#9C8791; font-size:12.5px;">Loading updates...</div>
+    <div id="storiesLoading" style="padding:16px 20px; color:var(--text-secondary); font-size:12.5px;">Loading updates...</div>
     <div class="story-row-empty" id="storiesEmpty" style="display:none;">No updates right now. Follow a model to see her Stories here.</div>
     <div class="story-row" id="storyRow" style="display:none;"></div>
 
@@ -312,7 +313,7 @@
       <div id="profileTab" style="display:none;">
         <div class="profile-block">
           <img class="profile-avatar" id="profileAvatarImg" src="" alt="" style="display:none;">
-          <div class="profile-avatar" id="profileAvatarInitial" style="display:none; align-items:center; justify-content:center; font-size:34px; color:#D4A24C; font-weight:600;"></div>
+          <div class="profile-avatar" id="profileAvatarInitial" style="display:none; align-items:center; justify-content:center; font-size:34px; color:var(--accent-gold); font-weight:600;"></div>
           <div class="profile-name" id="profileName"></div>
           <div class="profile-sub" id="profilePhone"></div>
           <a class="profile-link" href="/subscriber-avatar.html">Change photo</a>
@@ -571,5 +572,6 @@
     loadStories();
     loadDiscoverTeaser();
   </script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
