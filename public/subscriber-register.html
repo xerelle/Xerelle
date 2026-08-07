@@ -8,16 +8,18 @@
 <style>
   nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; margin: 0 auto; }
   nav img { height: 32px; width: auto; }
-  .back-row { margin-bottom: 2px; }
   .back-btn {
+    position: absolute;
+    top: 24px;
+    left: 16px;
     display: inline-flex;
     align-items: center;
-    margin-left: -4px;
     background: none;
     border: none;
     color: var(--text-primary);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    z-index: 2;
   }
   .back-btn svg { width: 22px; height: 22px; }
   body {
@@ -29,6 +31,7 @@
     align-items: center;
     padding: 0 20px 40px;
     margin: 0;
+    position: relative;
   }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 24px; margin-bottom: 6px; }
@@ -64,11 +67,9 @@
     <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
   </nav>
   <div class="card">
-    <div class="back-row">
-      <button class="back-btn" onclick="xerelleGoBack()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
-    </div>
+    <button class="back-btn" onclick="xerelleGoBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
     <h1>Create your account</h1>
     <p class="sub">Free to join — you'll still need a model's exact link or username to actually enter her Room.</p>
 
