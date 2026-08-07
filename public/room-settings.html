@@ -13,20 +13,23 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
     justify-content: center;
-    padding: 18px 20px 32px;
+    padding: 44px 20px 32px;
     margin: 0;
+    position: relative;
   }
   .card { max-width: 420px; width: 100%; }
-  .back-row { margin-bottom: 2px; }
   .back-btn {
+    position: absolute;
+    top: 8px;
+    left: 16px;
     display: inline-flex;
     align-items: center;
-    margin-left: -4px;
     background: none;
     border: none;
     color: var(--text-primary);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    z-index: 2;
   }
   .back-btn svg { width: 22px; height: 22px; }
   h1 { font-size: 22px; margin-bottom: 6px; }
@@ -136,11 +139,9 @@
 </head>
 <body>
   <div class="card">
-    <div class="back-row">
-      <button class="back-btn" onclick="xerelleGoBack()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-      </button>
-    </div>
+    <button class="back-btn" onclick="xerelleGoBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    </button>
     <h1>Room settings</h1>
     <p class="sub">Your price and how members can find you.</p>
     <div id="whoami"></div>
@@ -280,3 +281,4 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
