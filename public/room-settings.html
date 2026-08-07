@@ -16,25 +16,22 @@
     align-items: center;
     padding: 0 20px 32px;
     margin: 0;
-    position: relative;
   }
   nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
   nav img { height: 32px; width: auto; }
   .back-btn {
-    position: absolute;
-    top: 112px;
+    position: fixed;
+    top: 16px;
     left: 16px;
-    display: inline-flex;
-    align-items: center;
+    z-index: 10;
     background: none;
     border: none;
     color: var(--text-primary);
     cursor: pointer;
-    padding: 6px;
-    z-index: 2;
+    padding: 8px;
   }
   .back-btn svg { width: 22px; height: 22px; }
-  .card { max-width: 420px; width: 100%; margin-top: 98px; }
+  .card { max-width: 420px; width: 100%; }
   h1 { font-size: 22px; margin-bottom: 8px; }
   p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
   #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 24px; }
@@ -287,3 +284,4 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
