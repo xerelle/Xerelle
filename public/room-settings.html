@@ -12,29 +12,27 @@
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0 20px 32px;
+    justify-content: center;
+    padding: 78px 20px 32px;
     margin: 0;
-  }
-  .page-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    align-self: stretch;
-    padding: 16px 0;
+    position: relative;
   }
   .back-btn {
+    position: absolute;
+    top: 20px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
     background: none;
     border: none;
     color: var(--text-primary);
     cursor: pointer;
-    padding: 4px;
-    margin-right: auto;
+    padding: 6px;
+    z-index: 2;
   }
   .back-btn svg { width: 22px; height: 22px; }
   .card { max-width: 420px; width: 100%; }
-  h1 { font-size: 22px; margin-bottom: 6px; }
+  h1 { font-size: 22px; margin-bottom: 8px; }
   p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
   #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 24px; }
 
@@ -140,12 +138,10 @@
 </style>
 </head>
 <body>
-  <div class="page-topbar">
+  <div class="card">
     <button class="back-btn" onclick="xerelleGoBack()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
     </button>
-  </div>
-  <div class="card">
     <h1>Room settings</h1>
     <p class="sub">Your price and how members can find you.</p>
     <div id="whoami"></div>
@@ -285,3 +281,4 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
