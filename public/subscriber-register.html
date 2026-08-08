@@ -4,10 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/theme.css">
-<title>Xerelle — Sign Up</title>
+<title>Xerelle — Your Photo</title>
 <style>
-  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; margin: 0 auto; }
-  nav img { height: 32px; width: auto; }
+  * { box-sizing: border-box; }
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -15,114 +14,154 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 20px 40px;
+    padding: 0 20px 32px;
     margin: 0;
-    position: relative;
   }
-  .card { max-width: 420px; width: 100%; }
-  h1 { font-size: 24px; margin-bottom: 8px; }
-  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
-  label {
-    display: block; font-size: 13px; color: var(--text-tertiary);
-    margin-bottom: 6px; margin-top: 16px;
+  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
+  nav img { height: 32px; width: auto; }
+  .card { max-width: 380px; width: 100%; text-align: center; }
+  h1 { font-size: 22px; margin-bottom: 6px; }
+  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+  #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 24px; }
+
+  .avatar-drop {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1.5px dashed var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+    margin: 0 auto 24px;
+    color: var(--text-secondary);
+    font-size: 13px;
+    text-align: center;
+    padding: 10px;
   }
-  input {
-    width: 100%; box-sizing: border-box;
-    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px 14px; color: var(--text-primary); font-size: 15px;
+  .avatar-drop img { width: 100%; height: 100%; object-fit: cover; }
+  input[type="file"] { display: none; }
+
+  #uploadBtn {
+    width: auto;
+    display: inline-block;
+    min-width: 160px;
+    margin: 0 auto;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    font-weight: 600;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
   }
-  input:focus { outline: none; border-color: var(--accent-gold); }
-  #submitBtn {
-    width: 100%; margin-top: 26px;
-    background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
-    padding: 14px; border-radius: 10px; border: none;
-    font-size: 15px; cursor: pointer;
-  }
-  #submitBtn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  #uploadBtn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+
   #message {
-    margin-top: 18px; padding: 12px 14px; border-radius: 8px;
-    font-size: 14px; display: none; line-height: 1.5;
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    line-height: 1.5;
   }
   #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
   #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
-  a { color: var(--accent-green); }
+  a { color: var(--accent-gold); }
 </style>
 </head>
 <body>
   <nav>
     <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
   </nav>
+  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex; width:auto;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
   <div class="card">
-    <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex; width:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </button>
-    <h1>Create your account</h1>
-    <p class="sub">Free to join — you'll still need a model's exact link or username to actually enter her Room.</p>
+    <h1>Your photo</h1>
+    <p class="sub">Add a photo so models know it's really you.</p>
+    <div id="whoami"></div>
 
-    <form id="registerForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" required placeholder="Username" pattern="[a-z0-9._-]{3,30}">
-
-      <label for="display_name">Name</label>
-      <input type="text" id="display_name" required placeholder="Your name">
-
-      <label for="phone">Phone number</label>
-      <input type="tel" id="phone" required placeholder="+2348012345678">
-
-      <label for="email">Email (optional)</label>
-      <input type="email" id="email" placeholder="you@example.com">
-
-      <label for="password">Password</label>
-      <input type="password" id="password" required minlength="8">
-
-      <button type="submit" id="submitBtn">Create account</button>
-    </form>
+    <div id="uploadArea">
+      <div class="avatar-drop" id="avatarDrop">Tap to choose a photo</div>
+      <input type="file" id="photoInput" accept="image/*">
+      <button id="uploadBtn">Save photo</button>
+    </div>
 
     <div id="message"></div>
   </div>
 
   <script>
-    const form = document.getElementById('registerForm');
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    const whoami = document.getElementById('whoami');
+    const uploadArea = document.getElementById('uploadArea');
+    const avatarDrop = document.getElementById('avatarDrop');
+    const photoInput = document.getElementById('photoInput');
+    const uploadBtn = document.getElementById('uploadBtn');
     const messageBox = document.getElementById('message');
-    const submitBtn = document.getElementById('submitBtn');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating...';
+    if (!session) {
+      whoami.innerHTML = 'You need to <a href="/subscriber-login.html">log in</a> first.';
+      uploadArea.style.display = 'none';
+    } else {
+      whoami.textContent = `${session.display_name} (@${session.username})`;
+    }
+
+    avatarDrop.addEventListener('click', () => photoInput.click());
+
+    photoInput.addEventListener('change', () => {
+      if (!photoInput.files.length) return;
+      const url = URL.createObjectURL(photoInput.files[0]);
+      avatarDrop.innerHTML = `<img src="${url}" alt="">`;
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!photoInput.files.length) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Choose a photo first.';
+        return;
+      }
+
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Saving...';
       messageBox.className = '';
       messageBox.textContent = '';
 
-      const body = {
-        username: document.getElementById('username').value.trim(),
-        display_name: document.getElementById('display_name').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: document.getElementById('email').value.trim() || undefined,
-        password: document.getElementById('password').value,
-      };
+      const formData = new FormData();
+      formData.append('photo', photoInput.files[0]);
 
       try {
-        const res = await fetch('/api/subscribers/register', {
+        const res = await fetch('/api/subscribers/avatar/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
         });
         const data = await res.json();
 
         if (!res.ok) {
           messageBox.className = 'error';
-          messageBox.textContent = data.error || 'Something went wrong. Please try again.';
-        } else {
-          messageBox.className = 'success';
-          messageBox.innerHTML = `Account created! <a href="/subscriber-login.html">Log in</a>, then use the link a model gave you, or search her exact username, to enter her Room.`;
-          form.reset();
+          messageBox.textContent = data.message || data.error || 'Upload failed.';
+          return;
+        }
+
+        messageBox.className = 'success';
+        messageBox.textContent = 'Photo saved!';
+
+        // Update the cached session so the new photo shows immediately
+        // elsewhere (like the Profile tab) without needing to log out and back in.
+        if (session && data.avatar_url) {
+          session.avatar_url = data.avatar_url;
+          localStorage.setItem('xerelle_subscriber_session', JSON.stringify(session));
         }
       } catch (err) {
         messageBox.className = 'error';
-        messageBox.textContent = 'Could not reach the server. Please check your connection and try again.';
+        messageBox.textContent = 'Could not reach the server.';
       } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create account';
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Save photo';
       }
     });
   </script>
