@@ -11,10 +11,13 @@
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
-    justify-content: center;
-    padding: 40px 20px;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 40px;
     margin: 0;
   }
+  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
+  nav img { height: 32px; width: auto; }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 24px; margin-bottom: 6px; }
   p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
@@ -28,13 +31,13 @@
     padding: 12px 14px; color: var(--text-primary); font-size: 15px;
   }
   input:focus { outline: none; border-color: var(--accent-gold); }
-  button {
+  #submitBtn {
     width: 100%; margin-top: 26px;
     background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
     padding: 14px; border-radius: 10px; border: none;
     font-size: 15px; cursor: pointer;
   }
-  button:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  #submitBtn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
   #message {
     margin-top: 18px; padding: 12px 14px; border-radius: 8px;
     font-size: 14px; display: none; line-height: 1.5;
@@ -45,6 +48,12 @@
 </style>
 </head>
 <body>
+  <nav>
+    <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
+  </nav>
+  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
   <div class="card">
     <h1>Welcome back</h1>
     <p class="sub">Log in with your username or phone number.</p>
@@ -111,4 +120,3 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
