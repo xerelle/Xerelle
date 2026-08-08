@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/theme.css">
-<title>Xerelle — Sign Up</title>
+<title>Xerelle — Log In</title>
 <style>
-  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; margin: 0 auto; }
-  nav img { height: 32px; width: auto; }
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
@@ -17,10 +15,11 @@
     align-items: center;
     padding: 0 20px 40px;
     margin: 0;
-    position: relative;
   }
+  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
+  nav img { height: 32px; width: auto; }
   .card { max-width: 420px; width: 100%; }
-  h1 { font-size: 24px; margin-bottom: 8px; }
+  h1 { font-size: 24px; margin-bottom: 6px; }
   p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
   label {
     display: block; font-size: 13px; color: var(--text-tertiary);
@@ -45,64 +44,53 @@
   }
   #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
   #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
-  a { color: var(--accent-green); }
+  a { color: var(--accent-gold); }
 </style>
 </head>
 <body>
   <nav>
     <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
   </nav>
+  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </button>
   <div class="card">
-    <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex; width:auto;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-    </button>
-    <h1>Create your account</h1>
-    <p class="sub">Free to join — you'll still need a model's exact link or username to actually enter her Room.</p>
+    <h1>Welcome back</h1>
+    <p class="sub">Log in with your username or phone number.</p>
 
-    <form id="registerForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" required placeholder="Username" pattern="[a-z0-9._-]{3,30}">
-
-      <label for="display_name">Name</label>
-      <input type="text" id="display_name" required placeholder="Your name">
-
-      <label for="phone">Phone number</label>
-      <input type="tel" id="phone" required placeholder="+2348012345678">
-
-      <label for="email">Email (optional)</label>
-      <input type="email" id="email" placeholder="you@example.com">
+    <form id="loginForm">
+      <label for="identifier">Username or phone number</label>
+      <input type="text" id="identifier" required placeholder="Username or phone number">
 
       <label for="password">Password</label>
-      <input type="password" id="password" required minlength="8">
+      <input type="password" id="password" required>
 
-      <button type="submit" id="submitBtn">Create account</button>
+      <button type="submit" id="submitBtn">Log in</button>
     </form>
 
     <div id="message"></div>
+    <p class="sub" style="margin-top:20px;">No account yet? <a href="/subscriber-register.html">Create one</a></p>
   </div>
 
   <script>
-    const form = document.getElementById('registerForm');
+    const form = document.getElementById('loginForm');
     const messageBox = document.getElementById('message');
     const submitBtn = document.getElementById('submitBtn');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating...';
+      submitBtn.textContent = 'Logging in...';
       messageBox.className = '';
       messageBox.textContent = '';
 
       const body = {
-        username: document.getElementById('username').value.trim(),
-        display_name: document.getElementById('display_name').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: document.getElementById('email').value.trim() || undefined,
+        identifier: document.getElementById('identifier').value.trim(),
         password: document.getElementById('password').value,
       };
 
       try {
-        const res = await fetch('/api/subscribers/register', {
+        const res = await fetch('/api/subscribers/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
@@ -113,8 +101,9 @@
           messageBox.className = 'error';
           messageBox.textContent = data.error || 'Something went wrong. Please try again.';
         } else {
+          localStorage.setItem('xerelle_subscriber_session', JSON.stringify(data));
           messageBox.className = 'success';
-          messageBox.innerHTML = `Account created! <a href="/subscriber-login.html">Log in</a>, then use the link a model gave you, or search her exact username, to enter her Room.`;
+          messageBox.textContent = `Welcome back, ${data.display_name}! You're logged in.`;
           form.reset();
         }
       } catch (err) {
@@ -122,11 +111,10 @@
         messageBox.textContent = 'Could not reach the server. Please check your connection and try again.';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Create account';
+        submitBtn.textContent = 'Log in';
       }
     });
   </script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
