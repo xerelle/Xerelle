@@ -10,6 +10,7 @@ import { handleUpdateSubscriptionPrice } from "./routes/models/update-price.js";
 import { handleUpdateRoomSettings } from "./routes/models/room-toggles.js";
 import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
+import { handlePostFeedItem } from "./routes/models/feed-post.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
@@ -18,6 +19,9 @@ import { handleGetFollowedStories } from "./routes/subscribers/followed-stories.
 import { handleGetDiscoverModels } from "./routes/subscribers/discover.js";
 import { handleSubscriberChangePassword } from "./routes/subscribers/change-password.js";
 import { handleGetNotifications, handleMarkNotificationRead } from "./routes/subscribers/notifications.js";
+import { handleGetFeed } from "./routes/subscribers/feed-get.js";
+import { handleToggleFeedLike } from "./routes/subscribers/feed-like.js";
+import { handlePostFeedComment, handleGetFeedComments } from "./routes/subscribers/feed-comments.js";
 import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
 import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
@@ -67,6 +71,9 @@ export default {
         const notificationId = pathname.split("/")[4];
         return await handleMarkModelNotificationRead(request, env, notificationId);
       }
+      if (pathname === "/api/models/feed/post" && method === "POST") {
+        return await handlePostFeedItem(request, env);
+      }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
         return await handleToggleFollow(request, env, username);
@@ -107,6 +114,22 @@ export default {
         const notificationId = pathname.split("/")[4];
         return await handleMarkNotificationRead(request, env, notificationId);
       }
+      if (pathname.match(/^\/api\/subscribers\/feed\/[\w.-]+$/) && method === "GET") {
+        const username = pathname.split("/").pop();
+        return await handleGetFeed(request, env, username);
+      }
+      if (pathname.match(/^\/api\/subscribers\/feed\/post\/[\w-]+\/like$/) && method === "POST") {
+        const postId = pathname.split("/")[5];
+        return await handleToggleFeedLike(request, env, postId);
+      }
+      if (pathname.match(/^\/api\/subscribers\/feed\/post\/[\w-]+\/comments$/) && method === "POST") {
+        const postId = pathname.split("/")[5];
+        return await handlePostFeedComment(request, env, postId);
+      }
+      if (pathname.match(/^\/api\/subscribers\/feed\/post\/[\w-]+\/comments$/) && method === "GET") {
+        const postId = pathname.split("/")[5];
+        return await handleGetFeedComments(request, env, postId);
+      }
       if (pathname === "/api/block" && method === "POST") {
         return await handleCreateBlock(request, env);
       }
@@ -145,4 +168,3 @@ export default {
     }
   },
 };
-
