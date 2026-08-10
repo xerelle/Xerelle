@@ -41,14 +41,10 @@
     min-height: 0;
     overflow: hidden;
   }
-  body.self-view-mode #selfViewSections {
+  body.self-view-mode #selfViewScroll {
     flex: 1;
     overflow-y: auto;
-    display: block;
-  }
-  body.self-view-mode nav,
-  body.self-view-mode .self-view-header {
-    flex-shrink: 0;
+    padding-top: 56px;
   }
   body.self-view-mode .spacer {
     display: none;
@@ -359,29 +355,31 @@
     <div id="notfound" style="display:none;"></div>
 
     <div id="profileContent" style="display:none; flex-direction:column; flex:1;">
-      <div class="self-view-header" id="selfViewHeader" style="display:none;">
-        <a class="bell-link" href="/model-notifications.html">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <span class="bell-dot" id="bellDot"></span>
-        </a>
-      </div>
-
-      <div id="selfViewSections" style="display:none;">
-        <div class="self-view-section">
-          <div class="self-view-section-header">
-            <div class="self-view-section-title">Activity</div>
-          </div>
-          <div id="activitiesList"></div>
-          <div id="activitiesEmpty" class="self-view-empty" style="display:none;">No activity yet — once someone follows or likes your Room, it'll show up here.</div>
+      <div id="selfViewScroll" style="display:none;">
+        <div class="self-view-header" id="selfViewHeader">
+          <a class="bell-link" href="/model-notifications.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="bell-dot" id="bellDot"></span>
+          </a>
         </div>
 
-        <div class="self-view-section">
-          <div class="self-view-section-header">
-            <div class="self-view-section-title">Messages</div>
-            <a class="self-view-see-all" href="/inbox.html">See all</a>
+        <div id="selfViewSections">
+          <div class="self-view-section">
+            <div class="self-view-section-header">
+              <div class="self-view-section-title">Activity</div>
+            </div>
+            <div id="activitiesList"></div>
+            <div id="activitiesEmpty" class="self-view-empty" style="display:none;">No activity yet — once someone follows or likes your Room, it'll show up here.</div>
           </div>
-          <div id="messagesList"></div>
-          <div id="messagesEmpty" class="self-view-empty" style="display:none;">No messages yet.</div>
+
+          <div class="self-view-section">
+            <div class="self-view-section-header">
+              <div class="self-view-section-title">Messages</div>
+              <a class="self-view-see-all" href="/inbox.html">See all</a>
+            </div>
+            <div id="messagesList"></div>
+            <div id="messagesEmpty" class="self-view-empty" style="display:none;">No messages yet.</div>
+          </div>
         </div>
       </div>
 
@@ -510,8 +508,7 @@
           // content scrolls — the public view below doesn't need this.
           document.body.classList.add('self-view-mode');
           document.getElementById('navBar').style.display = 'flex';
-          document.getElementById('selfViewHeader').style.display = 'flex';
-          document.getElementById('selfViewSections').style.display = 'block';
+          document.getElementById('selfViewScroll').style.display = 'block';
           document.getElementById('topSection').style.display = 'none';
           document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(modelSession.username)}`;
 
