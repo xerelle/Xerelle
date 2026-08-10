@@ -11,6 +11,7 @@ import { handleUpdateRoomSettings } from "./routes/models/room-toggles.js";
 import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
 import { handlePostFeedItem } from "./routes/models/feed-post.js";
+import { handleGetActivities } from "./routes/models/activities.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
@@ -73,6 +74,9 @@ export default {
       }
       if (pathname === "/api/models/feed/post" && method === "POST") {
         return await handlePostFeedItem(request, env);
+      }
+      if (pathname === "/api/models/activities" && method === "GET") {
+        return await handleGetActivities(request, env);
       }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
@@ -168,3 +172,4 @@ export default {
     }
   },
 };
+
