@@ -14,12 +14,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 20px 32px;
+    padding: 0 20px;
     margin: 0;
+    height: 100vh;
+    overflow: hidden;
   }
-  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
+  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; flex-shrink: 0; }
   nav img { height: 32px; width: auto; }
-  .card { max-width: 420px; width: 100%; }
+  .card { max-width: 420px; width: 100%; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .post-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-primary);
+    flex-shrink: 0;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+  }
+  .nav-item.active { color: var(--accent-gold); }
+  .nav-item svg { width: 22px; height: 22px; }
   h1 { font-size: 22px; margin-bottom: 6px; }
   p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
   #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 20px; }
@@ -100,21 +123,42 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="card">
-    <h1>Post a Story</h1>
-    <p class="sub">A free update visible to everyone on your Room for 24 hours — your best tool for daily engagement.</p>
-    <div id="whoami"></div>
+    <div class="post-scroll">
+      <h1>Post a Story</h1>
+      <p class="sub">A free update visible to everyone on your Room for 24 hours — your best tool for daily engagement.</p>
+      <div id="whoami"></div>
 
-    <div id="postForm">
-      <div class="file-drop" id="fileDrop">Tap to choose a photo or video</div>
-      <input type="file" id="mediaInput" accept="image/*,video/*">
+      <div id="postForm">
+        <div class="file-drop" id="fileDrop">Tap to choose a photo or video</div>
+        <input type="file" id="mediaInput" accept="image/*,video/*">
 
-      <label for="caption">Caption (optional)</label>
-      <input type="text" id="caption" placeholder="What's happening today?" maxlength="200">
+        <label for="caption">Caption (optional)</label>
+        <input type="text" id="caption" placeholder="What's happening today?" maxlength="200">
 
-      <button id="postBtn">Post Story</button>
+        <button id="postBtn">Post Story</button>
+      </div>
+
+      <div id="message"></div>
     </div>
 
-    <div id="message"></div>
+    <div class="nav-bar">
+      <a class="nav-item" id="feedNavLink" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Feed
+      </a>
+      <a class="nav-item" href="/inbox.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Message
+      </a>
+      <a class="nav-item active" href="/post-story.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
+        Update
+      </a>
+      <a class="nav-item" href="/model-profile.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        Profile
+      </a>
+    </div>
   </div>
 
   <script>
@@ -131,6 +175,7 @@
       postForm.style.display = 'none';
     } else {
       whoami.textContent = `Posting as: ${session.display_name} (@${session.username})`;
+      document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
     }
 
     fileDrop.addEventListener('click', () => mediaInput.click());
