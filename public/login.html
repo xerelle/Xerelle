@@ -101,12 +101,13 @@
           messageBox.className = 'error';
           messageBox.textContent = data.error || 'Something went wrong. Please try again.';
         } else {
-          // Store session so other pages (verify.html, dashboard, etc.)
-          // know who's logged in without asking again.
+          // Store session so other pages know who's logged in without
+          // asking again, then take her to her own Room — not verify.html,
+          // since that should only matter the first time, not every login.
           localStorage.setItem('xerelle_model_session', JSON.stringify(data));
           messageBox.className = 'success';
           messageBox.textContent = `Welcome back, ${data.display_name}! Redirecting...`;
-          setTimeout(() => { window.location.href = '/verify.html'; }, 1200);
+          setTimeout(() => { window.location.href = `/room.html?u=${encodeURIComponent(data.username)}`; }, 1200);
         }
       } catch (err) {
         messageBox.className = 'error';
