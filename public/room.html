@@ -18,6 +18,11 @@
     margin: 0;
     min-height: 100vh;
   }
+  body.self-view-mode {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
   nav { display: flex; justify-content: center; padding: 20px; max-width: 460px; width: 100%; }
   nav img { height: 32px; width: auto; }
   .card {
@@ -26,6 +31,23 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+  }
+  body.self-view-mode .card {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  body.self-view-mode #selfViewSections {
+    flex: 1;
+    overflow-y: auto;
+    display: block;
+  }
+  body.self-view-mode nav,
+  body.self-view-mode .self-view-header {
+    flex-shrink: 0;
+  }
+  body.self-view-mode .nav-bar {
+    flex-shrink: 0;
   }
 
   .top-section {
@@ -476,7 +498,10 @@
         if (isOwnPage) {
           // Self-view: no photo box anymore — this is now an activity
           // dashboard (recent Activity + Messages), not a mirror of the
-          // public profile page.
+          // public profile page. Also switches to a fixed, app-style
+          // layout so the nav bar stays pinned and only the middle
+          // content scrolls — the public view below doesn't need this.
+          document.body.classList.add('self-view-mode');
           document.getElementById('navBar').style.display = 'flex';
           document.getElementById('selfViewHeader').style.display = 'flex';
           document.getElementById('selfViewSections').style.display = 'block';
