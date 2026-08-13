@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Verification Review</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+  }
+  .card { max-width: 460px; width: 100%; }
+  h1 { font-size: 20px; margin-bottom: 20px; }
+
+  #keyGate { max-width: 400px; margin: 60px auto; text-align: center; }
+  #keyGate input {
+    width: 100%; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text-primary);
+    font-size: 15px; margin-bottom: 12px;
+  }
+  #keyGate button {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle);
+    font-weight: 600; padding: 14px; border-radius: 10px; border: none; font-size: 15px;
+  }
+  #keyError { color: var(--danger); font-size: 13px; margin-top: 10px; display: none; }
+
+  .review-card {
+    background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  }
+  .review-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .review-name { font-size: 16px; font-weight: 700; }
+  .review-username { color: var(--text-secondary); font-size: 13px; }
+  .match-badge {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px;
+    text-transform: uppercase;
+  }
+  .match-badge.match { background: var(--success-bg); color: var(--accent-green); }
+  .match-badge.partial_match { background: rgba(212,162,76,0.15); color: var(--accent-gold); }
+  .match-badge.mismatch { background: var(--danger-bg); color: var(--danger); }
+  .match-badge.not_checked { background: var(--bg-surface-alt); color: var(--text-secondary); }
+
+  .review-detail { font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; }
+  .review-detail b { color: var(--text-primary); }
+
+  .photo-row { display: flex; gap: 10px; margin: 14px 0; }
+  .photo-row img {
+    width: 50%; border-radius: 8px; border: 1px solid var(--border);
+    object-fit: cover; aspect-ratio: 1;
+  }
+
+  .action-row { display: flex; gap: 10px; margin-top: 12px; }
+  .btn-approve, .btn-reject {
+    flex: 1; padding: 12px; border-radius: 8px; border: none;
+    font-weight: 600; font-size: 14px; cursor: pointer;
+  }
+  .btn-approve { background: var(--accent-green); color: #fff; }
+  .btn-reject { background: var(--danger); color: #fff; }
+  .btn-approve:disabled, .btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #empty, #loading { text-align: center; color: var(--text-secondary); padding: 40px 20px; }
+</style>
+</head>
+<body>
+  <div id="keyGate">
+    <h1>Verification Review</h1>
+    <input type="password" id="adminKeyInput" placeholder="Enter admin key">
+    <button id="unlockBtn">Unlock</button>
+    <div id="keyError">Incorrect key.</div>
+  </div>
+
+  <div class="card" id="mainContent" style="display:none;">
+    <h1>Pending Verifications</h1>
+    <div id="loading">Loading...</div>
+    <div id="empty" style="display:none;">No pending verifications right now.</div>
+    <div id="reviewList"></div>
+  </div>
+
+  <script>
+    let adminKey = '';
+
+    document.getElementById('unlockBtn').addEventListener('click', async () => {
+      adminKey = document.getElementById('adminKeyInput').value.trim();
+      if (!adminKey) return;
+
+      try {
+        const res = await fetch(`/api/admin/verifications?admin_key=${encodeURIComponent(adminKey)}`);
+        if (!res.ok) {
+          document.getElementById('keyError').style.display = 'block';
+          return;
+        }
+        const data = await res.json();
+        document.getElementById('keyGate').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        renderList(data.pending || []);
+      } catch (err) {
+        document.getElementById('keyError').style.display = 'block';
+      }
+    });
+
+    function formatDate(unixSeconds) {
+      return new Date(unixSeconds * 1000).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function renderList(pending) {
+      document.getElementById('loading').style.display = 'none';
+      const list = document.getElementById('reviewList');
+
+      if (pending.length === 0) {
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+
+      pending.forEach((m) => {
+        const card = document.createElement('div');
+        card.className = 'review-card';
+        card.id = `review-${m.id}`;
+
+        const badgeLabel = {
+          match: 'Name Match',
+          partial_match: 'Partial Match',
+          mismatch: 'Mismatch',
+          not_checked: 'Not Checked',
+        }[m.name_match_status] || 'Not Checked';
+
+        card.innerHTML = `
+          <div class="review-top">
+            <div>
+              <div class="review-name">${m.display_name}${m.age ? `, ${m.age}` : ''}</div>
+              <div class="review-username">@${m.username} · ${m.phone}</div>
+            </div>
+            <div class="match-badge ${m.name_match_status || 'not_checked'}">${badgeLabel}</div>
+          </div>
+          <div class="review-detail"><b>Registered name:</b> ${m.display_name}</div>
+          <div class="review-detail"><b>ID extracted name:</b> ${m.id_extracted_name || '—'}</div>
+          <div class="review-detail"><b>Submitted:</b> ${formatDate(m.created_at)}</div>
+          <div class="photo-row">
+            <img src="/media/${m.id_document_url}" alt="ID document">
+            <img src="/media/${m.liveness_selfie_url}" alt="Selfie">
+          </div>
+          <div class="action-row">
+            <button class="btn-approve" onclick="decide('${m.id}', 'verified', this)">Approve</button>
+            <button class="btn-reject" onclick="decide('${m.id}', 'rejected', this)">Reject</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    window.decide = async function (modelId, decision, btn) {
+      const card = document.getElementById(`review-${modelId}`);
+      card.querySelectorAll('button').forEach((b) => (b.disabled = true));
+
+      try {
+        await fetch(`/api/admin/verifications/${modelId}?admin_key=${encodeURIComponent(adminKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision }),
+        });
+        card.style.opacity = '0.4';
+        card.querySelector('.action-row').innerHTML = `<div style="color:var(--text-secondary); font-size:13px;">Marked as ${decision}.</div>`;
+      } catch (err) {
+        card.querySelectorAll('button').forEach((b) => (b.disabled = false));
+      }
+    };
+  </script>
+  <script src="/theme-toggle.js"></script>
+</body>
+</html>
