@@ -12,6 +12,7 @@ import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
 import { handlePostFeedItem } from "./routes/models/feed-post.js";
 import { handleGetActivities } from "./routes/models/activities.js";
+import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
 import { handleUploadSubscriberAvatar } from "./routes/subscribers/avatar.js";
@@ -77,6 +78,13 @@ export default {
       }
       if (pathname === "/api/models/activities" && method === "GET") {
         return await handleGetActivities(request, env);
+      }
+      if (pathname === "/api/admin/verifications" && method === "GET") {
+        return await handleListPendingVerifications(request, env);
+      }
+      if (pathname.match(/^\/api\/admin\/verifications\/[\w-]+$/) && method === "POST") {
+        const modelId = pathname.split("/").pop();
+        return await handleReviewVerification(request, env, modelId);
       }
       if (pathname.match(/^\/api\/models\/[\w.-]+\/follow$/) && method === "POST") {
         const username = pathname.split("/")[3];
