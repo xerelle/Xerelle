@@ -440,14 +440,14 @@
           const initial = thread.model_display_name.trim().charAt(0).toUpperCase();
           const nameLabel = thread.model_age ? `${thread.model_display_name}, ${thread.model_age}` : thread.model_display_name;
           const avatarContent = thread.teaser_media_url
-            ? `<img src="${thread.teaser_media_url}" alt="">`
-            : initial;
+            ? `<img src="${window.xerelleEscapeHtml(thread.teaser_media_url)}" alt="">`
+            : window.xerelleEscapeHtml(initial);
 
           item.innerHTML = `
             <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
-              <div class="thread-name">${nameLabel}</div>
-              <div class="thread-preview">${prefix}${thread.last_message}</div>
+              <div class="thread-name">${window.xerelleEscapeHtml(nameLabel)}</div>
+              <div class="thread-preview">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
           `;
@@ -491,8 +491,8 @@
           const initial = story.model_display_name.trim().charAt(0).toUpperCase();
           const storyNameLabel = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
           item.innerHTML = `
-            <img class="story-avatar" src="${story.teaser_media_url || ''}" onerror="this.style.display='none'" alt="">
-            <div class="story-name">${storyNameLabel}</div>
+            <img class="story-avatar" src="${window.xerelleEscapeHtml(story.teaser_media_url || '')}" onerror="this.style.display='none'" alt="">
+            <div class="story-name">${window.xerelleEscapeHtml(storyNameLabel)}</div>
           `;
           item.addEventListener('click', () => openStory(story));
           storyRow.appendChild(item);
@@ -512,8 +512,8 @@
     function openStory(story) {
       storyNameTag.textContent = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
       storyMediaContainer.innerHTML = story.media_type === 'video'
-        ? `<video src="${story.media_url}" autoplay controls></video>`
-        : `<img src="${story.media_url}" alt="">`;
+        ? `<video src="${window.xerelleEscapeHtml(story.media_url)}" autoplay controls></video>`
+        : `<img src="${window.xerelleEscapeHtml(story.media_url)}" alt="">`;
 
       if (story.caption) {
         storyCaption.textContent = story.caption;
@@ -563,7 +563,7 @@
           item.href = notif.link || '#';
 
           item.innerHTML = `
-            <div class="notif-message">${notif.message}</div>
+            <div class="notif-message">${window.xerelleEscapeHtml(notif.message)}</div>
             <div class="notif-time">${formatTime(notif.created_at)}</div>
           `;
 
@@ -634,11 +634,11 @@
 
           const initial = model.display_name.trim().charAt(0).toUpperCase();
           const photoHtml = model.teaser_media_url
-            ? `<img class="discover-photo" src="${model.teaser_media_url}" alt="">`
-            : `<div class="discover-photo-fallback">${initial}</div>`;
+            ? `<img class="discover-photo" src="${window.xerelleEscapeHtml(model.teaser_media_url)}" alt="">`
+            : `<div class="discover-photo-fallback">${window.xerelleEscapeHtml(initial)}</div>`;
 
           const discoverNameLabel = model.age ? `${model.display_name}, ${model.age}` : model.display_name;
-          item.innerHTML = `${photoHtml}<div class="discover-name">${discoverNameLabel}</div>`;
+          item.innerHTML = `${photoHtml}<div class="discover-name">${window.xerelleEscapeHtml(discoverNameLabel)}</div>`;
           discoverRow.appendChild(item);
         });
 
@@ -660,4 +660,3 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
