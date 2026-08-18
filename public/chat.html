@@ -16,22 +16,21 @@
     justify-content: center;
     padding: 0;
     margin: 0;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
   }
   .card {
     max-width: 460px;
     width: 100%;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
   }
   .header {
     padding: 14px 20px;
     border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
     background: var(--bg-primary);
-    z-index: 2;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -70,6 +69,7 @@
     position: absolute;
     top: 56px;
     right: 20px;
+    z-index: 5;
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -196,6 +196,7 @@
     gap: 8px;
     padding: 14px 20px;
     border-top: 1px solid var(--border);
+    flex-shrink: 0;
   }
   .input-row input {
     flex: 1;
@@ -421,7 +422,7 @@
         const avatarCircle = document.getElementById('avatarCircle');
         const initial = profile.display_name.trim().charAt(0).toUpperCase();
         avatarCircle.innerHTML = profile.teaser_media_url
-          ? `<img src="${profile.teaser_media_url}" alt="">`
+          ? `<img src="${window.xerelleEscapeHtml(profile.teaser_media_url)}" alt="">`
           : initial;
         if (activeStory) {
           avatarCircle.classList.add('has-story');
@@ -502,8 +503,8 @@
       const storyCaption = document.getElementById('storyCaption');
 
       storyMediaContainer.innerHTML = activeStory.media_type === 'video'
-        ? `<video src="${activeStory.media_url}" autoplay controls></video>`
-        : `<img src="${activeStory.media_url}" alt="">`;
+        ? `<video src="${window.xerelleEscapeHtml(activeStory.media_url)}" autoplay controls></video>`
+        : `<img src="${window.xerelleEscapeHtml(activeStory.media_url)}" alt="">`;
 
       if (activeStory.caption) {
         storyCaption.textContent = activeStory.caption;
