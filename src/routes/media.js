@@ -1,16 +1,31 @@
-import { notFound } from "../lib/http.js";
+import { notFound, jsonResponse } from "../lib/http.js";
+import { getActorFromSession } from "./lib/actor.js";
 
-// Serves a file directly out of R2 by its storage key. This is what
-// turns an internal R2 key (e.g. "gallery/modelId/abc123") into an
-// actual working image URL a browser can load: /media/gallery/modelId/abc123
+// Serves a file directly out of R2 by its storage key. Most media
+// (gallery, Stories, Feed) is intentionally public — a Room's teaser
+// photo needs to load for anyone visiting the page, logged in or not.
 //
-// R2 buckets are private by default and don't expose a public URL on
-// their own — everything stored there (gallery photos, verification
-// documents, etc.) needs to go through a route like this to be
-// retrieved. Verification documents (ID/liveness) should NEVER be
-// served publicly this way — only gallery photos and other
-// intentionally-public media should use this route.
-export async function handleServeMedia(key, env) {
+// Verification documents are different: the "verification/{modelId}/..."
+// prefix is treated as private, and this now actually ENFORCES that —
+// only the model herself, or an admin with the correct key, can view
+// them. Previously this was only a comment, not real protection.
+export async function handleServeMedia(key, request, env) {
+  if (key.startsWith("verification/")) {
+    const pathModelId = key.split("/")[1];
+
+    const url = new URL(request.url);
+    const adminKey = url.searchParams.get("admin_key") || request.headers.get("X-Admin-Key");
+    const isAdmin = adminKey && adminKey === env.ADMIN_REVIEW_KEY;
+
+    if (!isAdmin) {
+      const actor = await getActorFromSession(request, env);
+      const isOwner = actor && actor.type === "model" && actor.id === pathModelId;
+      if (!isOwner) {
+        return jsonResponse({ error: "forbidden" }, 403);
+      }
+    }
+  }
+
   const object = await env.MEDIA.get(key);
   if (!object) {
     return notFound();
