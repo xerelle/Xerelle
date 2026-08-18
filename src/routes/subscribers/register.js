@@ -1,5 +1,7 @@
 import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/http.js";
 
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days — matches login.js exactly
+
 export async function handleSubscriberRegister(request, env) {
   const body = await request.json();
   const { username, display_name, phone, email, password } = body;
@@ -38,5 +40,21 @@ export async function handleSubscriberRegister(request, env) {
     .bind(id, username, display_name, phone, email ?? null, password_hash)
     .run();
 
-  return jsonResponse({ id, username });
+  // Create a real session immediately, matching login.js exactly — so
+  // she's already logged in right after registering, same fix applied
+  // to the model side.
+  const token = generateId();
+  await env.SESSIONS.put(
+    `subscriber_session:${token}`,
+    JSON.stringify({ subscriber_id: id }),
+    { expirationTtl: SESSION_TTL_SECONDS }
+  );
+
+  return jsonResponse({
+    token,
+    id,
+    username,
+    display_name,
+    phone,
+  });
 }
