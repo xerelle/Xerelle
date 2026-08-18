@@ -89,9 +89,7 @@
 
     async function loadNotifications() {
       if (!session) {
-        loading.style.display = 'none';
-        notfound.textContent = 'Log in first.';
-        notfound.style.display = 'block';
+        window.location.href = '/login.html';
         return;
       }
 
