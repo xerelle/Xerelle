@@ -1,4 +1,5 @@
 import { jsonResponse, badRequest } from "../../lib/http.js";
+import { getModelIdFromSession } from "./login.js";
 
 // Simple fuzzy name matching: normalizes both names (lowercase, strips
 // punctuation/extra spaces), then checks how many words from the shorter
@@ -51,10 +52,6 @@ async function extractNameFromId(idDocument, env) {
 
     const rawText = data.ParsedResults[0].ParsedText || "";
 
-    // Nigerian ID documents vary in layout, so this is a heuristic, not a
-    // guarantee: look for a line containing "NAME" as a label, and take
-    // whatever follows it. Falls back to the longest all-letters line on
-    // the document, which is often the name when no explicit label exists.
     const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
 
     const labeledLine = lines.find((l) => /name/i.test(l));
@@ -76,14 +73,24 @@ async function extractNameFromId(idDocument, env) {
 }
 
 export async function handleModelVerify(request, env) {
+  // The model_id used below is ALWAYS the one from the actual logged-in
+  // session — never trusted from the form. Previously the form's
+  // model_id was used directly, meaning anyone could submit documents
+  // under a DIFFERENT model's ID and corrupt or hijack her verification.
+  const sessionModelId = await getModelIdFromSession(request, env);
+  if (!sessionModelId) {
+    return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
+  }
+
   const formData = await request.formData();
-  const modelId = formData.get("model_id");
   const idDocument = formData.get("id_document");
   const livenessSelfie = formData.get("liveness_selfie");
 
-  if (!modelId || !idDocument || !livenessSelfie) {
-    return badRequest("model_id, id_document, and liveness_selfie are required");
+  if (!idDocument || !livenessSelfie) {
+    return badRequest("id_document and liveness_selfie are required");
   }
+
+  const modelId = sessionModelId;
 
   const idKey = `verification/${modelId}/id-document-${Date.now()}`;
   const selfieKey = `verification/${modelId}/liveness-${Date.now()}`;
