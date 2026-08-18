@@ -1,5 +1,6 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
+import { validateUpload } from "../../lib/validate-upload.js";
 
 const MAX_GALLERY_PHOTOS = 4;
 
@@ -28,8 +29,15 @@ export async function handleUploadGalleryPhoto(request, env) {
     return badRequest("photo is required");
   }
 
+  // Checks the actual file bytes, not just the claimed type — and
+  // enforces a real size limit, neither of which existed before.
+  const validation = await validateUpload(photo, { maxSizeMB: 10, category: "image" });
+  if (!validation.valid) {
+    return badRequest(validation.error);
+  }
+
   const key = `gallery/${modelId}/${generateId()}`;
-  await env.MEDIA.put(key, await photo.arrayBuffer(), {
+  await env.MEDIA.put(key, validation.buffer, {
     httpMetadata: { contentType: photo.type || "image/jpeg" },
   });
 
@@ -58,3 +66,4 @@ export async function getGalleryPhotoUrls(modelId, env) {
 
   return results.map((row) => row.media_url);
 }
+
