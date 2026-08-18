@@ -1,14 +1,24 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
+import { getSubscriberIdFromSession } from "../subscribers/login.js";
 
 const SUBSCRIPTION_PRICE_KOBO = 1000000;
 const MODEL_SHARE_RATE = 0.65;
 
 export async function handleCheckoutStart(request, env) {
-  const body = await request.json();
-  const { subscriber_id, model_id } = body;
+  // subscriber_id now comes ONLY from the real logged-in session, never
+  // from the request body — previously anyone could pay with their own
+  // money but have the resulting subscription attributed to a DIFFERENT
+  // subscriber's account of their choosing.
+  const subscriber_id = await getSubscriberIdFromSession(request, env);
+  if (!subscriber_id) {
+    return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
+  }
 
-  if (!subscriber_id || !model_id) {
-    return badRequest("subscriber_id and model_id are required");
+  const body = await request.json();
+  const { model_id } = body;
+
+  if (!model_id) {
+    return badRequest("model_id is required");
   }
 
   const model = await env.DB.prepare(
