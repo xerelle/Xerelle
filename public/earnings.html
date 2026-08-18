@@ -60,11 +60,6 @@
   .referral-amount { font-size: 13.5px; font-weight: 600; color: var(--accent-green); }
 
   .empty-note { font-size: 12.5px; color: var(--text-secondary); padding: 12px 0; }
-  .coming-soon-tag {
-    display: inline-block; font-size: 10.5px; color: var(--text-secondary);
-    background: var(--bg-surface); border: 1px solid var(--border);
-    padding: 2px 8px; border-radius: 8px; margin-left: 6px;
-  }
 </style>
 </head>
 <body>
@@ -100,9 +95,10 @@
 
       <div class="breakdown-row">
         <div>
-          <div class="breakdown-label">Milestone bonus <span class="coming-soon-tag">Coming soon</span></div>
+          <div class="breakdown-label">Milestone bonus</div>
+          <div class="breakdown-sub" id="milestoneProgress">0/10 subscribers</div>
         </div>
-        <div class="breakdown-amount">—</div>
+        <div class="breakdown-amount" id="milestoneTotal">₦0</div>
       </div>
 
       <div class="section-title">Referral history</div>
@@ -136,6 +132,11 @@
         document.getElementById('referralTotal').textContent = `₦${refNaira}`;
         document.getElementById('subscriberCountLabel').textContent =
           `${data.active_subscriber_count || 0} active subscriber${data.active_subscriber_count === 1 ? '' : 's'}`;
+
+        const milestoneNaira = Math.floor((data.milestone_bonus_kobo || 0) / 100).toLocaleString();
+        document.getElementById('milestoneTotal').textContent = `₦${milestoneNaira}`;
+        document.getElementById('milestoneProgress').textContent =
+          `${data.milestone_progress_count || 0}/${data.milestone_cap || 10} subscribers${data.milestone_complete ? ' — complete!' : ''}`;
 
         const list = document.getElementById('referralList');
         if (!data.referral_entries || data.referral_entries.length === 0) {
