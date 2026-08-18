@@ -154,7 +154,10 @@
     }
 
     async function loadEarnings() {
-      if (!session) return;
+      if (!session) {
+        window.location.href = '/login.html';
+        return;
+      }
       document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
 
       try {
@@ -206,4 +209,3 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
