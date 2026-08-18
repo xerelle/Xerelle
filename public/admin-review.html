@@ -134,21 +134,21 @@
         card.innerHTML = `
           <div class="review-top">
             <div>
-              <div class="review-name">${m.display_name}${m.age ? `, ${m.age}` : ''}</div>
-              <div class="review-username">@${m.username} · ${m.phone}</div>
+              <div class="review-name">${window.xerelleEscapeHtml(m.display_name)}${m.age ? `, ${m.age}` : ''}</div>
+              <div class="review-username">@${window.xerelleEscapeHtml(m.username)} · ${window.xerelleEscapeHtml(m.phone)}</div>
             </div>
             <div class="match-badge ${m.name_match_status || 'not_checked'}">${badgeLabel}</div>
           </div>
-          <div class="review-detail"><b>Registered name:</b> ${m.display_name}</div>
-          <div class="review-detail"><b>ID extracted name:</b> ${m.id_extracted_name || '—'}</div>
+          <div class="review-detail"><b>Registered name:</b> ${window.xerelleEscapeHtml(m.display_name)}</div>
+          <div class="review-detail"><b>ID extracted name:</b> ${window.xerelleEscapeHtml(m.id_extracted_name || '—')}</div>
           <div class="review-detail"><b>Submitted:</b> ${formatDate(m.created_at)}</div>
           <div class="photo-row">
-            <img src="/media/${m.id_document_url}" alt="ID document">
-            <img src="/media/${m.liveness_selfie_url}" alt="Selfie">
+            <img src="/media/${window.xerelleEscapeHtml(m.id_document_url)}" alt="ID document">
+            <img src="/media/${window.xerelleEscapeHtml(m.liveness_selfie_url)}" alt="Selfie">
           </div>
           <div class="action-row">
-            <button class="btn-approve" onclick="decide('${m.id}', 'verified', this)">Approve</button>
-            <button class="btn-reject" onclick="decide('${m.id}', 'rejected', this)">Reject</button>
+            <button class="btn-approve" onclick="decide('${window.xerelleEscapeHtml(m.id)}', 'verified', this)">Approve</button>
+            <button class="btn-reject" onclick="decide('${window.xerelleEscapeHtml(m.id)}', 'rejected', this)">Reject</button>
           </div>
         `;
         list.appendChild(card);
