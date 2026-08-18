@@ -148,13 +148,13 @@
           const initial = model.display_name.trim().charAt(0).toUpperCase();
           const nameLabel = model.age ? `${model.display_name}, ${model.age}` : model.display_name;
           const photoHtml = model.teaser_media_url
-            ? `<img class="model-photo" src="${model.teaser_media_url}" alt="">`
-            : `<div class="model-photo-fallback">${initial}</div>`;
+            ? `<img class="model-photo" src="${window.xerelleEscapeHtml(model.teaser_media_url)}" alt="">`
+            : `<div class="model-photo-fallback">${window.xerelleEscapeHtml(initial)}</div>`;
 
           card.innerHTML = `
             ${photoHtml}
             <div class="model-info">
-              <div class="model-name">${nameLabel}</div>
+              <div class="model-name">${window.xerelleEscapeHtml(nameLabel)}</div>
             </div>
           `;
           modelGrid.appendChild(card);
@@ -171,4 +171,3 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
-
