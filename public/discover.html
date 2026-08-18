@@ -108,9 +108,7 @@
 
     async function loadDiscover() {
       if (!session) {
-        loading.style.display = 'none';
-        locked.style.display = 'block';
-        locked.querySelector('.locked-box').textContent = 'Log in first.';
+        window.location.href = '/subscriber-login.html';
         return;
       }
 
