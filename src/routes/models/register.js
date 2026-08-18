@@ -3,6 +3,18 @@ import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/ht
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days — matches login.js exactly
 
 export async function handleModelRegister(request, env) {
+  // Rate limited by IP — prevents automated spam-account creation.
+  // Stricter than login (5/60s), since legitimate registration only
+  // happens once per real person.
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const { success } = await env.REGISTER_LIMITER.limit({ key: ip });
+  if (!success) {
+    return jsonResponse(
+      { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
+      429
+    );
+  }
+
   const body = await request.json();
   const { username, display_name, phone, email, password, age } = body;
 
@@ -65,4 +77,3 @@ export async function handleModelRegister(request, env) {
     next_step: "verification",
   });
 }
-
