@@ -5,6 +5,18 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 // Logs a subscriber in with EITHER her username OR her phone number,
 // plus her password. Same pattern as model login.
 export async function handleSubscriberLogin(request, env) {
+  // Rate limited by IP — same protection as model login, using the
+  // SAME shared LOGIN_LIMITER (one limiter covers both login endpoints,
+  // since they're the same kind of risk).
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const { success } = await env.LOGIN_LIMITER.limit({ key: ip });
+  if (!success) {
+    return jsonResponse(
+      { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
+      429
+    );
+  }
+
   const body = await request.json();
   const { identifier, password } = body;
 
@@ -59,4 +71,3 @@ export async function getSubscriberIdFromSession(request, env) {
     return null;
   }
 }
-
