@@ -1,11 +1,12 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
+import { validateUpload } from "../../lib/validate-upload.js";
 
 const FEED_POST_LIFETIME_SECONDS = 30 * 24 * 60 * 60; // 30 days
 
 // Posts a new Feed item for the logged-in model. Unlike Gallery (public
 // preview) or Stories (24hr, public), Feed is subscriber-only content —
-// gated entirely at read time (see feed.js) — and lives for 30 days,
+// gated entirely at read time (see feed-get.js) — and lives for 30 days,
 // roughly matching one billing cycle, rather than being permanent.
 export async function handlePostFeedItem(request, env) {
   const modelId = await getModelIdFromSession(request, env);
@@ -21,9 +22,16 @@ export async function handlePostFeedItem(request, env) {
     return badRequest("media is required");
   }
 
-  const mediaType = media.type && media.type.startsWith("video") ? "video" : "photo";
+  const validation = await validateUpload(media, { maxSizeMB: 50, category: "media" });
+  if (!validation.valid) {
+    return badRequest(validation.error);
+  }
+
+  const mediaType = validation.detectedType === "mp4" || validation.detectedType === "webm"
+    ? "video"
+    : "photo";
   const key = `feed/${modelId}/${generateId()}`;
-  await env.MEDIA.put(key, await media.arrayBuffer(), {
+  await env.MEDIA.put(key, validation.buffer, {
     httpMetadata: { contentType: media.type || "image/jpeg" },
   });
 
