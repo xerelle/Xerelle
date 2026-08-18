@@ -1,16 +1,17 @@
 import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/http.js";
+import { checkRateLimit } from "../../lib/rate-limit.js";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
 // Logs a subscriber in with EITHER her username OR her phone number,
 // plus her password. Same pattern as model login.
 export async function handleSubscriberLogin(request, env) {
-  // Rate limited by IP — same protection as model login, using the
-  // SAME shared LOGIN_LIMITER (one limiter covers both login endpoints,
-  // since they're the same kind of risk).
+  // Rate limited by IP — same protection as model login, using its own
+  // separate action key so a subscriber login flood and a model login
+  // flood are tracked independently.
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const { success } = await env.LOGIN_LIMITER.limit({ key: ip });
-  if (!success) {
+  const allowed = await checkRateLimit(env, "subscriber_login", ip, 10, 60);
+  if (!allowed) {
     return jsonResponse(
       { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
       429
