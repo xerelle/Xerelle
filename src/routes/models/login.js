@@ -1,4 +1,5 @@
 import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/http.js";
+import { checkRateLimit } from "../../lib/rate-limit.js";
 
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 
@@ -8,12 +9,12 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 // (e.g. localStorage) and send it back as an "Authorization: Bearer
 // <token>" header on future requests.
 export async function handleModelLogin(request, env) {
-  // Rate limited by IP, before touching the database at all — stops
-  // rapid password-guessing against any account. 10 attempts/60s is
-  // generous for genuine typos, tight enough to block real brute-forcing.
+  // Rate limited by IP, before touching passwords at all — stops rapid
+  // password-guessing against any account. 10 attempts/60s is generous
+  // for genuine typos, tight enough to block real brute-forcing.
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-  const { success } = await env.LOGIN_LIMITER.limit({ key: ip });
-  if (!success) {
+  const allowed = await checkRateLimit(env, "model_login", ip, 10, 60);
+  if (!allowed) {
     return jsonResponse(
       { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
       429
