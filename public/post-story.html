@@ -171,8 +171,7 @@
     const messageBox = document.getElementById('message');
 
     if (!session) {
-      whoami.innerHTML = 'You need to <a href="/login.html">log in</a> first.';
-      postForm.style.display = 'none';
+      window.location.href = '/login.html';
     } else {
       whoami.textContent = `Posting as: ${session.display_name} (@${session.username})`;
       document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
