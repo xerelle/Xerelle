@@ -12,6 +12,7 @@ import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
 import { handlePostFeedItem } from "./routes/models/feed-post.js";
 import { handleGetActivities } from "./routes/models/activities.js";
+import { handleGetEarnings } from "./routes/models/earnings.js";
 import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
 import { handleSubscriberRegister } from "./routes/subscribers/register.js";
 import { handleSubscriberLogin } from "./routes/subscribers/login.js";
@@ -78,6 +79,9 @@ export default {
       }
       if (pathname === "/api/models/activities" && method === "GET") {
         return await handleGetActivities(request, env);
+      }
+      if (pathname === "/api/models/earnings" && method === "GET") {
+        return await handleGetEarnings(request, env);
       }
       if (pathname === "/api/admin/verifications" && method === "GET") {
         return await handleListPendingVerifications(request, env);
