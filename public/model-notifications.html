@@ -120,7 +120,7 @@
           item.href = notif.link || '#';
 
           item.innerHTML = `
-            <div class="notif-message">${notif.message}</div>
+            <div class="notif-message">${window.xerelleEscapeHtml(notif.message)}</div>
             <div class="notif-time">${formatTime(notif.created_at)}</div>
           `;
 
