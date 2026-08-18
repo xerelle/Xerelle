@@ -287,12 +287,12 @@
     }
 
     async function init() {
-      if (!subscriberId) {
-        showNotFound('No conversation specified.');
+      if (!session) {
+        window.location.href = '/login.html';
         return;
       }
-      if (!session) {
-        showNotFound('Log in first.');
+      if (!subscriberId) {
+        showNotFound('No conversation specified.');
         return;
       }
 
