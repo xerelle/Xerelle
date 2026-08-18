@@ -170,8 +170,7 @@
     let selectedFile = null;
 
     if (!session) {
-      whoami.innerHTML = 'You need to <a href="/login.html" style="color:var(--accent-gold);">log in</a> first.';
-      formArea.style.display = 'none';
+      window.location.href = '/login.html';
     } else {
       whoami.textContent = `${session.display_name} (@${session.username})`;
       document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
