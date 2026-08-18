@@ -370,6 +370,9 @@
 
   <script>
     const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    if (!session) {
+      window.location.href = '/subscriber-login.html';
+    }
 
     const tabs = {
       chats: { el: document.getElementById('chatsTab'), nav: document.getElementById('menuChats') },
