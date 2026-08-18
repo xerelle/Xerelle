@@ -36,4 +36,17 @@
       window.location.href = '/index.html';
     }
   };
+
+  // Escapes user-generated text before it's inserted into the page via
+  // innerHTML/template literals — e.g. a display name, message body, or
+  // caption. Without this, someone could set their name to something
+  // like <img onerror="..."> and have it execute in another user's
+  // browser when displayed (stored XSS). ALWAYS wrap any user-supplied
+  // text with this before putting it inside innerHTML anywhere in the app.
+  window.xerelleEscapeHtml = function (str) {
+    if (str === null || str === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  };
 })();
