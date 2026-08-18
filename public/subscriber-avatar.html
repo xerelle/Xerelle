@@ -104,8 +104,7 @@
     const messageBox = document.getElementById('message');
 
     if (!session) {
-      whoami.innerHTML = 'You need to <a href="/subscriber-login.html">log in</a> first.';
-      uploadArea.style.display = 'none';
+      window.location.href = '/subscriber-login.html';
     } else {
       whoami.textContent = `${session.display_name} (@${session.username})`;
     }
