@@ -134,11 +134,11 @@
 
           item.innerHTML = `
             <div class="block-left">
-              <div class="block-name">${label}</div>
-              <div class="block-reason">"${block.reason}"</div>
+              <div class="block-name">${window.xerelleEscapeHtml(label)}</div>
+              <div class="block-reason">"${window.xerelleEscapeHtml(block.reason)}"</div>
               <div class="block-date">Blocked ${formatDate(block.created_at)}</div>
             </div>
-            <button class="unblock-btn" data-id="${block.id}">Unblock</button>
+            <button class="unblock-btn" data-id="${window.xerelleEscapeHtml(block.id)}">Unblock</button>
           `;
           blockList.appendChild(item);
         });
