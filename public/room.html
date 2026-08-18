@@ -604,8 +604,8 @@
             : '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>';
 
           item.innerHTML = `
-            <div class="activity-avatar">${initial}</div>
-            <div class="activity-text"><b>${a.subscriber_name}</b> ${verb}</div>
+            <div class="activity-avatar">${window.xerelleEscapeHtml(initial)}</div>
+            <div class="activity-text"><b>${window.xerelleEscapeHtml(a.subscriber_name)}</b> ${verb}</div>
             <div class="activity-icon ${iconClass}">${icon}</div>
           `;
           list.appendChild(item);
@@ -651,14 +651,14 @@
           const initial = (t.subscriber_label || '?').trim().charAt(0).toUpperCase();
           const preview = t.last_sender_type === 'model' ? `You: ${t.last_message}` : t.last_message;
           const avatarHtml = t.avatar_url
-            ? `<img src="${t.avatar_url}" alt="">`
-            : initial;
+            ? `<img src="${window.xerelleEscapeHtml(t.avatar_url)}" alt="">`
+            : window.xerelleEscapeHtml(initial);
 
           item.innerHTML = `
             <div class="msg-avatar">${avatarHtml}</div>
             <div class="msg-info">
-              <div class="msg-name">${t.subscriber_label}</div>
-              <div class="msg-preview">${preview || ''}</div>
+              <div class="msg-name">${window.xerelleEscapeHtml(t.subscriber_label)}</div>
+              <div class="msg-preview">${window.xerelleEscapeHtml(preview || '')}</div>
             </div>
             <div class="msg-time">${timeAgo(t.last_sent_at)}</div>
           `;
