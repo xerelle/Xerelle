@@ -92,7 +92,9 @@
       if (!adminKey) return;
 
       try {
-        const res = await fetch(`/api/admin/verifications?admin_key=${encodeURIComponent(adminKey)}`);
+        const res = await fetch('/api/admin/verifications', {
+          headers: { 'X-Admin-Key': adminKey },
+        });
         if (!res.ok) {
           document.getElementById('keyError').style.display = 'block';
           return;
@@ -160,9 +162,9 @@
       card.querySelectorAll('button').forEach((b) => (b.disabled = true));
 
       try {
-        await fetch(`/api/admin/verifications/${modelId}?admin_key=${encodeURIComponent(adminKey)}`, {
+        await fetch(`/api/admin/verifications/${modelId}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Key': adminKey },
           body: JSON.stringify({ decision }),
         });
         card.style.opacity = '0.4';
