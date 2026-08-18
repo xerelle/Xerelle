@@ -1,13 +1,40 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { isBlocked } from "../blocks.js";
 import { createNotification } from "../lib/notifications.js";
+import { getActorFromSession } from "../lib/actor.js";
 
 export async function handleSendMessage(request, env) {
-  const body = await request.json();
-  const { sender_type, subscriber_id, model_id, message_body } = body;
+  // Who is ACTUALLY sending this — derived from their real session token,
+  // never trusted from the request body. sender_type and the "from" ID
+  // are both taken from this, not from whatever the client claims.
+  const actor = await getActorFromSession(request, env);
+  if (!actor) {
+    return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
+  }
 
-  if (!sender_type || !subscriber_id || !model_id || !message_body) {
-    return badRequest("sender_type, subscriber_id, model_id, and message_body are required");
+  const body = await request.json();
+  const { subscriber_id, model_id, message_body } = body;
+
+  if (!subscriber_id || !model_id || !message_body) {
+    return badRequest("subscriber_id, model_id, and message_body are required");
+  }
+
+  // The actor must actually BE one of the two people in this
+  // conversation — a subscriber can only send as herself, a model only
+  // as herself. This is the check that was missing entirely before.
+  let sender_type;
+  if (actor.type === "subscriber") {
+    if (actor.id !== subscriber_id) {
+      return jsonResponse({ error: "forbidden", message: "You can only send messages as yourself." }, 403);
+    }
+    sender_type = "subscriber";
+  } else if (actor.type === "model") {
+    if (actor.id !== model_id) {
+      return jsonResponse({ error: "forbidden", message: "You can only send messages as yourself." }, 403);
+    }
+    sender_type = "model";
+  } else {
+    return jsonResponse({ error: "forbidden" }, 403);
   }
 
   // If either side has blocked the other, messaging is prevented both
@@ -106,7 +133,23 @@ export async function handleSendMessage(request, env) {
   return jsonResponse({ id, sent_at: Math.floor(Date.now() / 1000) });
 }
 
-export async function handleGetMessages(subscriberId, modelId, env) {
+// Now requires the request itself (not just the two IDs), so we can
+// verify the person asking is actually part of this conversation —
+// previously this had NO authentication at all.
+export async function handleGetMessages(request, subscriberId, modelId, env) {
+  const actor = await getActorFromSession(request, env);
+  if (!actor) {
+    return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
+  }
+
+  const isPartOfConversation =
+    (actor.type === "subscriber" && actor.id === subscriberId) ||
+    (actor.type === "model" && actor.id === modelId);
+
+  if (!isPartOfConversation) {
+    return jsonResponse({ error: "forbidden", message: "This isn't your conversation." }, 403);
+  }
+
   const { results } = await env.DB.prepare(
     `SELECT id, sender_type, body, sent_at FROM messages
      WHERE subscriber_id = ? AND model_id = ?
@@ -117,4 +160,3 @@ export async function handleGetMessages(subscriberId, modelId, env) {
 
   return jsonResponse({ messages: results });
 }
-
