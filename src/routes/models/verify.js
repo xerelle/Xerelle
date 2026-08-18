@@ -1,5 +1,6 @@
 import { jsonResponse, badRequest } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
+import { validateUpload } from "../../lib/validate-upload.js";
 
 // Simple fuzzy name matching: normalizes both names (lowercase, strips
 // punctuation/extra spaces), then checks how many words from the shorter
@@ -90,13 +91,24 @@ export async function handleModelVerify(request, env) {
     return badRequest("id_document and liveness_selfie are required");
   }
 
+  // Both must genuinely be photos — checked by actual file bytes, not
+  // just trusting the browser's claimed file type.
+  const idValidation = await validateUpload(idDocument, { maxSizeMB: 10, category: "image" });
+  if (!idValidation.valid) {
+    return badRequest(`ID document: ${idValidation.error}`);
+  }
+  const selfieValidation = await validateUpload(livenessSelfie, { maxSizeMB: 10, category: "image" });
+  if (!selfieValidation.valid) {
+    return badRequest(`Selfie: ${selfieValidation.error}`);
+  }
+
   const modelId = sessionModelId;
 
   const idKey = `verification/${modelId}/id-document-${Date.now()}`;
   const selfieKey = `verification/${modelId}/liveness-${Date.now()}`;
 
-  await env.MEDIA.put(idKey, await idDocument.arrayBuffer());
-  await env.MEDIA.put(selfieKey, await livenessSelfie.arrayBuffer());
+  await env.MEDIA.put(idKey, idValidation.buffer);
+  await env.MEDIA.put(selfieKey, selfieValidation.buffer);
 
   // OCR + name cross-check — best-effort, never blocks submission if it fails.
   let idExtractedName = null;
