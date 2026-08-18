@@ -170,7 +170,7 @@ export default {
       }
       if (pathname.match(/^\/api\/messages\/[\w-]+\/[\w-]+$/) && method === "GET") {
         const [, , , subscriberId, modelId] = pathname.split("/");
-        return await handleGetMessages(subscriberId, modelId, env);
+        return await handleGetMessages(request, subscriberId, modelId, env);
       }
       if (pathname.startsWith("/media/") && method === "GET") {
         const key = pathname.replace("/media/", "");
