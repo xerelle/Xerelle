@@ -281,16 +281,16 @@
         el.dataset.postId = post.id;
 
         const mediaHtml = post.media_type === 'video'
-          ? `<video src="${post.media_url}" loop muted playsinline></video><button class="mute-btn" onclick="toggleMute(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>`
-          : `<img src="${post.media_url}" alt="">`;
+          ? `<video src="${window.xerelleEscapeHtml(post.media_url)}" loop muted playsinline></video><button class="mute-btn" onclick="toggleMute(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>`
+          : `<img src="${window.xerelleEscapeHtml(post.media_url)}" alt="">`;
 
         el.innerHTML = `
           ${mediaHtml}
           <div class="post-overlay"></div>
           <div class="post-content">
             <div class="post-info">
-              <div class="post-name">${modelName}</div>
-              <div class="post-caption">${post.caption || ''}</div>
+              <div class="post-name">${window.xerelleEscapeHtml(modelName)}</div>
+              <div class="post-caption">${window.xerelleEscapeHtml(post.caption || '')}</div>
             </div>
             <div class="post-actions">
               <button class="action-btn ${post.liked_by_me ? 'liked' : ''}" ${isModelViewer ? '' : `onclick="toggleLike('${post.id}', this)"`}>
@@ -378,7 +378,7 @@
           const item = document.createElement('div');
           item.className = 'comment-item';
           const badge = c.author_type === 'model' ? ' <span style="color:#D4A24C; font-size:10.5px; border:1px solid #D4A24C; border-radius:8px; padding:1px 6px; margin-left:4px;">Model</span>' : '';
-          item.innerHTML = `<div class="comment-author">${c.author_name}${badge}</div><div class="comment-body">${c.body}</div>`;
+          item.innerHTML = `<div class="comment-author">${window.xerelleEscapeHtml(c.author_name)}${badge}</div><div class="comment-body">${window.xerelleEscapeHtml(c.body)}</div>`;
           list.appendChild(item);
         });
       } catch (err) {
