@@ -174,7 +174,7 @@ export default {
       }
       if (pathname.startsWith("/media/") && method === "GET") {
         const key = pathname.replace("/media/", "");
-        return await handleServeMedia(key, env);
+        return await handleServeMedia(key, request, env);
       }
 
       return env.ASSETS.fetch(request);
