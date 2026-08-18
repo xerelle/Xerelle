@@ -1,5 +1,7 @@
 import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/http.js";
 
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days — matches login.js exactly
+
 export async function handleModelRegister(request, env) {
   const body = await request.json();
   const { username, display_name, phone, email, password, age } = body;
@@ -43,10 +45,24 @@ export async function handleModelRegister(request, env) {
     .bind(id, username, display_name, phone, email ?? null, password_hash, ageNumber)
     .run();
 
+  // Create a real session immediately, exactly the same way login.js
+  // does — so she's already logged in by the time she reaches the
+  // verification step, rather than needing to log in separately right
+  // after registering.
+  const token = generateId();
+  await env.SESSIONS.put(
+    `model_session:${token}`,
+    JSON.stringify({ model_id: id }),
+    { expirationTtl: SESSION_TTL_SECONDS }
+  );
+
   return jsonResponse({
+    token,
     id,
     username,
+    display_name,
     verification_status: "pending",
     next_step: "verification",
   });
 }
+
