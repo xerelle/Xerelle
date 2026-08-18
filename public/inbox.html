@@ -163,9 +163,7 @@
 
     async function loadInbox() {
       if (!session) {
-        loading.style.display = 'none';
-        notfound.textContent = 'Log in first.';
-        notfound.style.display = 'block';
+        window.location.href = '/login.html';
         return;
       }
       whoami.textContent = `${session.display_name} (@${session.username})`;
