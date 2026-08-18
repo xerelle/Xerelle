@@ -393,12 +393,12 @@
     }
 
     async function init() {
-      if (!modelUsername) {
-        showNotFound('No model specified. Use a link like chat.html?u=hername');
+      if (!session) {
+        window.location.href = '/subscriber-login.html';
         return;
       }
-      if (!session) {
-        showNotFound('Log in as a subscriber first to chat.');
+      if (!modelUsername) {
+        showNotFound('No model specified. Use a link like chat.html?u=hername');
         return;
       }
 
