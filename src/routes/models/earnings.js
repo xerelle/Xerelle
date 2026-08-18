@@ -1,12 +1,16 @@
 import { jsonResponse } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
 
+const MILESTONE_BONUS_PER_SUBSCRIBER_KOBO = 100000; // ₦1,000
+const MILESTONE_CAP = 10;
+
 // Returns a model's earnings summary: subscription revenue, referral
-// bonuses (with a breakdown of who each came from), and a combined
-// total balance. This is read-only — no withdrawal logic here, since
-// there's no real Paystack balance to withdraw from yet. Powers both
-// the small balance chip on Room self-view and the full Earnings page,
-// so the two never show different numbers.
+// bonuses (with a breakdown of who each came from), milestone bonus
+// progress, and a combined total balance. This is read-only — no
+// withdrawal logic here, since there's no real Paystack balance to
+// withdraw from yet. Powers both the small balance chip on Room
+// self-view and the full Earnings page, so the two never show
+// different numbers.
 export async function handleGetEarnings(request, env) {
   const modelId = await getModelIdFromSession(request, env);
   if (!modelId) {
@@ -44,13 +48,30 @@ export async function handleGetEarnings(request, env) {
 
   const referralTotalKobo = referralEntries.reduce((sum, r) => sum + r.bonus_amount_kobo, 0);
 
+  // Milestone bonus: ₦1,000 for each of her first 10 distinct
+  // subscribers ever gained — counts everyone who has EVER subscribed,
+  // not just currently-active ones, since cancelling later shouldn't
+  // erase progress already earned. Accrues from the very first
+  // subscriber; the cap just stops it growing past 10.
+  const distinctSubs = await env.DB.prepare(
+    "SELECT COUNT(DISTINCT subscriber_id) as count FROM subscriptions WHERE model_id = ?"
+  )
+    .bind(modelId)
+    .first();
+  const milestoneCount = Math.min(distinctSubs.count, MILESTONE_CAP);
+  const milestoneBonusKobo = milestoneCount * MILESTONE_BONUS_PER_SUBSCRIBER_KOBO;
+  const milestoneComplete = distinctSubs.count >= MILESTONE_CAP;
+
   return jsonResponse({
-    total_balance_kobo: subscriptionRevenueKobo + referralTotalKobo,
+    total_balance_kobo: subscriptionRevenueKobo + referralTotalKobo + milestoneBonusKobo,
     subscription_revenue_kobo: subscriptionRevenueKobo,
     active_subscriber_count: activeSubs.count,
     referral_total_kobo: referralTotalKobo,
     referral_entries: referralEntries,
-    milestone_bonus_status: "coming_soon",
+    milestone_bonus_kobo: milestoneBonusKobo,
+    milestone_progress_count: milestoneCount,
+    milestone_cap: MILESTONE_CAP,
+    milestone_complete: milestoneComplete,
     withdrawal_status: "coming_soon",
   });
 }
