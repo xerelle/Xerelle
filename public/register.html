@@ -158,9 +158,11 @@
           messageBox.className = 'error';
           messageBox.textContent = data.error || 'Something went wrong. Please try again.';
         } else {
+          localStorage.setItem('xerelle_model_session', JSON.stringify(data));
           messageBox.className = 'success';
-          messageBox.innerHTML = `Welcome, @${data.username}! Account created. <a href="/login.html" style="color:var(--accent-green);">Log in</a> to continue to verification.`;
+          messageBox.textContent = `Welcome, @${data.username}! Redirecting to verification...`;
           form.reset();
+          setTimeout(() => { window.location.href = '/verify.html'; }, 1200);
         }
       } catch (err) {
         messageBox.className = 'error';
