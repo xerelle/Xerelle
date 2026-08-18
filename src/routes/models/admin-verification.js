@@ -5,12 +5,12 @@ import { jsonResponse, badRequest } from "../../lib/http.js";
 // clean versus which need closer attention — this is a decision-support
 // list, not an automatic approval mechanism.
 //
-// Protected by a simple shared admin key (via query param or header),
-// since there's no full admin-user system yet — same pattern as a
-// single-operator review workflow. NOT meant for public/model access.
+// Protected by a simple shared admin key, sent via the X-Admin-Key
+// header ONLY — never accepted via URL query string, since a URL with a
+// secret in it can end up saved in browser history, server logs, or
+// accidentally shared/screenshotted.
 export async function handleListPendingVerifications(request, env) {
-  const url = new URL(request.url);
-  const adminKey = url.searchParams.get("admin_key") || request.headers.get("X-Admin-Key");
+  const adminKey = request.headers.get("X-Admin-Key");
 
   if (!adminKey || adminKey !== env.ADMIN_REVIEW_KEY) {
     return jsonResponse({ error: "unauthorized" }, 401);
@@ -32,8 +32,7 @@ export async function handleListPendingVerifications(request, env) {
 
 // Approves or rejects a model's verification.
 export async function handleReviewVerification(request, env, modelId) {
-  const url = new URL(request.url);
-  const adminKey = url.searchParams.get("admin_key") || request.headers.get("X-Admin-Key");
+  const adminKey = request.headers.get("X-Admin-Key");
 
   if (!adminKey || adminKey !== env.ADMIN_REVIEW_KEY) {
     return jsonResponse({ error: "unauthorized" }, 401);
