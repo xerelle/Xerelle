@@ -243,8 +243,23 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
+    gap: 12px;
     padding: 4px 4px 16px;
   }
+  .balance-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 12px 6px 10px;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  .balance-chip svg { width: 15px; height: 15px; color: var(--accent-gold); }
   .bell-link {
     position: relative;
     color: var(--text-primary);
@@ -357,6 +372,10 @@
     <div id="profileContent" style="display:none; flex-direction:column; flex:1;">
       <div id="selfViewScroll" style="display:none;">
         <div class="self-view-header" id="selfViewHeader">
+          <a class="balance-chip" href="/earnings.html" id="balanceChip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+            <span id="balanceChipAmount">₦0</span>
+          </a>
           <a class="bell-link" href="/model-notifications.html">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="bell-dot" id="bellDot"></span>
@@ -526,6 +545,7 @@
 
           loadActivities(modelSession);
           loadRecentMessages(modelSession);
+          loadBalance(modelSession);
 
           document.getElementById('bottomSection').style.display = 'none';
         } else {
@@ -591,6 +611,20 @@
       } catch (err) {
         empty.textContent = 'Could not load activity.';
         empty.style.display = 'block';
+      }
+    }
+
+    async function loadBalance(session) {
+      try {
+        const res = await fetch('/api/models/earnings', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+        const naira = Math.floor((data.total_balance_kobo || 0) / 100).toLocaleString();
+        document.getElementById('balanceChipAmount').textContent = `₦${naira}`;
+      } catch (err) {
+        // Balance chip silently stays at ₦0 if this fails — not worth
+        // showing an error state for a small header element.
       }
     }
 
