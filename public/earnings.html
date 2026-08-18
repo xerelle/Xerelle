@@ -188,7 +188,7 @@
             const amountNaira = Math.floor(r.bonus_amount_kobo / 100).toLocaleString();
             item.innerHTML = `
               <div>
-                <div class="referral-name">${r.referred_model_name}</div>
+                <div class="referral-name">${window.xerelleEscapeHtml(r.referred_model_name)}</div>
                 <div class="referral-time">${formatDate(r.created_at)}</div>
               </div>
               <div class="referral-amount">+₦${amountNaira}</div>
@@ -206,3 +206,4 @@
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
+
