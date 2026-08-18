@@ -1,5 +1,6 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { getSubscriberIdFromSession } from "./login.js";
+import { validateUpload } from "../../lib/validate-upload.js";
 
 // Uploads (or replaces) the logged-in subscriber's single avatar photo.
 // Unlike a model's gallery (multiple photos), a subscriber has just one
@@ -17,8 +18,13 @@ export async function handleUploadSubscriberAvatar(request, env) {
     return badRequest("photo is required");
   }
 
+  const validation = await validateUpload(photo, { maxSizeMB: 10, category: "image" });
+  if (!validation.valid) {
+    return badRequest(validation.error);
+  }
+
   const key = `avatars/subscribers/${subscriberId}/${generateId()}`;
-  await env.MEDIA.put(key, await photo.arrayBuffer(), {
+  await env.MEDIA.put(key, validation.buffer, {
     httpMetadata: { contentType: photo.type || "image/jpeg" },
   });
 
