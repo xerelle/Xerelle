@@ -8,6 +8,18 @@ const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 // (e.g. localStorage) and send it back as an "Authorization: Bearer
 // <token>" header on future requests.
 export async function handleModelLogin(request, env) {
+  // Rate limited by IP, before touching the database at all — stops
+  // rapid password-guessing against any account. 10 attempts/60s is
+  // generous for genuine typos, tight enough to block real brute-forcing.
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const { success } = await env.LOGIN_LIMITER.limit({ key: ip });
+  if (!success) {
+    return jsonResponse(
+      { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
+      429
+    );
+  }
+
   const body = await request.json();
   const { identifier, password } = body;
 
