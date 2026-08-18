@@ -3,6 +3,17 @@ import { jsonResponse, badRequest, generateId, hashPassword } from "../../lib/ht
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days — matches login.js exactly
 
 export async function handleSubscriberRegister(request, env) {
+  // Rate limited by IP, same as model registration — shares the same
+  // REGISTER_LIMITER since it's the same kind of risk.
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  const { success } = await env.REGISTER_LIMITER.limit({ key: ip });
+  if (!success) {
+    return jsonResponse(
+      { error: "rate_limited", message: "Too many attempts. Please wait a minute and try again." },
+      429
+    );
+  }
+
   const body = await request.json();
   const { username, display_name, phone, email, password } = body;
 
@@ -41,8 +52,7 @@ export async function handleSubscriberRegister(request, env) {
     .run();
 
   // Create a real session immediately, matching login.js exactly — so
-  // she's already logged in right after registering, same fix applied
-  // to the model side.
+  // she's already logged in right after registering.
   const token = generateId();
   await env.SESSIONS.put(
     `subscriber_session:${token}`,
