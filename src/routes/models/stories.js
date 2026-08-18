@@ -1,6 +1,7 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { getModelIdFromSession } from "./login.js";
 import { createNotification } from "../lib/notifications.js";
+import { validateUpload } from "../../lib/validate-upload.js";
 
 const STORY_LIFETIME_SECONDS = 60 * 60 * 24; // 24 hours
 
@@ -23,9 +24,18 @@ export async function handlePostStory(request, env) {
     return badRequest("media is required");
   }
 
-  const mediaType = media.type && media.type.startsWith("video") ? "video" : "photo";
+  // Stories allow photo OR video — checks actual file bytes and a real
+  // size limit (video allowed larger than a plain photo would be).
+  const validation = await validateUpload(media, { maxSizeMB: 50, category: "media" });
+  if (!validation.valid) {
+    return badRequest(validation.error);
+  }
+
+  const mediaType = validation.detectedType === "mp4" || validation.detectedType === "webm"
+    ? "video"
+    : "photo";
   const key = `stories/${modelId}/${generateId()}`;
-  await env.MEDIA.put(key, await media.arrayBuffer(), {
+  await env.MEDIA.put(key, validation.buffer, {
     httpMetadata: { contentType: media.type || "image/jpeg" },
   });
 
