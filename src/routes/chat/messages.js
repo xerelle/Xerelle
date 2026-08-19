@@ -2,11 +2,11 @@ import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { isBlocked } from "../blocks.js";
 import { createNotification } from "../lib/notifications.js";
 import { getActorFromSession } from "../lib/actor.js";
+import { recordStreakActivity } from "../lib/streaks.js";
+
+const MODEL_FREE_REPLY_LIMIT = 2; // initial reply + one follow-up nudge
 
 export async function handleSendMessage(request, env) {
-  // Who is ACTUALLY sending this — derived from their real session token,
-  // never trusted from the request body. sender_type and the "from" ID
-  // are both taken from this, not from whatever the client claims.
   const actor = await getActorFromSession(request, env);
   if (!actor) {
     return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
@@ -19,9 +19,6 @@ export async function handleSendMessage(request, env) {
     return badRequest("subscriber_id, model_id, and message_body are required");
   }
 
-  // The actor must actually BE one of the two people in this
-  // conversation — a subscriber can only send as herself, a model only
-  // as herself. This is the check that was missing entirely before.
   let sender_type;
   if (actor.type === "subscriber") {
     if (actor.id !== subscriber_id) {
@@ -37,9 +34,6 @@ export async function handleSendMessage(request, env) {
     return jsonResponse({ error: "forbidden" }, 403);
   }
 
-  // If either side has blocked the other, messaging is prevented both
-  // ways — checked before anything else, so a block always takes effect
-  // immediately regardless of subscription status.
   const blocked = await isBlocked("subscriber", subscriber_id, "model", model_id, env);
   if (blocked) {
     return jsonResponse(
@@ -48,15 +42,17 @@ export async function handleSendMessage(request, env) {
     );
   }
 
-  if (sender_type === "subscriber") {
-    const activeSub = await env.DB.prepare(
-      `SELECT id FROM subscriptions
-       WHERE subscriber_id = ? AND model_id = ? AND status = 'active'
-         AND current_period_end > unixepoch()`
-    )
-      .bind(subscriber_id, model_id)
-      .first();
+  const activeSub = await env.DB.prepare(
+    `SELECT id FROM subscriptions
+     WHERE subscriber_id = ? AND model_id = ? AND status = 'active'
+       AND current_period_end > unixepoch()`
+  )
+    .bind(subscriber_id, model_id)
+    .first();
 
+  let isFirstTrialMessage = false;
+
+  if (sender_type === "subscriber") {
     if (!activeSub) {
       const trialUsed = await env.DB.prepare(
         `SELECT id FROM trial_messages WHERE subscriber_id = ? AND model_id = ?`
@@ -71,11 +67,36 @@ export async function handleSendMessage(request, env) {
         );
       }
 
+      isFirstTrialMessage = true;
       await env.DB.prepare(
         `INSERT INTO trial_messages (id, subscriber_id, model_id) VALUES (?, ?, ?)`
       )
         .bind(generateId(), subscriber_id, model_id)
         .run();
+    }
+  }
+
+  // Without an active subscription, the model gets TWO free messages to
+  // this specific person — her initial reply (often the auto-reply)
+  // plus one follow-up nudge — before she's blocked from messaging
+  // further until a real subscription exists. Prevents unlimited free
+  // messaging (and the risk of sharing off-platform contact info)
+  // while still leaving room for a genuine second attempt to convert.
+  if (sender_type === "model" && !activeSub) {
+    const priorModelMessages = await env.DB.prepare(
+      `SELECT COUNT(*) as count FROM messages WHERE subscriber_id = ? AND model_id = ? AND sender_type = 'model'`
+    )
+      .bind(subscriber_id, model_id)
+      .first();
+
+    if (priorModelMessages.count >= MODEL_FREE_REPLY_LIMIT) {
+      return jsonResponse(
+        {
+          error: "subscription_required",
+          message: "You've used both your free messages to this person — she needs to subscribe before you can message her again.",
+        },
+        402
+      );
     }
   }
 
@@ -87,7 +108,37 @@ export async function handleSendMessage(request, env) {
     .bind(id, subscriber_id, model_id, sender_type, message_body)
     .run();
 
-  // Notify whichever side DIDN'T send this message.
+  try {
+    await recordStreakActivity(env, subscriber_id, model_id, sender_type);
+  } catch (err) {
+    console.error("Streak update failed:", err);
+  }
+
+  if (isFirstTrialMessage) {
+    try {
+      const model = await env.DB.prepare(
+        "SELECT auto_reply_message FROM models WHERE id = ?"
+      )
+        .bind(model_id)
+        .first();
+
+      if (model && model.auto_reply_message && model.auto_reply_message.trim()) {
+        await env.DB.prepare(
+          `INSERT INTO messages (id, subscriber_id, model_id, sender_type, body)
+           VALUES (?, ?, ?, 'model', ?)`
+        )
+          .bind(generateId(), subscriber_id, model_id, model.auto_reply_message.trim())
+          .run();
+
+        // Auto-reply counts as one of the model's two free messages —
+        // recorded for the streak same as any other message.
+        await recordStreakActivity(env, subscriber_id, model_id, "model");
+      }
+    } catch (err) {
+      console.error("Auto-reply failed:", err);
+    }
+  }
+
   if (sender_type === "model") {
     try {
       const model = await env.DB.prepare("SELECT username, display_name FROM models WHERE id = ?")
@@ -133,9 +184,6 @@ export async function handleSendMessage(request, env) {
   return jsonResponse({ id, sent_at: Math.floor(Date.now() / 1000) });
 }
 
-// Now requires the request itself (not just the two IDs), so we can
-// verify the person asking is actually part of this conversation —
-// previously this had NO authentication at all.
 export async function handleGetMessages(request, subscriberId, modelId, env) {
   const actor = await getActorFromSession(request, env);
   if (!actor) {
