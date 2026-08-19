@@ -67,6 +67,26 @@
     margin: 14px 0;
   }
 
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 0 24px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-primary);
+    margin-top: 32px;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+  }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-item.active { color: var(--accent-gold); }
   .save-btn {
     width: 100%;
     background: var(--accent-gold);
@@ -131,6 +151,25 @@
 
     <button class="save-btn" id="saveBtn">Save Auto-Reply</button>
     <div id="message"></div>
+
+    <div class="nav-bar">
+      <a class="nav-item" id="feedNavLink" href="#">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Feed
+      </a>
+      <a class="nav-item" href="/inbox.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Message
+      </a>
+      <a class="nav-item" href="/post-story.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
+        Update
+      </a>
+      <a class="nav-item active" href="/model-profile.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+        Profile
+      </a>
+    </div>
   </div>
 
   <script>
@@ -149,6 +188,7 @@
 
     async function loadCurrent() {
       document.getElementById('whoami').textContent = `${session.display_name} (@${session.username})`;
+      document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
       try {
         const res = await fetch('/api/models/auto-reply', {
           headers: { 'Authorization': `Bearer ${session.token}` },
