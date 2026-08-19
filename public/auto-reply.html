@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
+<title>Xerelle — Auto-Reply</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+  }
+  .card { max-width: 460px; width: 100%; padding: 64px 20px 40px; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  .sub { color: var(--text-secondary); font-size: 13px; margin-bottom: 24px; }
+
+  .intro {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  .intro b { color: var(--text-primary); }
+
+  textarea {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text-primary);
+    font-size: 14.5px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 120px;
+  }
+  .char-count { text-align: right; font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+  .hints-section { margin-top: 28px; }
+  .hints-title { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .hint-item {
+    display: flex; gap: 10px; padding: 10px 0;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 13px; color: var(--text-secondary); line-height: 1.5;
+  }
+  .hint-icon { color: var(--accent-gold); flex-shrink: 0; font-weight: 700; }
+  .hint-item b { color: var(--text-primary); }
+
+  .example-box {
+    background: var(--bg-surface-alt, var(--bg-surface));
+    border-left: 3px solid var(--accent-gold);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--text-primary);
+    font-style: italic;
+    margin: 14px 0;
+  }
+
+  .save-btn {
+    width: 100%;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    font-weight: 600;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 24px;
+  }
+  #message {
+    margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+    font-size: 13px; display: none; text-align: center;
+  }
+  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
+  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
+</style>
+</head>
+<body>
+  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:var(--bg-surface); border:1px solid var(--border); border-radius:50%; color:var(--text-primary); cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+
+  <div class="card">
+    <h1>Auto-Reply</h1>
+    <div class="sub" id="whoami"></div>
+
+    <div class="intro">
+      When someone messages you for the <b>very first time</b>, this reply gets sent back automatically — before you've had a chance to respond yourself. It's often the single biggest factor in whether she keeps talking or subscribes, so it's worth genuinely thinking through.
+    </div>
+
+    <div class="hints-section">
+      <div class="hints-title">What makes a good auto-reply</div>
+
+      <div class="hint-item">
+        <span class="hint-icon">•</span>
+        <span><b>Ask a real question.</b> A reply that ends with a question ("what brought you here?") is far more likely to get a response than a flat "hey" or "thanks for the message."</span>
+      </div>
+      <div class="hint-item">
+        <span class="hint-icon">•</span>
+        <span><b>Sound like you, not a bot.</b> Generic or robotic replies ("Thank you for your message") make people disengage immediately. Warmth and personality matter here more than anywhere else.</span>
+      </div>
+      <div class="hint-item">
+        <span class="hint-icon">•</span>
+        <span><b>Keep it short.</b> Two or three sentences reads as genuine interest. A long paragraph can feel like a sales pitch before you've even said hello.</span>
+      </div>
+      <div class="hint-item">
+        <span class="hint-icon">•</span>
+        <span><b>Don't ask for money up front.</b> This is her free first message — the goal is to make her want to keep talking, not to push a subscription immediately.</span>
+      </div>
+
+      <div class="example-box">
+        "Hi! I don't usually get first messages this sweet 😊 What made you stop by my Room?"
+      </div>
+    </div>
+
+    <div class="hints-title" style="margin-top:28px;">Your auto-reply</div>
+    <textarea id="replyText" maxlength="500" placeholder="e.g. Hey! Thanks for reaching out 💕 I love getting to know new people — tell me a bit about yourself, and what made you want to chat?"></textarea>
+    <div class="char-count"><span id="charCount">0</span>/500</div>
+
+    <button class="save-btn" id="saveBtn">Save Auto-Reply</button>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    if (!session) {
+      window.location.href = '/login.html';
+    }
+
+    const textarea = document.getElementById('replyText');
+    const charCount = document.getElementById('charCount');
+    const messageBox = document.getElementById('message');
+
+    textarea.addEventListener('input', () => {
+      charCount.textContent = textarea.value.length;
+    });
+
+    async function loadCurrent() {
+      document.getElementById('whoami').textContent = `${session.display_name} (@${session.username})`;
+      try {
+        const res = await fetch('/api/models/auto-reply', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+        textarea.value = data.auto_reply_message || '';
+        charCount.textContent = textarea.value.length;
+      } catch (err) {
+        console.error('Failed to load auto-reply:', err);
+      }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/models/auto-reply', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ auto_reply_message: textarea.value }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+        messageBox.className = 'success';
+        messageBox.textContent = 'Saved.';
+      } catch (err) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Could not reach the server.';
+      }
+    });
+
+    if (session) {
+      loadCurrent();
+    }
+  </script>
+  <script src="/theme-toggle.js"></script>
+</body>
+</html>
