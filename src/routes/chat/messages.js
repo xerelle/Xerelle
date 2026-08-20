@@ -2,7 +2,7 @@ import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
 import { isBlocked } from "../blocks.js";
 import { createNotification } from "../lib/notifications.js";
 import { getActorFromSession } from "../lib/actor.js";
-import { recordStreakActivity } from "../lib/streaks.js";
+import { recordStreakActivity, getEffectiveStreak } from "../lib/streaks.js";
 
 const MODEL_FREE_REPLY_LIMIT = 2; // initial reply + one follow-up nudge
 
@@ -76,12 +76,6 @@ export async function handleSendMessage(request, env) {
     }
   }
 
-  // Without an active subscription, the model gets TWO free messages to
-  // this specific person — her initial reply (often the auto-reply)
-  // plus one follow-up nudge — before she's blocked from messaging
-  // further until a real subscription exists. Prevents unlimited free
-  // messaging (and the risk of sharing off-platform contact info)
-  // while still leaving room for a genuine second attempt to convert.
   if (sender_type === "model" && !activeSub) {
     const priorModelMessages = await env.DB.prepare(
       `SELECT COUNT(*) as count FROM messages WHERE subscriber_id = ? AND model_id = ? AND sender_type = 'model'`
@@ -130,8 +124,6 @@ export async function handleSendMessage(request, env) {
           .bind(generateId(), subscriber_id, model_id, model.auto_reply_message.trim())
           .run();
 
-        // Auto-reply counts as one of the model's two free messages —
-        // recorded for the streak same as any other message.
         await recordStreakActivity(env, subscriber_id, model_id, "model");
       }
     } catch (err) {
@@ -206,5 +198,19 @@ export async function handleGetMessages(request, subscriberId, modelId, env) {
     .bind(subscriberId, modelId)
     .all();
 
-  return jsonResponse({ messages: results });
+  // Include the current streak alongside the conversation, so the chat
+  // header can show it without a separate request.
+  let streak = 0;
+  try {
+    const streakRow = await env.DB.prepare(
+      "SELECT * FROM chat_streaks WHERE subscriber_id = ? AND model_id = ?"
+    )
+      .bind(subscriberId, modelId)
+      .first();
+    streak = getEffectiveStreak(streakRow);
+  } catch (err) {
+    console.error("Failed to fetch streak:", err);
+  }
+
+  return jsonResponse({ messages: results, streak });
 }
