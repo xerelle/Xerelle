@@ -50,6 +50,8 @@
   }
   .header h1 { font-size: 17px; margin: 0; }
   .header .sub { color: var(--text-secondary); font-size: 12.5px; margin-top: 2px; }
+  .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12.5px; font-weight: 600; vertical-align: middle; }
+  .streak-badge svg { flex-shrink: 0; }
   .header-menu-btn {
     margin-left: auto;
     background: none;
@@ -226,7 +228,7 @@
       <div class="header">
         <div class="avatar-circle" id="avatarCircle"></div>
         <div>
-          <h1 id="subscriberName"></h1>
+          <h1><span id="subscriberNameText"></span><span id="streakBadge"></span></h1>
           <div class="sub">Private between you and this subscriber.</div>
         </div>
         <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
@@ -296,7 +298,7 @@
         return;
       }
 
-      document.getElementById('subscriberName').textContent = subscriberName;
+      document.getElementById('subscriberNameText').textContent = subscriberName;
       const avatarCircle = document.getElementById('avatarCircle');
       avatarCircle.innerHTML = subscriberAvatar
         ? `<img src="${window.xerelleEscapeHtml(subscriberAvatar)}" alt="">`
@@ -312,6 +314,7 @@
             emptyState.style.display = 'none';
             data.messages.forEach(renderMessage);
           }
+          document.getElementById('streakBadge').innerHTML = window.renderStreakBadge(data.streak || 0);
         }
         loading.style.display = 'none';
         chatUI.style.display = 'flex';
@@ -436,6 +439,7 @@
 
     init();
   </script>
+  <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
