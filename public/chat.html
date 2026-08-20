@@ -54,6 +54,8 @@
   .avatar-circle.has-story { border: 2px solid var(--accent-gold); }
   .header h1 { font-size: 17px; margin: 0; }
   .header .sub { color: var(--text-secondary); font-size: 12.5px; margin-top: 2px; }
+  .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12.5px; font-weight: 600; vertical-align: middle; }
+  .streak-badge svg { flex-shrink: 0; }
   .header-menu-btn {
     margin-left: auto;
     background: none;
@@ -305,7 +307,7 @@
       <div class="header">
         <div class="avatar-circle" id="avatarCircle"></div>
         <div>
-          <h1 id="modelName"></h1>
+          <h1><span id="modelNameText"></span><span id="streakBadge"></span></h1>
           <div class="sub" id="modelUsername"></div>
         </div>
         <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
@@ -414,7 +416,7 @@
         modelId = profile.id;
         activeStory = profile.active_story || null;
 
-        document.getElementById('modelName').textContent = profile.age
+        document.getElementById('modelNameText').textContent = profile.age
           ? `${profile.display_name}, ${profile.age}`
           : profile.display_name;
         document.getElementById('modelUsername').textContent = `@${profile.username}`;
@@ -437,6 +439,7 @@
             emptyState.style.display = 'none';
             data.messages.forEach(renderMessage);
           }
+          document.getElementById('streakBadge').innerHTML = window.renderStreakBadge(data.streak || 0);
         }
 
         loading.style.display = 'none';
@@ -606,6 +609,7 @@
 
     init();
   </script>
+  <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
