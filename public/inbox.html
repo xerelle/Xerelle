@@ -85,6 +85,8 @@
     font-weight: 600;
     margin-bottom: 3px;
   }
+  .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12px; font-weight: 600; vertical-align: middle; }
+  .streak-badge svg { flex-shrink: 0; }
   .thread-preview {
     font-size: 13px;
     color: var(--text-secondary);
@@ -202,7 +204,7 @@
           item.innerHTML = `
             <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
-              <div class="thread-phone">${window.xerelleEscapeHtml(thread.subscriber_label)}</div>
+              <div class="thread-phone">${window.xerelleEscapeHtml(thread.subscriber_label)}${window.renderStreakBadge(thread.streak || 0)}</div>
               <div class="thread-preview ${thread.last_sender_type === 'model' ? 'you' : ''}">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
@@ -219,6 +221,7 @@
 
     loadInbox();
   </script>
+  <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
