@@ -132,6 +132,8 @@
   .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
   .thread-left { min-width: 0; flex: 1; }
   .thread-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12px; font-weight: 600; vertical-align: middle; }
+  .streak-badge svg { flex-shrink: 0; }
   .thread-preview {
     font-size: 13px; color: var(--text-secondary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -449,7 +451,7 @@
           item.innerHTML = `
             <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
-              <div class="thread-name">${window.xerelleEscapeHtml(nameLabel)}</div>
+              <div class="thread-name">${window.xerelleEscapeHtml(nameLabel)}${window.renderStreakBadge(thread.streak || 0)}</div>
               <div class="thread-preview">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
@@ -660,6 +662,7 @@
     loadStories();
     loadDiscoverTeaser();
   </script>
+  <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
