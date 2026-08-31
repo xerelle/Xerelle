@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/theme.css">
+<title>Xerelle — Refund Policy</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  .card {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 64px 24px 80px;
+  }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .updated { color: var(--text-secondary); font-size: 13px; margin-bottom: 8px; }
+  .draft-notice {
+    background: var(--bg-surface);
+    border: 1px solid var(--accent-gold);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 20px 0 32px;
+    line-height: 1.5;
+  }
+  h2 {
+    font-size: 17px;
+    margin: 32px 0 12px;
+    color: var(--accent-gold);
+  }
+  p, li { font-size: 14.5px; line-height: 1.7; color: var(--text-primary); }
+  ul { padding-left: 20px; margin: 10px 0; }
+  li { margin-bottom: 6px; }
+  a.plain { color: var(--accent-gold); }
+</style>
+</head>
+<body>
+  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:var(--bg-surface); border:1px solid var(--border); border-radius:50%; color:var(--text-primary); cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+
+  <div class="card">
+    <h1>Refund Policy</h1>
+    <div class="updated">Last updated: [DATE]</div>
+
+    <div class="draft-notice">
+      This document is a working draft prepared ahead of formal legal review. It reflects our current, good-faith policy and applies as-is in the meantime.
+    </div>
+
+    <h2>Overview</h2>
+    <p>Xerelle subscriptions grant access to a creator's private messaging, Feed, and Stories for a recurring billing period. Because this is a subscription service providing ongoing access — not a one-time physical or digital good — refunds are handled differently than a typical retail purchase, similar to how other subscription platforms operate.</p>
+
+    <h2>When a refund is granted</h2>
+    <p>You are eligible for a refund if:</p>
+    <ul>
+      <li><strong>Genuine non-delivery</strong> — you subscribed but the creator never responded or provided any access to the features included in your subscription.</li>
+      <li><strong>Billing error</strong> — you were charged the wrong amount, charged more than once for the same billing period, or otherwise billed incorrectly due to a technical fault.</li>
+      <li><strong>Unauthorized charge</strong> — a payment was made on your account without your authorization (for example, your card was used without your knowledge).</li>
+    </ul>
+
+    <h2>When a refund is not granted</h2>
+    <p>Refunds are not provided for:</p>
+    <ul>
+      <li>Subjective dissatisfaction with a creator's personality, content, or communication style</li>
+      <li>A creator responding less frequently than you hoped, once some genuine interaction has occurred</li>
+      <li>Simply changing your mind after subscribing</li>
+      <li>Any period of a subscription you chose not to use</li>
+    </ul>
+    <p>This mirrors standard practice across subscription services generally (e.g. streaming or membership platforms): access was made available for the billing period, and normal subjective dissatisfaction is not treated as non-delivery.</p>
+
+    <h2>How to request a refund</h2>
+    <p>To request a refund, contact us at <a class="plain" href="mailto:xerelleteam@gmail.com">xerelleteam@gmail.com</a> with your account details and the reason for your request. We aim to respond to all refund requests within [X] business days.</p>
+
+    <h2>Cancelling a subscription</h2>
+    <p>You may cancel an active subscription at any time from your account settings. Cancelling stops future billing but does not retroactively refund the current billing period unless it qualifies under the grounds above. You will retain access to the subscribed creator's content until the end of the period you've already paid for.</p>
+
+    <h2>Processing time</h2>
+    <p>Approved refunds are returned to your original payment method and may take [X] business days to appear, depending on your bank or card provider.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about this policy can be directed to <a class="plain" href="mailto:xerelleteam@gmail.com">xerelleteam@gmail.com</a>.</p>
+  </div>
+
+  <script src="/theme-toggle.js"></script>
+</body>
+</html>
