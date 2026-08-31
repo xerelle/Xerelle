@@ -256,7 +256,7 @@
     color: var(--text-secondary);
   }
 
-  /* Story overlay (for the Update button) */
+  /* Story overlay (for the Story button) */
   .story-overlay {
     display: none;
     position: fixed;
@@ -337,7 +337,7 @@
         </button>
         <button class="nav-item" id="navUpdate">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
-          Update
+          Story
         </button>
         <button class="nav-item" id="navCall">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
@@ -495,8 +495,8 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // Nav bar: Message is the default view (already showing), Update opens
-    // her Story if she has one active, Call is an honest placeholder.
+    // Nav bar: Message is the default view (already showing), Story opens
+    // her active Story if she has one, Call is an honest placeholder.
     document.getElementById('navUpdate').addEventListener('click', () => {
       if (!activeStory) {
         alert("She doesn't have an active update right now.");
@@ -609,7 +609,6 @@
 
     init();
   </script>
-  <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
 </body>
 </html>
