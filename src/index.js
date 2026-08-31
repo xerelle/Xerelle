@@ -12,6 +12,8 @@ import { handleUpdateAutoReply, handleGetAutoReply } from "./routes/models/auto-
 import { handleModelChangePassword } from "./routes/models/change-password.js";
 import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./routes/models/notifications.js";
 import { handlePostFeedItem } from "./routes/models/feed-post.js";
+import { handlePostSubscriberFeedItem } from "./routes/subscribers/feed-post.js";
+import { handlePostSubscriberStory } from "./routes/subscribers/story-post.js";
 import { handleGetActivities } from "./routes/models/activities.js";
 import { handleGetEarnings } from "./routes/models/earnings.js";
 import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
@@ -83,6 +85,12 @@ export default {
       }
       if (pathname === "/api/models/feed/post" && method === "POST") {
         return await handlePostFeedItem(request, env);
+      }
+      if (pathname === "/api/subscribers/feed/post" && method === "POST") {
+        return await handlePostSubscriberFeedItem(request, env);
+      }
+      if (pathname === "/api/subscribers/stories/post" && method === "POST") {
+        return await handlePostSubscriberStory(request, env);
       }
       if (pathname === "/api/models/activities" && method === "GET") {
         return await handleGetActivities(request, env);
@@ -191,4 +199,3 @@ export default {
     }
   },
 };
-
