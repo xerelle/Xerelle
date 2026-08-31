@@ -179,6 +179,13 @@
 
     fileDrop.addEventListener('click', () => mediaInput.click());
 
+    // Open the native photo/video picker immediately on arrival, so it
+    // feels like one motion from tapping "Update" rather than landing
+    // on an empty page and needing a second tap.
+    if (session) {
+      mediaInput.click();
+    }
+
     mediaInput.addEventListener('change', () => {
       if (!mediaInput.files.length) return;
       const file = mediaInput.files[0];
