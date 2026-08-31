@@ -26,12 +26,16 @@
     display: block; font-size: 13px; color: var(--text-tertiary);
     margin-bottom: 6px; margin-top: 16px;
   }
+  label .optional { color: var(--text-secondary); font-weight: 400; text-transform: none; letter-spacing: 0; }
   input {
     width: 100%; box-sizing: border-box;
     background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
     padding: 12px 14px; color: var(--text-primary); font-size: 15px;
   }
   input:focus { outline: none; border-color: var(--accent-gold); }
+  .model-field-hint {
+    font-size: 12.5px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5;
+  }
   #submitBtn {
     width: 100%; margin-top: 26px;
     background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
@@ -60,8 +64,8 @@
     <p class="sub">Free to join — you'll still need a model's exact link or username to actually enter her Room.</p>
 
     <form id="registerForm">
-      <label for="username">Username</label>
-      <input type="text" id="username" required placeholder="Username" pattern="[a-z0-9._-]{3,30}">
+      <label for="username">Choose a username</label>
+      <input type="text" id="username" required placeholder="Your own username" pattern="[a-z0-9._-]{3,30}">
 
       <label for="display_name">Name</label>
       <input type="text" id="display_name" required placeholder="Your name">
@@ -75,6 +79,10 @@
       <label for="password">Password</label>
       <input type="password" id="password" required minlength="8">
 
+      <label for="model_username">Who did you come for? <span class="optional">(optional)</span></label>
+      <input type="text" id="model_username" placeholder="Her exact username">
+      <div class="model-field-hint">If you know the username of the model you're here for, enter it and we'll take you straight to her Room after signup.</div>
+
       <button type="submit" id="submitBtn">Create account</button>
     </form>
 
@@ -86,12 +94,22 @@
     const messageBox = document.getElementById('message');
     const submitBtn = document.getElementById('submitBtn');
 
+    // If arriving from a specific model's Room (e.g. room.html links here
+    // with ?model=hername when she isn't logged in yet), pre-fill the
+    // field so he doesn't have to retype what he already found.
+    const prefillModel = new URLSearchParams(window.location.search).get('model');
+    if (prefillModel) {
+      document.getElementById('model_username').value = prefillModel;
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.disabled = true;
       submitBtn.textContent = 'Creating...';
       messageBox.className = '';
       messageBox.textContent = '';
+
+      const modelUsername = document.getElementById('model_username').value.trim();
 
       const body = {
         username: document.getElementById('username').value.trim(),
@@ -115,9 +133,17 @@
         } else {
           localStorage.setItem('xerelle_subscriber_session', JSON.stringify(data));
           messageBox.className = 'success';
-          messageBox.textContent = `Welcome, @${data.username}! Redirecting...`;
+
+          const destination = modelUsername
+            ? `/room.html?u=${encodeURIComponent(modelUsername)}`
+            : '/subscriber-avatar.html';
+
+          messageBox.textContent = modelUsername
+            ? `Welcome, @${data.username}! Taking you to her Room...`
+            : `Welcome, @${data.username}! Redirecting...`;
+
           form.reset();
-          setTimeout(() => { window.location.href = '/subscriber-avatar.html'; }, 1200);
+          setTimeout(() => { window.location.href = destination; }, 1200);
         }
       } catch (err) {
         messageBox.className = 'error';
