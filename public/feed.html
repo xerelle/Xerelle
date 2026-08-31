@@ -88,10 +88,13 @@
   .nav-item {
     display: flex; flex-direction: column; align-items: center; gap: 3px;
     color: #9C8791; text-decoration: none;
+    background: none; border: none; cursor: pointer; font: inherit;
   }
   .nav-item.active { color: #D4A24C; }
   .nav-item svg { width: 24px; height: 24px; }
   .nav-item span { font-size: 10px; }
+
+  input[type="file"] { display: none; }
 
   /* Locked / teaser state */
   .locked-screen {
@@ -146,6 +149,44 @@
     background: #D4A24C; color: #2B0A1F; border: none; border-radius: 20px;
     padding: 0 18px; font-weight: 600; font-size: 13px;
   }
+
+  /* Upload panel — same bottom-sheet language as Comments, for consistency */
+  .upload-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 20;
+  }
+  .upload-sheet {
+    background: #1A0710; width: 100%; max-height: 85vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px;
+  }
+  .upload-header {
+    padding: 16px 20px; border-bottom: 1px solid #2B0A1F;
+    display: flex; justify-content: space-between; align-items: center;
+    color: #fff; font-weight: 600; font-size: 15px;
+  }
+  .upload-header button { background: none; border: none; color: #9C8791; font-size: 20px; }
+  .upload-body { padding: 16px 20px; overflow-y: auto; }
+  .upload-preview {
+    width: 100%; height: 220px; border-radius: 12px; overflow: hidden;
+    background: #3A1029; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .upload-preview img, .upload-preview video { width: 100%; height: 100%; object-fit: cover; }
+  .upload-caption {
+    width: 100%; background: #3A1029; border: 1px solid #4A1E36; border-radius: 10px;
+    padding: 12px 14px; color: #F7F0E6; font-size: 14px; font-family: inherit;
+    resize: vertical; min-height: 60px; margin-bottom: 8px;
+  }
+  .upload-expiry { font-size: 12px; color: #9C8791; line-height: 1.5; margin-bottom: 18px; }
+  .upload-post-btn {
+    width: 100%; background: #D4A24C; color: #2B0A1F; font-weight: 700;
+    padding: 14px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
+  }
+  .upload-post-btn:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  .upload-status { margin-top: 12px; font-size: 13.5px; text-align: center; color: #9C8791; }
+  .upload-status.success { color: #6FBF73; }
+  .upload-status.error { color: #E88B9B; }
 </style>
 </head>
 <body>
@@ -167,10 +208,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
       <span>Feed</span>
     </div>
-    <a class="nav-item" id="uploadNavItem" href="/model-feed-post.html" style="display:none;">
+    <button class="nav-item" id="uploadNavItem" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span>Upload</span>
-    </a>
+    </button>
     <a class="nav-item" id="navRoom" href="#">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9 9h.01M15 9h.01M9.5 15a3.5 3.5 0 0 0 5 0"/></svg>
       <span>Room</span>
@@ -195,6 +236,28 @@
       <div class="comment-input-row">
         <input type="text" id="commentInput" placeholder="Add a comment...">
         <button id="sendComment">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload panel: opened directly by a real tap on the Upload nav item,
+       so the native picker isn't blocked by mobile browsers' restriction
+       on auto-triggering file inputs outside a genuine user gesture. -->
+  <input type="file" id="feedUploadInput" accept="image/*,video/*">
+  <div class="upload-panel" id="uploadPanel">
+    <div class="upload-sheet">
+      <div class="upload-header">
+        <span>Post to Feed</span>
+        <button id="closeUpload">✕</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-preview" id="uploadPreview">
+          <span style="color:#9C8791; font-size:13px;">No media selected</span>
+        </div>
+        <textarea class="upload-caption" id="uploadCaption" placeholder="Say something about this..."></textarea>
+        <div class="upload-expiry">This post will be visible to your subscribers for 30 days, then automatically expire.</div>
+        <button class="upload-post-btn" id="uploadPostBtn">Post to Feed</button>
+        <div class="upload-status" id="uploadStatus"></div>
       </div>
     </div>
   </div>
@@ -420,6 +483,91 @@
           countEl.textContent = parseInt(countEl.textContent) + 1;
         }
       } catch (err) {}
+    });
+
+    // ============ Upload flow, entirely in-page ============
+    const feedUploadInput = document.getElementById('feedUploadInput');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadCaption = document.getElementById('uploadCaption');
+    const uploadPostBtn = document.getElementById('uploadPostBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    let selectedUploadFile = null;
+
+    document.getElementById('uploadNavItem').addEventListener('click', () => {
+      // A direct tap — this is a genuine user gesture, so the native
+      // picker opens reliably (unlike triggering it from page load).
+      feedUploadInput.click();
+    });
+
+    feedUploadInput.addEventListener('change', () => {
+      const file = feedUploadInput.files[0];
+      if (!file) return;
+      selectedUploadFile = file;
+
+      const url = URL.createObjectURL(file);
+      uploadPreview.innerHTML = file.type.startsWith('video')
+        ? `<video src="${url}" muted playsinline controls></video>`
+        : `<img src="${url}" alt="">`;
+
+      uploadStatus.textContent = '';
+      uploadStatus.className = 'upload-status';
+      uploadPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeUpload').addEventListener('click', () => {
+      uploadPanel.style.display = 'none';
+    });
+
+    uploadPostBtn.addEventListener('click', async () => {
+      if (!selectedUploadFile) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = 'Please choose a photo or video first.';
+        return;
+      }
+
+      uploadPostBtn.disabled = true;
+      uploadPostBtn.textContent = 'Posting...';
+      uploadStatus.textContent = '';
+      uploadStatus.className = 'upload-status';
+
+      const formData = new FormData();
+      formData.append('media', selectedUploadFile);
+      formData.append('caption', uploadCaption.value.trim());
+
+      try {
+        const res = await fetch('/api/models/feed/post', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          uploadStatus.className = 'upload-status error';
+          uploadStatus.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+
+        uploadStatus.className = 'upload-status success';
+        uploadStatus.textContent = 'Posted! Refreshing your Feed...';
+        selectedUploadFile = null;
+        uploadCaption.value = '';
+        feedUploadInput.value = '';
+
+        // Give a moment to see the success message, then close and
+        // reload the feed so the new post actually appears.
+        setTimeout(() => {
+          uploadPanel.style.display = 'none';
+          window.location.reload();
+        }, 900);
+      } catch (err) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = 'Could not reach the server.';
+      } finally {
+        uploadPostBtn.disabled = false;
+        uploadPostBtn.textContent = 'Post to Feed';
+      }
     });
 
     loadFeed();
