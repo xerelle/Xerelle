@@ -4,130 +4,122 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/theme.css">
-<title>Xerelle — Inbox</title>
+<title>Xerelle — Home</title>
 <style>
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
-    justify-content: center;
-    padding: 0;
+    flex-direction: column;
+    align-items: center;
     margin: 0;
     height: 100vh;
     overflow: hidden;
   }
-  .card { max-width: 460px; width: 100%; height: 100vh; display: flex; flex-direction: column; }
-  .header {
-    padding: 64px 20px 16px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .header h1 { font-size: 20px; margin: 0 0 2px; }
-  .header .sub { color: var(--text-secondary); font-size: 13px; }
-
-  .thread-list { padding: 0 0 20px; flex: 1; overflow-y: auto; }
-
-  /* My Story row — WhatsApp/TikTok-style, lets a model view her own
-     currently active story after posting it */
-  .my-story-row {
+  nav { display: flex; justify-content: center; padding: 20px; max-width: 460px; width: 100%; flex-shrink: 0; }
+  nav img { height: 32px; width: auto; }
+  .card {
+    max-width: 460px;
+    width: 100%;
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .scroll-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 { font-size: 20px; margin: 0; }
+
+  .story-row {
+    display: flex;
+    gap: 16px;
     padding: 16px 20px;
+    overflow-x: auto;
     border-bottom: 1px solid var(--border-subtle);
+  }
+  .story-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 68px;
     cursor: pointer;
     background: none;
-    border-left: none; border-right: none; border-top: none;
-    width: 100%;
-    text-align: left;
-    font-family: inherit;
+    border: none;
   }
-  .my-story-avatar {
-    width: 52px;
-    height: 52px;
+  .story-avatar {
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: var(--bg-surface);
-    border: 3px solid var(--border);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--accent-gold);
+    border: 3px solid var(--accent-gold);
+    padding: 2px;
+    object-fit: cover;
+  }
+  .story-name {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-align: center;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
   }
-  .my-story-avatar.has-story { border-color: var(--accent-gold); }
-  .my-story-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .my-story-text { color: var(--text-primary); }
-  .my-story-title { font-size: 14.5px; font-weight: 600; margin-bottom: 2px; }
-  .my-story-sub { font-size: 12.5px; color: var(--text-secondary); }
+  .story-row-empty {
+    padding: 16px 20px;
+    color: var(--text-secondary);
+    font-size: 12.5px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
 
-  .story-viewer-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: #000;
-    z-index: 15;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+  .tab-content { }
+
+  .find-her-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .story-viewer-overlay.open { display: flex; }
-  .story-viewer-overlay img, .story-viewer-overlay video {
-    max-width: 100vw;
-    max-height: 100vh;
-    object-fit: contain;
+  .find-her-label {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--text-tertiary); margin-bottom: 10px;
   }
-  .story-viewer-caption {
-    position: absolute;
-    bottom: 40px;
-    left: 20px;
-    right: 20px;
+  .find-her-row { display: flex; gap: 8px; }
+  .find-her-row input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 11px 16px;
     color: var(--text-primary);
     font-size: 14px;
-    text-align: center;
-    background: rgba(0,0,0,0.5);
-    padding: 10px 14px;
-    border-radius: 8px;
   }
-  .story-viewer-close {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    background: none;
+  .find-her-row input:focus { outline: none; border-color: var(--accent-gold); }
+  .find-her-row button {
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    font-weight: 600;
+    padding: 0 20px;
+    border-radius: 20px;
     border: none;
-    color: var(--text-primary);
-    font-size: 28px;
+    font-size: 14px;
     cursor: pointer;
-    z-index: 16;
   }
-  .nav-bar {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 12px 0 24px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-primary);
-    flex-shrink: 0;
+  .find-her-hint {
+    font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;
   }
-  .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 11px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .nav-item.active { color: var(--accent-gold); }
-  .nav-item svg { width: 22px; height: 22px; }
+
   .thread-item {
     display: flex;
     justify-content: space-between;
@@ -154,47 +146,236 @@
     color: var(--accent-gold);
     overflow: hidden;
   }
-  .avatar-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+  .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
   .thread-left { min-width: 0; flex: 1; }
-  .thread-phone {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 3px;
-  }
+  .thread-name { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
   .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12px; font-weight: 600; vertical-align: middle; }
   .streak-badge svg { flex-shrink: 0; }
   .thread-preview {
-    font-size: 13px;
+    font-size: 13px; color: var(--text-secondary);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .thread-preview.you { color: var(--text-tertiary); }
+  .thread-time { font-size: 11.5px; color: var(--text-secondary); flex-shrink: 0; margin-left: 12px; }
+
+  .profile-block { padding: 30px 20px; text-align: center; }
+  .profile-avatar {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: var(--bg-surface); border: 2px solid var(--border);
+    margin: 0 auto 16px; object-fit: cover; display: block;
+    cursor: pointer;
+  }
+  .profile-avatar-wrap { position: relative; width: 100px; margin: 0 auto 16px; }
+  .avatar-edit-badge {
+    position: absolute; bottom: 12px; right: -2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-gold); color: var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg-primary); cursor: pointer;
+  }
+  .avatar-edit-badge svg { width: 14px; height: 14px; }
+  .profile-name { font-size: 19px; margin-bottom: 2px; }
+  .profile-sub { color: var(--text-secondary); font-size: 13.5px; margin-bottom: 24px; }
+  .profile-link {
+    display: block; width: 100%; max-width: 280px; margin: 0 auto 12px;
+    background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+    padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+  }
+  .profile-link.danger { border-color: var(--danger); color: var(--danger); }
+  .profile-divider {
+    max-width: 280px; margin: 20px auto; border-top: 1px solid var(--border-subtle);
+  }
+  .profile-section-label {
+    max-width: 280px; margin: 0 auto 10px; text-align: left;
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--text-tertiary); text-transform: uppercase;
+  }
+
+  .discover-caption {
+    padding: 18px 20px 12px;
     color: var(--text-secondary);
+    font-size: 13.5px;
+    margin: 0;
+  }
+  .discover-row {
+    display: flex;
+    gap: 12px;
+    padding: 0 20px 20px;
+    overflow-x: auto;
+  }
+  .discover-item {
+    flex-shrink: 0;
+    width: 70px;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+  }
+  .discover-photo {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: var(--bg-surface);
+    object-fit: cover;
+    display: block;
+  }
+  .discover-photo-fallback {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: var(--bg-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--accent-gold);
+  }
+  .discover-name {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .thread-preview.you { color: var(--text-tertiary); }
-  .thread-time {
-    font-size: 11.5px;
-    color: var(--text-secondary);
+  .discover-more {
     flex-shrink: 0;
-    margin-left: 12px;
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-gold);
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .notif-item {
+    display: block;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+  .notif-item.unread { background: rgba(212,162,76,0.06); }
+  .notif-item.unread::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 20px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+  }
+  .notif-message { font-size: 14px; padding-left: 14px; margin-bottom: 3px; }
+  .notif-time { font-size: 11.5px; color: var(--text-secondary); padding-left: 14px; }
+
+  .placeholder-tab {
+    padding: 60px 20px; text-align: center; color: var(--text-secondary); font-size: 14px;
+  }
+
+  .story-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 11;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .story-overlay.open { display: flex; }
+  .story-overlay img, .story-overlay video {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+  }
+  .story-caption {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    right: 20px;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+  .story-name-tag {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .story-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 12;
   }
 
   #loading, #empty, #notfound {
-    padding: 60px 20px;
-    text-align: center;
-    color: var(--text-secondary);
+    padding: 60px 20px; text-align: center; color: var(--text-secondary);
   }
-  a.plain { color: var(--accent-gold); }
+
+  .bottom-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-primary);
+    flex-shrink: 0;
+  }
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+    position: relative;
+  }
+  .bottom-nav-item.active { color: var(--accent-gold); }
+  .bottom-nav-item svg { width: 22px; height: 22px; }
+  .bottom-nav-dot {
+    display: none;
+    position: absolute;
+    top: -2px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    border: 2px solid var(--bg-primary);
+  }
+  .bottom-nav-dot.show { display: block; }
 
   input[type="file"] { display: none; }
 
-  /* Upload panel — same bottom-sheet pattern used on feed.html, for consistency */
   .upload-panel {
     position: fixed; inset: 0; background: rgba(0,0,0,0.6);
-    display: none; align-items: flex-end; z-index: 20;
+    display: none; align-items: flex-end; z-index: 25;
   }
   .upload-sheet {
     background: var(--bg-surface-alt); width: 100%; max-height: 85vh;
@@ -207,19 +388,13 @@
     color: var(--text-primary); font-weight: 600; font-size: 15px;
   }
   .upload-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
-  .upload-body { padding: 16px 20px; overflow-y: auto; }
+  .upload-body { padding: 20px; overflow-y: auto; text-align: center; }
   .upload-preview {
-    width: 100%; height: 220px; border-radius: 12px; overflow: hidden;
+    width: 160px; height: 160px; border-radius: 50%; overflow: hidden;
     background: var(--bg-surface); display: flex; align-items: center; justify-content: center;
-    margin-bottom: 16px;
+    margin: 0 auto 20px;
   }
-  .upload-preview img, .upload-preview video { width: 100%; height: 100%; object-fit: cover; }
-  .upload-caption {
-    width: 100%; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 14px; color: var(--text-primary); font-size: 14px; font-family: inherit;
-    margin-bottom: 8px;
-  }
-  .upload-hint { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+  .upload-preview img { width: 100%; height: 100%; object-fit: cover; }
   .upload-post-btn {
     width: 100%; background: var(--accent-gold); color: var(--border-subtle); font-weight: 700;
     padding: 14px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
@@ -231,105 +406,175 @@
 </style>
 </head>
 <body>
+  <nav>
+    <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
+  </nav>
   <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:var(--bg-surface); border:1px solid var(--border); border-radius:50%; color:var(--text-primary); cursor:pointer; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <div class="card">
-    <div class="header">
-      <h1>Inbox</h1>
-      <div class="sub" id="whoami"></div>
+    <div class="scroll-wrapper">
+      <div class="header"><h1>Xerelle</h1></div>
+
+      <div id="storiesLoading" style="padding:16px 20px; color:var(--text-secondary); font-size:12.5px;">Loading updates...</div>
+      <div class="story-row-empty" id="storiesEmpty" style="display:none;">No updates right now. Follow a model to see her Stories here.</div>
+      <div class="story-row" id="storyRow" style="display:none;"></div>
+
+      <div class="tab-content">
+        <div id="chatsTab">
+          <div class="find-her-section">
+            <div class="find-her-label">Find a model</div>
+            <div class="find-her-row">
+              <input type="text" id="findHerInput" placeholder="Her exact username">
+              <button id="findHerBtn">Go</button>
+            </div>
+            <div class="find-her-hint">Enter her exact username to go straight to her Room.</div>
+          </div>
+
+          <div id="loading">Loading...</div>
+          <div id="notfound" style="display:none;"></div>
+          <div id="empty" style="display:none;">No conversations yet. Search above, or message a model from her Room to start one.</div>
+          <div id="threadList"></div>
+
+          <div id="discoverTeaser" style="display:none;">
+            <p class="discover-caption">Looking for someone else?</p>
+            <div class="discover-row" id="discoverRow"></div>
+          </div>
+        </div>
+
+        <div id="notificationsTab" style="display:none;">
+          <div id="notifLoading" style="padding:60px 20px; text-align:center; color:var(--text-secondary);">Loading...</div>
+          <div id="notifEmpty" class="placeholder-tab" style="display:none;">No notifications yet.</div>
+          <div id="notifList"></div>
+        </div>
+
+        <div id="profileTab" style="display:none;">
+          <div class="profile-block">
+            <div class="profile-avatar-wrap">
+              <img class="profile-avatar" id="profileAvatarImg" src="" alt="" style="display:none;">
+              <div class="profile-avatar" id="profileAvatarInitial" style="display:none; align-items:center; justify-content:center; font-size:34px; color:var(--accent-gold); font-weight:600;"></div>
+              <button class="avatar-edit-badge" id="avatarEditBadge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              </button>
+            </div>
+            <div class="profile-name" id="profileName"></div>
+            <div class="profile-sub" id="profilePhone"></div>
+            <div class="profile-divider"></div>
+            <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">Payment methods</a>
+            <a class="profile-link" href="/change-password.html">Change password</a>
+            <a class="profile-link" href="/appearance.html">Appearance</a>
+            <div class="profile-divider"></div>
+            <div class="profile-section-label">Legal</div>
+            <a class="profile-link" href="/terms-of-service.html">Terms of Service</a>
+            <a class="profile-link" href="/privacy-policy.html">Privacy Policy</a>
+            <a class="profile-link" href="/refund-policy.html">Refund Policy</a>
+            <div class="profile-divider"></div>
+            <a class="profile-link danger" href="#" id="logoutBtn">Log out</a>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="loading">Loading...</div>
-    <div id="notfound" style="display:none;"></div>
-    <div id="empty" style="display:none;">No messages yet. Once a subscriber messages you, their conversation will show up here.</div>
-
-    <button class="my-story-row" id="myStoryRow" style="display:none;">
-      <div class="my-story-avatar" id="myStoryAvatar"></div>
-      <div class="my-story-text">
-        <div class="my-story-title" id="myStoryTitle">My Story</div>
-        <div class="my-story-sub" id="myStorySub">Tap to view</div>
-      </div>
-    </button>
-
-    <div class="thread-list" id="threadList"></div>
-
-    <div class="nav-bar">
-      <a class="nav-item" id="feedNavLink" href="#">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Feed
-      </a>
-      <a class="nav-item active" href="/inbox.html">
+    <div class="bottom-nav">
+      <button class="bottom-nav-item active" id="menuChats" data-tab="chats">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Message
-      </a>
-      <button class="nav-item" id="updateNavItem">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
-        Story
+        Chats
       </button>
-      <a class="nav-item" href="/model-profile.html">
+      <button class="bottom-nav-item" id="menuNotifications" data-tab="notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+        <span class="bottom-nav-dot" id="notifDot"></span>
+      </button>
+      <button class="bottom-nav-item" id="menuProfile" data-tab="profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
         Profile
-      </a>
+      </button>
     </div>
   </div>
 
-  <!-- Story upload panel: opened directly by a real tap on Update, so the
-       native picker isn't blocked by mobile browsers' restriction on
-       auto-triggering file inputs outside a genuine user gesture. -->
-  <input type="file" id="storyUploadInput" accept="image/*,video/*">
-  <div class="story-viewer-overlay" id="storyViewerOverlay">
-    <button class="story-viewer-close" id="storyViewerClose">&times;</button>
-    <div id="storyViewerMedia"></div>
-    <div class="story-viewer-caption" id="storyViewerCaption" style="display:none;"></div>
+  <div class="story-overlay" id="storyOverlay">
+    <button class="story-close" id="storyClose">&times;</button>
+    <div class="story-name-tag" id="storyNameTag"></div>
+    <div id="storyMediaContainer"></div>
+    <div class="story-caption" id="storyCaption" style="display:none;"></div>
   </div>
 
+  <input type="file" id="avatarUploadInput" accept="image/*">
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-sheet">
       <div class="upload-header">
-        <span>Post a Story</span>
+        <span>Change Photo</span>
         <button id="closeUpload">✕</button>
       </div>
       <div class="upload-body">
         <div class="upload-preview" id="uploadPreview">
-          <span style="color:var(--text-secondary); font-size:13px;">No media selected</span>
+          <span style="color:var(--text-secondary); font-size:13px;">No photo selected</span>
         </div>
-        <input type="text" class="upload-caption" id="uploadCaption" placeholder="What's happening today?" maxlength="200">
-        <div class="upload-hint">Visible on your Room for 24 hours, then automatically expires.</div>
-        <button class="upload-post-btn" id="uploadPostBtn">Post Story</button>
+        <button class="upload-post-btn" id="uploadPostBtn">Save Photo</button>
         <div class="upload-status" id="uploadStatus"></div>
       </div>
     </div>
   </div>
 
   <script>
-    const session = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
-    const loading = document.getElementById('loading');
-    const notfound = document.getElementById('notfound');
-    const empty = document.getElementById('empty');
-    const threadList = document.getElementById('threadList');
-    const whoami = document.getElementById('whoami');
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    if (!session) {
+      window.location.href = '/subscriber-login.html';
+    }
+
+    const tabs = {
+      chats: { el: document.getElementById('chatsTab'), nav: document.getElementById('menuChats') },
+      notifications: { el: document.getElementById('notificationsTab'), nav: document.getElementById('menuNotifications') },
+      profile: { el: document.getElementById('profileTab'), nav: document.getElementById('menuProfile') },
+    };
+
+    function switchTab(name) {
+      Object.entries(tabs).forEach(([key, tab]) => {
+        tab.el.style.display = key === name ? 'block' : 'none';
+        tab.nav.classList.toggle('active', key === name);
+      });
+      if (name === 'profile') loadProfile();
+      if (name === 'notifications') loadNotifications();
+    }
+
+    Object.entries(tabs).forEach(([key, tab]) => {
+      tab.nav.addEventListener('click', () => switchTab(key));
+    });
 
     function formatTime(unixSeconds) {
       const date = new Date(unixSeconds * 1000);
       const now = new Date();
       const isToday = date.toDateString() === now.toDateString();
-      if (isToday) {
-        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-      }
+      if (isToday) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
 
-    async function loadInbox() {
+    function goToModel() {
+      const input = document.getElementById('findHerInput');
+      const username = input.value.trim();
+      if (!username) return;
+      window.location.href = `/room.html?u=${encodeURIComponent(username)}`;
+    }
+    document.getElementById('findHerBtn').addEventListener('click', goToModel);
+    document.getElementById('findHerInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') goToModel();
+    });
+
+    async function loadMessages() {
+      const loading = document.getElementById('loading');
+      const notfound = document.getElementById('notfound');
+      const empty = document.getElementById('empty');
+      const threadList = document.getElementById('threadList');
+
       if (!session) {
-        window.location.href = '/login.html';
+        loading.style.display = 'none';
+        notfound.textContent = 'Log in first.';
+        notfound.style.display = 'block';
         return;
       }
-      whoami.textContent = `${session.display_name} (@${session.username})`;
-      document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
 
       try {
-        const res = await fetch('/api/models/inbox', {
+        const res = await fetch('/api/subscribers/inbox', {
           headers: { 'Authorization': `Bearer ${session.token}` },
         });
         const data = await res.json();
@@ -351,22 +596,23 @@
         data.threads.forEach((thread) => {
           const item = document.createElement('a');
           item.className = 'thread-item';
+          item.href = `/chat.html?u=${encodeURIComponent(thread.model_username)}`;
 
-          const prefix = thread.last_sender_type === 'model' ? 'You: ' : '';
-          const initial = thread.subscriber_label.trim().charAt(0).toUpperCase();
-          const avatarContent = thread.avatar_url
-            ? `<img src="${window.xerelleEscapeHtml(thread.avatar_url)}" alt="">`
+          const prefix = thread.last_sender_type === 'subscriber' ? 'You: ' : '';
+          const initial = thread.model_display_name.trim().charAt(0).toUpperCase();
+          const nameLabel = thread.model_age ? `${thread.model_display_name}, ${thread.model_age}` : thread.model_display_name;
+          const avatarContent = thread.teaser_media_url
+            ? `<img src="${window.xerelleEscapeHtml(thread.teaser_media_url)}" alt="">`
             : window.xerelleEscapeHtml(initial);
 
           item.innerHTML = `
             <div class="avatar-circle">${avatarContent}</div>
             <div class="thread-left">
-              <div class="thread-phone">${window.xerelleEscapeHtml(thread.subscriber_label)}${window.renderStreakBadge(thread.streak || 0)}</div>
-              <div class="thread-preview ${thread.last_sender_type === 'model' ? 'you' : ''}">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
+              <div class="thread-name">${window.xerelleEscapeHtml(nameLabel)}${window.renderStreakBadge(thread.streak || 0)}</div>
+              <div class="thread-preview">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
             </div>
             <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
           `;
-          item.href = `/model-chat.html?subscriber=${encodeURIComponent(thread.subscriber_id)}&name=${encodeURIComponent(thread.subscriber_label)}&avatar=${encodeURIComponent(thread.avatar_url || '')}`;
           threadList.appendChild(item);
         });
       } catch (err) {
@@ -376,30 +622,211 @@
       }
     }
 
-    // ============ Story upload flow, entirely in-page ============
-    const storyUploadInput = document.getElementById('storyUploadInput');
-    const uploadPanel = document.getElementById('uploadPanel');
-    const uploadPreview = document.getElementById('uploadPreview');
-    const uploadCaption = document.getElementById('uploadCaption');
-    const uploadPostBtn = document.getElementById('uploadPostBtn');
-    const uploadStatus = document.getElementById('uploadStatus');
-    let selectedStoryFile = null;
+    async function loadStories() {
+      const loading = document.getElementById('storiesLoading');
+      const empty = document.getElementById('storiesEmpty');
+      const storyRow = document.getElementById('storyRow');
 
-    document.getElementById('updateNavItem').addEventListener('click', () => {
-      // A direct tap — a genuine user gesture, so the native picker
-      // opens reliably (unlike triggering it from page load).
-      storyUploadInput.click();
+      if (!session) {
+        loading.style.display = 'none';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/subscribers/stories-feed', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        loading.style.display = 'none';
+
+        if (!data.stories || data.stories.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        storyRow.style.display = 'flex';
+        data.stories.forEach((story) => {
+          const item = document.createElement('button');
+          item.className = 'story-item';
+          const initial = story.model_display_name.trim().charAt(0).toUpperCase();
+          const storyNameLabel = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
+          item.innerHTML = `
+            <img class="story-avatar" src="${window.xerelleEscapeHtml(story.teaser_media_url || '')}" onerror="this.style.display='none'" alt="">
+            <div class="story-name">${window.xerelleEscapeHtml(storyNameLabel)}</div>
+          `;
+          item.addEventListener('click', () => openStory(story));
+          storyRow.appendChild(item);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        empty.textContent = 'Could not load updates.';
+        empty.style.display = 'block';
+      }
+    }
+
+    const storyOverlay = document.getElementById('storyOverlay');
+    const storyMediaContainer = document.getElementById('storyMediaContainer');
+    const storyCaption = document.getElementById('storyCaption');
+    const storyNameTag = document.getElementById('storyNameTag');
+
+    function openStory(story) {
+      storyNameTag.textContent = story.model_age ? `${story.model_display_name}, ${story.model_age}` : story.model_display_name;
+      storyMediaContainer.innerHTML = story.media_type === 'video'
+        ? `<video src="${window.xerelleEscapeHtml(story.media_url)}" autoplay controls></video>`
+        : `<img src="${window.xerelleEscapeHtml(story.media_url)}" alt="">`;
+
+      if (story.caption) {
+        storyCaption.textContent = story.caption;
+        storyCaption.style.display = 'block';
+      } else {
+        storyCaption.style.display = 'none';
+      }
+
+      storyOverlay.classList.add('open');
+    }
+    function closeStory() {
+      storyOverlay.classList.remove('open');
+      storyMediaContainer.innerHTML = '';
+    }
+    document.getElementById('storyClose').addEventListener('click', closeStory);
+    storyOverlay.addEventListener('click', (e) => {
+      if (e.target === storyOverlay) closeStory();
     });
 
-    storyUploadInput.addEventListener('change', () => {
-      const file = storyUploadInput.files[0];
+    let notificationsLoaded = false;
+
+    async function loadNotifications() {
+      if (notificationsLoaded) return;
+      if (!session) return;
+
+      const loading = document.getElementById('notifLoading');
+      const empty = document.getElementById('notifEmpty');
+      const notifList = document.getElementById('notifList');
+
+      try {
+        const res = await fetch('/api/subscribers/notifications', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        loading.style.display = 'none';
+        notificationsLoaded = true;
+
+        if (!data.notifications || data.notifications.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        data.notifications.forEach((notif) => {
+          const item = document.createElement('a');
+          item.className = `notif-item ${notif.is_read ? '' : 'unread'}`;
+          item.href = notif.link || '#';
+
+          item.innerHTML = `
+            <div class="notif-message">${window.xerelleEscapeHtml(notif.message)}</div>
+            <div class="notif-time">${formatTime(notif.created_at)}</div>
+          `;
+
+          if (!notif.is_read) {
+            item.addEventListener('click', () => {
+              fetch(`/api/subscribers/notifications/${notif.id}/read`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.token}` },
+              }).catch(() => {});
+            });
+          }
+
+          notifList.appendChild(item);
+        });
+      } catch (err) {
+        loading.style.display = 'none';
+        empty.textContent = 'Could not load notifications.';
+        empty.style.display = 'block';
+      }
+    }
+
+    function loadProfile() {
+      if (!session) return;
+      document.getElementById('profileName').textContent = session.display_name || 'You';
+      document.getElementById('profilePhone').textContent = session.phone ? `@${session.username || ''} · ${session.phone}` : '';
+
+      const avatarImg = document.getElementById('profileAvatarImg');
+      const avatarInitial = document.getElementById('profileAvatarInitial');
+      if (session.avatar_url) {
+        avatarImg.src = session.avatar_url;
+        avatarImg.style.display = 'block';
+      } else {
+        avatarInitial.textContent = (session.display_name || '?').trim().charAt(0).toUpperCase();
+        avatarInitial.style.display = 'flex';
+      }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      localStorage.removeItem('xerelle_subscriber_session');
+      window.location.href = '/subscriber-login.html';
+    });
+
+    async function loadDiscoverTeaser() {
+      if (!session) return;
+
+      try {
+        const res = await fetch('/api/subscribers/discover', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!data.models || data.models.length === 0) return;
+
+        const discoverTeaser = document.getElementById('discoverTeaser');
+        const discoverRow = document.getElementById('discoverRow');
+        discoverTeaser.style.display = 'block';
+
+        data.models.slice(0, 8).forEach((model) => {
+          const item = document.createElement('a');
+          item.className = 'discover-item';
+          item.href = `/room.html?u=${encodeURIComponent(model.username)}`;
+
+          const initial = model.display_name.trim().charAt(0).toUpperCase();
+          const photoHtml = model.teaser_media_url
+            ? `<img class="discover-photo" src="${window.xerelleEscapeHtml(model.teaser_media_url)}" alt="">`
+            : `<div class="discover-photo-fallback">${window.xerelleEscapeHtml(initial)}</div>`;
+
+          const discoverNameLabel = model.age ? `${model.display_name}, ${model.age}` : model.display_name;
+          item.innerHTML = `${photoHtml}<div class="discover-name">${window.xerelleEscapeHtml(discoverNameLabel)}</div>`;
+          discoverRow.appendChild(item);
+        });
+
+        const moreLink = document.createElement('a');
+        moreLink.className = 'discover-more';
+        moreLink.href = '/discover.html';
+        moreLink.textContent = 'See all';
+        discoverRow.appendChild(moreLink);
+      } catch (err) {
+      }
+    }
+
+    const avatarUploadInput = document.getElementById('avatarUploadInput');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadPostBtn = document.getElementById('uploadPostBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    let selectedAvatarFile = null;
+
+    function openAvatarPicker() {
+      avatarUploadInput.click();
+    }
+    document.getElementById('avatarEditBadge').addEventListener('click', openAvatarPicker);
+
+    avatarUploadInput.addEventListener('change', () => {
+      const file = avatarUploadInput.files[0];
       if (!file) return;
-      selectedStoryFile = file;
+      selectedAvatarFile = file;
 
       const url = URL.createObjectURL(file);
-      uploadPreview.innerHTML = file.type.startsWith('video')
-        ? `<video src="${url}" muted playsinline controls></video>`
-        : `<img src="${url}" alt="">`;
+      uploadPreview.innerHTML = `<img src="${url}" alt="">`;
 
       uploadStatus.textContent = '';
       uploadStatus.className = 'upload-status';
@@ -411,24 +838,22 @@
     });
 
     uploadPostBtn.addEventListener('click', async () => {
-      if (!selectedStoryFile) {
+      if (!selectedAvatarFile) {
         uploadStatus.className = 'upload-status error';
-        uploadStatus.textContent = 'Choose a photo or video first.';
+        uploadStatus.textContent = 'Choose a photo first.';
         return;
       }
 
       uploadPostBtn.disabled = true;
-      uploadPostBtn.textContent = 'Posting...';
+      uploadPostBtn.textContent = 'Saving...';
       uploadStatus.textContent = '';
       uploadStatus.className = 'upload-status';
 
       const formData = new FormData();
-      formData.append('media', selectedStoryFile);
-      const caption = uploadCaption.value.trim();
-      if (caption) formData.append('caption', caption);
+      formData.append('photo', selectedAvatarFile);
 
       try {
-        const res = await fetch('/api/models/stories/post', {
+        const res = await fetch('/api/subscribers/avatar/upload', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${session.token}` },
           body: formData,
@@ -437,100 +862,36 @@
 
         if (!res.ok) {
           uploadStatus.className = 'upload-status error';
-          uploadStatus.textContent = data.message || data.error || 'Something went wrong.';
+          uploadStatus.textContent = data.message || data.error || 'Upload failed.';
           return;
         }
 
         uploadStatus.className = 'upload-status success';
-        uploadStatus.textContent = 'Story posted!';
-        selectedStoryFile = null;
-        uploadCaption.value = '';
-        storyUploadInput.value = '';
+        uploadStatus.textContent = 'Photo saved!';
+
+        if (session && data.avatar_url) {
+          session.avatar_url = data.avatar_url;
+          localStorage.setItem('xerelle_subscriber_session', JSON.stringify(session));
+        }
+        loadProfile();
+        selectedAvatarFile = null;
+        avatarUploadInput.value = '';
 
         setTimeout(() => {
           uploadPanel.style.display = 'none';
-          loadMyStory();
         }, 900);
       } catch (err) {
         uploadStatus.className = 'upload-status error';
         uploadStatus.textContent = 'Could not reach the server.';
       } finally {
         uploadPostBtn.disabled = false;
-        uploadPostBtn.textContent = 'Post Story';
+        uploadPostBtn.textContent = 'Save Photo';
       }
     });
 
-    // ============ My Story — lets her view her own active story ============
-    async function loadMyStory() {
-      if (!session) return;
-      const row = document.getElementById('myStoryRow');
-      const avatar = document.getElementById('myStoryAvatar');
-      const title = document.getElementById('myStoryTitle');
-      const sub = document.getElementById('myStorySub');
-
-      try {
-        const res = await fetch(`/api/models/${encodeURIComponent(session.username)}`, {
-          headers: { 'Authorization': `Bearer ${session.token}` },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-
-        row.style.display = 'flex';
-        const initial = session.display_name.trim().charAt(0).toUpperCase();
-        avatar.innerHTML = data.teaser_media_url
-          ? `<img src="${window.xerelleEscapeHtml(data.teaser_media_url)}" alt="">`
-          : window.xerelleEscapeHtml(initial);
-
-        if (data.active_story) {
-          avatar.classList.add('has-story');
-          title.textContent = 'My Story';
-          sub.textContent = 'Tap to view your active story';
-          row.onclick = () => openMyStory(data.active_story);
-        } else {
-          avatar.classList.remove('has-story');
-          title.textContent = 'My Story';
-          sub.textContent = 'No active story — tap Story below to post one';
-          row.onclick = () => {
-            document.getElementById('updateNavItem').click();
-          };
-        }
-      } catch (err) {
-        // Quietly do nothing — this is a secondary element, not worth
-        // showing an error for on the main inbox.
-      }
-    }
-
-    function openMyStory(story) {
-      const media = document.getElementById('storyViewerMedia');
-      const caption = document.getElementById('storyViewerCaption');
-
-      media.innerHTML = story.media_type === 'video'
-        ? `<video src="${window.xerelleEscapeHtml(story.media_url)}" autoplay controls></video>`
-        : `<img src="${window.xerelleEscapeHtml(story.media_url)}" alt="">`;
-
-      if (story.caption) {
-        caption.textContent = story.caption;
-        caption.style.display = 'block';
-      } else {
-        caption.style.display = 'none';
-      }
-
-      document.getElementById('storyViewerOverlay').classList.add('open');
-    }
-
-    document.getElementById('storyViewerClose').addEventListener('click', () => {
-      document.getElementById('storyViewerOverlay').classList.remove('open');
-      document.getElementById('storyViewerMedia').innerHTML = '';
-    });
-    document.getElementById('storyViewerOverlay').addEventListener('click', (e) => {
-      if (e.target.id === 'storyViewerOverlay') {
-        e.target.classList.remove('open');
-        document.getElementById('storyViewerMedia').innerHTML = '';
-      }
-    });
-
-    loadInbox();
-    loadMyStory();
+    loadMessages();
+    loadStories();
+    loadDiscoverTeaser();
   </script>
   <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
