@@ -14,6 +14,7 @@ import { handleGetModelNotifications, handleMarkModelNotificationRead } from "./
 import { handlePostFeedItem } from "./routes/models/feed-post.js";
 import { handlePostSubscriberFeedItem } from "./routes/subscribers/feed-post.js";
 import { handlePostSubscriberStory } from "./routes/subscribers/story-post.js";
+import { handleGetSubscriberStoriesForModel } from "./routes/models/subscriber-stories.js";
 import { handleGetActivities } from "./routes/models/activities.js";
 import { handleGetEarnings } from "./routes/models/earnings.js";
 import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
@@ -91,6 +92,9 @@ export default {
       }
       if (pathname === "/api/subscribers/stories/post" && method === "POST") {
         return await handlePostSubscriberStory(request, env);
+      }
+      if (pathname === "/api/models/subscriber-stories" && method === "GET") {
+        return await handleGetSubscriberStoriesForModel(request, env);
       }
       if (pathname === "/api/models/activities" && method === "GET") {
         return await handleGetActivities(request, env);
