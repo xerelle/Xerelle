@@ -460,6 +460,10 @@
             <div class="profile-name" id="profileName"></div>
             <div class="profile-sub" id="profilePhone"></div>
             <div class="profile-divider"></div>
+            <div class="profile-section-label">My Updates</div>
+            <button class="profile-link" id="postFeedBtn">Post to Feed</button>
+            <button class="profile-link" id="postStoryBtn">Post a Story</button>
+            <div class="profile-divider"></div>
             <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">Payment methods</a>
             <a class="profile-link" href="/change-password.html">Change password</a>
             <a class="profile-link" href="/appearance.html">Appearance</a>
@@ -512,6 +516,48 @@
         </div>
         <button class="upload-post-btn" id="uploadPostBtn">Save Photo</button>
         <div class="upload-status" id="uploadStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feed post panel — opened directly by a real tap, so the native
+       picker isn't blocked by mobile browsers' restriction on
+       auto-triggering file inputs outside a genuine user gesture. -->
+  <input type="file" id="feedPostInput" accept="image/*,video/*">
+  <div class="upload-panel" id="feedPostPanel">
+    <div class="upload-sheet">
+      <div class="upload-header">
+        <span>Post to Feed</span>
+        <button id="closeFeedPost">✕</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-preview" id="feedPostPreview" style="border-radius:12px; height:200px;">
+          <span style="color:var(--text-secondary); font-size:13px;">No media selected</span>
+        </div>
+        <input type="text" id="feedPostCaption" placeholder="Say something about this..." style="width:100%; box-sizing:border-box; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; color:var(--text-primary); font-size:14px; margin-bottom:8px;">
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:18px;">Visible for 30 days to any model you currently subscribe to. If you have no active subscription, nobody sees this.</div>
+        <button class="upload-post-btn" id="feedPostBtn2">Post to Feed</button>
+        <div class="upload-status" id="feedPostStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Story panel, same pattern -->
+  <input type="file" id="storyPostInput" accept="image/*,video/*">
+  <div class="upload-panel" id="storyPostPanel">
+    <div class="upload-sheet">
+      <div class="upload-header">
+        <span>Post a Story</span>
+        <button id="closeStoryPost">✕</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-preview" id="storyPostPreview" style="border-radius:12px; height:200px;">
+          <span style="color:var(--text-secondary); font-size:13px;">No media selected</span>
+        </div>
+        <input type="text" id="storyPostCaption" placeholder="What's happening today?" style="width:100%; box-sizing:border-box; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; color:var(--text-primary); font-size:14px; margin-bottom:8px;">
+        <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:18px;">Visible for 24 hours to any model you currently subscribe to. If you have no active subscription, nobody sees this.</div>
+        <button class="upload-post-btn" id="storyPostBtn2">Post Story</button>
+        <div class="upload-status" id="storyPostStatus"></div>
       </div>
     </div>
   </div>
@@ -886,6 +932,152 @@
       } finally {
         uploadPostBtn.disabled = false;
         uploadPostBtn.textContent = 'Save Photo';
+      }
+    });
+
+    // ============ Member's own Feed post flow, entirely in-page ============
+    const feedPostInput = document.getElementById('feedPostInput');
+    const feedPostPanel = document.getElementById('feedPostPanel');
+    const feedPostPreview = document.getElementById('feedPostPreview');
+    const feedPostCaption = document.getElementById('feedPostCaption');
+    const feedPostBtn2 = document.getElementById('feedPostBtn2');
+    const feedPostStatus = document.getElementById('feedPostStatus');
+    let selectedFeedFile = null;
+
+    document.getElementById('postFeedBtn').addEventListener('click', () => {
+      feedPostInput.click();
+    });
+
+    feedPostInput.addEventListener('change', () => {
+      const file = feedPostInput.files[0];
+      if (!file) return;
+      selectedFeedFile = file;
+      const url = URL.createObjectURL(file);
+      feedPostPreview.innerHTML = file.type.startsWith('video')
+        ? `<video src="${url}" muted playsinline controls></video>`
+        : `<img src="${url}" alt="">`;
+      feedPostStatus.textContent = '';
+      feedPostStatus.className = 'upload-status';
+      feedPostPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeFeedPost').addEventListener('click', () => {
+      feedPostPanel.style.display = 'none';
+    });
+
+    feedPostBtn2.addEventListener('click', async () => {
+      if (!selectedFeedFile) {
+        feedPostStatus.className = 'upload-status error';
+        feedPostStatus.textContent = 'Choose a photo or video first.';
+        return;
+      }
+      feedPostBtn2.disabled = true;
+      feedPostBtn2.textContent = 'Posting...';
+      feedPostStatus.textContent = '';
+      feedPostStatus.className = 'upload-status';
+
+      const formData = new FormData();
+      formData.append('media', selectedFeedFile);
+      const caption = feedPostCaption.value.trim();
+      if (caption) formData.append('caption', caption);
+
+      try {
+        const res = await fetch('/api/subscribers/feed/post', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          feedPostStatus.className = 'upload-status error';
+          feedPostStatus.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+        feedPostStatus.className = 'upload-status success';
+        feedPostStatus.textContent = 'Posted!';
+        selectedFeedFile = null;
+        feedPostCaption.value = '';
+        feedPostInput.value = '';
+        setTimeout(() => { feedPostPanel.style.display = 'none'; }, 900);
+      } catch (err) {
+        feedPostStatus.className = 'upload-status error';
+        feedPostStatus.textContent = 'Could not reach the server.';
+      } finally {
+        feedPostBtn2.disabled = false;
+        feedPostBtn2.textContent = 'Post to Feed';
+      }
+    });
+
+    // ============ Member's own Story post flow, entirely in-page ============
+    const storyPostInput = document.getElementById('storyPostInput');
+    const storyPostPanel = document.getElementById('storyPostPanel');
+    const storyPostPreview = document.getElementById('storyPostPreview');
+    const storyPostCaption = document.getElementById('storyPostCaption');
+    const storyPostBtn2 = document.getElementById('storyPostBtn2');
+    const storyPostStatus = document.getElementById('storyPostStatus');
+    let selectedStoryFile2 = null;
+
+    document.getElementById('postStoryBtn').addEventListener('click', () => {
+      storyPostInput.click();
+    });
+
+    storyPostInput.addEventListener('change', () => {
+      const file = storyPostInput.files[0];
+      if (!file) return;
+      selectedStoryFile2 = file;
+      const url = URL.createObjectURL(file);
+      storyPostPreview.innerHTML = file.type.startsWith('video')
+        ? `<video src="${url}" muted playsinline controls></video>`
+        : `<img src="${url}" alt="">`;
+      storyPostStatus.textContent = '';
+      storyPostStatus.className = 'upload-status';
+      storyPostPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeStoryPost').addEventListener('click', () => {
+      storyPostPanel.style.display = 'none';
+    });
+
+    storyPostBtn2.addEventListener('click', async () => {
+      if (!selectedStoryFile2) {
+        storyPostStatus.className = 'upload-status error';
+        storyPostStatus.textContent = 'Choose a photo or video first.';
+        return;
+      }
+      storyPostBtn2.disabled = true;
+      storyPostBtn2.textContent = 'Posting...';
+      storyPostStatus.textContent = '';
+      storyPostStatus.className = 'upload-status';
+
+      const formData = new FormData();
+      formData.append('media', selectedStoryFile2);
+      const caption = storyPostCaption.value.trim();
+      if (caption) formData.append('caption', caption);
+
+      try {
+        const res = await fetch('/api/subscribers/stories/post', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          storyPostStatus.className = 'upload-status error';
+          storyPostStatus.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+        storyPostStatus.className = 'upload-status success';
+        storyPostStatus.textContent = 'Story posted!';
+        selectedStoryFile2 = null;
+        storyPostCaption.value = '';
+        storyPostInput.value = '';
+        setTimeout(() => { storyPostPanel.style.display = 'none'; }, 900);
+      } catch (err) {
+        storyPostStatus.className = 'upload-status error';
+        storyPostStatus.textContent = 'Could not reach the server.';
+      } finally {
+        storyPostBtn2.disabled = false;
+        storyPostBtn2.textContent = 'Post Story';
       }
     });
 
