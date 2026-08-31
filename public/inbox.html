@@ -29,6 +29,46 @@
 
   .thread-list { padding: 0 0 20px; flex: 1; overflow-y: auto; }
 
+  /* Subscriber updates row — stories from members who currently have
+     an active subscription to her, same visual pattern as the
+     subscriber-side "followed models" story row */
+  .subscriber-stories-row {
+    display: flex;
+    gap: 16px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .subscriber-story-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 64px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .subscriber-story-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 3px solid var(--accent-gold);
+    padding: 2px;
+    object-fit: cover;
+  }
+  .subscriber-story-name {
+    font-size: 10.5px;
+    color: var(--text-tertiary);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+
   /* My Story row — WhatsApp/TikTok-style, lets a model view her own
      currently active story after posting it */
   .my-story-row {
@@ -247,6 +287,8 @@
         <div class="my-story-sub" id="myStorySub">Tap to view</div>
       </div>
     </button>
+
+    <div class="subscriber-stories-row" id="subscriberStoriesRow" style="display:none;"></div>
 
     <div id="loading">Loading...</div>
     <div id="notfound" style="display:none;"></div>
@@ -529,8 +571,46 @@
       }
     });
 
+    // ============ Subscriber updates row — members with an active
+    // subscription to her who currently have a live story ============
+    async function loadSubscriberStories() {
+      if (!session) return;
+      const row = document.getElementById('subscriberStoriesRow');
+
+      try {
+        const res = await fetch('/api/models/subscriber-stories', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (!data.stories || data.stories.length === 0) return;
+
+        row.style.display = 'flex';
+        data.stories.forEach((story) => {
+          const item = document.createElement('button');
+          item.className = 'subscriber-story-item';
+          const initial = story.subscriber_label.trim().charAt(0).toUpperCase();
+          const avatarHtml = story.avatar_url
+            ? `<img class="subscriber-story-avatar" src="${window.xerelleEscapeHtml(story.avatar_url)}" alt="">`
+            : `<div class="subscriber-story-avatar" style="display:flex; align-items:center; justify-content:center; font-weight:600; color:var(--accent-gold);">${window.xerelleEscapeHtml(initial)}</div>`;
+
+          item.innerHTML = `
+            ${avatarHtml}
+            <div class="subscriber-story-name">${window.xerelleEscapeHtml(story.subscriber_label)}</div>
+          `;
+          item.addEventListener('click', () => openMyStory(story));
+          row.appendChild(item);
+        });
+      } catch (err) {
+        // Quietly do nothing — secondary element, not worth an error
+        // state on the main inbox.
+      }
+    }
+
     loadInbox();
     loadMyStory();
+    loadSubscriberStories();
   </script>
   <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
