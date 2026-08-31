@@ -96,7 +96,8 @@
 
   input[type="file"] { display: none; }
 
-  /* Locked / teaser state */
+  /* Locked / teaser state — shown ONLY when she has no posts at all
+     for a genuine preview to show */
   .locked-screen {
     height: 100vh; display: none; flex-direction: column; align-items: center;
     justify-content: center; color: #fff; text-align: center; padding: 32px;
@@ -110,6 +111,41 @@
     background: linear-gradient(135deg, #F3DFB0, #D4A24C 45%, #A8762F);
     color: #2B0A1F; font-weight: 700; padding: 14px 32px;
     border-radius: 10px; border: none; font-size: 15px; text-decoration: none;
+  }
+
+  /* Paywall card — same full-height post sizing, shown right after the
+     single free preview post so scrolling down naturally leads here */
+  .paywall-card {
+    height: calc(100vh - 64px);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #1A0710;
+    color: #fff;
+    text-align: center;
+    padding: 32px;
+  }
+  .paywall-card img {
+    width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 20px;
+    border: 2px solid #D4A24C;
+  }
+  .paywall-card h2 { font-size: 18px; margin-bottom: 8px; }
+  .paywall-card p { font-size: 13.5px; color: #B0A5AA; margin-bottom: 22px; max-width: 280px; line-height: 1.5; }
+  .preview-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 3;
+    background: rgba(212,162,76,0.9);
+    color: #2B0A1F;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 12px;
   }
 
   .empty-screen {
@@ -240,9 +276,6 @@
     </div>
   </div>
 
-  <!-- Upload panel: opened directly by a real tap on the Upload nav item,
-       so the native picker isn't blocked by mobile browsers' restriction
-       on auto-triggering file inputs outside a genuine user gesture. -->
   <input type="file" id="feedUploadInput" accept="image/*,video/*">
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-sheet">
@@ -318,6 +351,21 @@
         loadingScreen.style.display = 'none';
 
         if (data.locked) {
+          if (data.preview_post) {
+            // She has at least one post — show it as a genuine, real
+            // preview (Like works, no comment button since commenting
+            // requires an active subscription), then a paywall card
+            // right after it in the same scroll flow.
+            renderPreviewPost(data.preview_post, data.model_display_name);
+            renderPaywallCard(data.model_display_name, data.model_teaser_url, data.message);
+            feedScroll.style.display = 'block';
+            bottomNav.style.display = 'flex';
+            setupVideoAutoplay();
+            return;
+          }
+
+          // No posts at all yet — nothing to preview, show the plain
+          // locked screen as before.
           lockedScreen.style.display = 'flex';
           document.getElementById('lockedName').textContent = data.model_display_name || 'This Room';
           document.getElementById('lockedMessage').textContent = data.message || 'Subscribe to unlock her Feed.';
@@ -376,7 +424,6 @@
           </div>
         `;
 
-        // Double-tap to like — only for subscribers, not the model viewing her own post
         if (!isModelViewer) {
           let lastTap = 0;
           el.addEventListener('click', (e) => {
@@ -394,6 +441,69 @@
 
         feedScroll.appendChild(el);
       });
+    }
+
+    // Renders the single free preview post for a locked (non-subscribed)
+    // viewer — same real post card as a normal Feed post, Like fully
+    // works, but deliberately NO comment button, since commenting
+    // requires an active subscription (enforced server-side regardless).
+    function renderPreviewPost(post, modelName) {
+      const el = document.createElement('div');
+      el.className = 'post';
+      el.dataset.postId = post.id;
+      el.style.position = 'relative';
+
+      const mediaHtml = post.media_type === 'video'
+        ? `<video src="${window.xerelleEscapeHtml(post.media_url)}" loop muted playsinline></video><button class="mute-btn" onclick="toggleMute(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>`
+        : `<img src="${window.xerelleEscapeHtml(post.media_url)}" alt="">`;
+
+      el.innerHTML = `
+        <span class="preview-badge">Free Preview</span>
+        ${mediaHtml}
+        <div class="post-overlay"></div>
+        <div class="post-content">
+          <div class="post-info">
+            <div class="post-name">${window.xerelleEscapeHtml(modelName)}</div>
+            <div class="post-caption">${window.xerelleEscapeHtml(post.caption || '')}</div>
+          </div>
+          <div class="post-actions">
+            <button class="action-btn ${post.liked_by_me ? 'liked' : ''}" onclick="toggleLike('${post.id}', this)">
+              <svg viewBox="0 0 24 24" fill="${post.liked_by_me ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              <div class="action-count">${post.like_count}</div>
+            </button>
+          </div>
+        </div>
+      `;
+
+      let lastTap = 0;
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('.action-btn') || e.target.closest('.mute-btn')) return;
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          const likeBtn = el.querySelector('.action-btn');
+          if (!likeBtn.classList.contains('liked')) {
+            toggleLike(post.id, likeBtn);
+          }
+        }
+        lastTap = now;
+      });
+
+      feedScroll.appendChild(el);
+    }
+
+    function renderPaywallCard(modelName, teaserUrl, message) {
+      const el = document.createElement('div');
+      el.className = 'paywall-card';
+      const avatarHtml = teaserUrl
+        ? `<img src="${window.xerelleEscapeHtml(teaserUrl)}" alt="">`
+        : '';
+      el.innerHTML = `
+        ${avatarHtml}
+        <h2>${window.xerelleEscapeHtml(modelName)}</h2>
+        <p>${window.xerelleEscapeHtml(message || 'Subscribe to unlock her full Feed.')}</p>
+        <a class="unlock-btn" href="/room.html?u=${encodeURIComponent(username)}">View her Room</a>
+      `;
+      feedScroll.appendChild(el);
     }
 
     function setupVideoAutoplay() {
@@ -495,8 +605,6 @@
     let selectedUploadFile = null;
 
     document.getElementById('uploadNavItem').addEventListener('click', () => {
-      // A direct tap — this is a genuine user gesture, so the native
-      // picker opens reliably (unlike triggering it from page load).
       feedUploadInput.click();
     });
 
@@ -555,8 +663,6 @@
         uploadCaption.value = '';
         feedUploadInput.value = '';
 
-        // Give a moment to see the success message, then close and
-        // reload the feed so the new post actually appears.
         setTimeout(() => {
           uploadPanel.style.display = 'none';
           window.location.reload();
