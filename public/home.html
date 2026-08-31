@@ -42,7 +42,6 @@
   }
   .header h1 { font-size: 20px; margin: 0; }
 
-  /* Persistent Stories row */
   .story-row {
     display: flex;
     gap: 16px;
@@ -88,7 +87,39 @@
 
   .tab-content { }
 
-  /* Chats */
+  .find-her-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .find-her-label {
+    font-size: 12.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--text-tertiary); margin-bottom: 10px;
+  }
+  .find-her-row { display: flex; gap: 8px; }
+  .find-her-row input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 11px 16px;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+  .find-her-row input:focus { outline: none; border-color: var(--accent-gold); }
+  .find-her-row button {
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    font-weight: 600;
+    padding: 0 20px;
+    border-radius: 20px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .find-her-hint {
+    font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;
+  }
+
   .thread-item {
     display: flex;
     justify-content: space-between;
@@ -127,7 +158,6 @@
   .thread-preview.you { color: var(--text-tertiary); }
   .thread-time { font-size: 11.5px; color: var(--text-secondary); flex-shrink: 0; margin-left: 12px; }
 
-  /* Profile */
   .profile-block { padding: 30px 20px; text-align: center; }
   .profile-avatar {
     width: 100px; height: 100px; border-radius: 50%;
@@ -252,7 +282,6 @@
     padding: 60px 20px; text-align: center; color: var(--text-secondary); font-size: 14px;
   }
 
-  /* Story overlay (full screen viewer) */
   .story-overlay {
     display: none;
     position: fixed;
@@ -305,7 +334,6 @@
     padding: 60px 20px; text-align: center; color: var(--text-secondary);
   }
 
-  /* Bottom nav bar (static — replaces the old top tab bar) */
   .bottom-nav {
     display: flex;
     justify-content: space-around;
@@ -345,7 +373,6 @@
 
   input[type="file"] { display: none; }
 
-  /* Avatar upload panel — same bottom-sheet pattern used elsewhere in the app */
   .upload-panel {
     position: fixed; inset: 0; background: rgba(0,0,0,0.6);
     display: none; align-items: flex-end; z-index: 25;
@@ -389,16 +416,24 @@
     <div class="scroll-wrapper">
       <div class="header"><h1>Xerelle</h1></div>
 
-      <!-- Persistent Stories row -->
       <div id="storiesLoading" style="padding:16px 20px; color:var(--text-secondary); font-size:12.5px;">Loading updates...</div>
       <div class="story-row-empty" id="storiesEmpty" style="display:none;">No updates right now. Follow a model to see her Stories here.</div>
       <div class="story-row" id="storyRow" style="display:none;"></div>
 
       <div class="tab-content">
         <div id="chatsTab">
+          <div class="find-her-section">
+            <div class="find-her-label">Find a model</div>
+            <div class="find-her-row">
+              <input type="text" id="findHerInput" placeholder="Her exact username">
+              <button id="findHerBtn">Go</button>
+            </div>
+            <div class="find-her-hint">Enter her exact username to go straight to her Room.</div>
+          </div>
+
           <div id="loading">Loading...</div>
           <div id="notfound" style="display:none;"></div>
-          <div id="empty" style="display:none;">No conversations yet. Message a model from her Room to start one.</div>
+          <div id="empty" style="display:none;">No conversations yet. Search above, or message a model from her Room to start one.</div>
           <div id="threadList"></div>
 
           <div id="discoverTeaser" style="display:none;">
@@ -464,9 +499,6 @@
     <div class="story-caption" id="storyCaption" style="display:none;"></div>
   </div>
 
-  <!-- Avatar upload panel: opened directly by a real tap, so the native
-       picker isn't blocked by mobile browsers' restriction on
-       auto-triggering file inputs outside a genuine user gesture. -->
   <input type="file" id="avatarUploadInput" accept="image/*">
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-sheet">
@@ -516,6 +548,17 @@
       if (isToday) return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
+
+    function goToModel() {
+      const input = document.getElementById('findHerInput');
+      const username = input.value.trim();
+      if (!username) return;
+      window.location.href = `/room.html?u=${encodeURIComponent(username)}`;
+    }
+    document.getElementById('findHerBtn').addEventListener('click', goToModel);
+    document.getElementById('findHerInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') goToModel();
+    });
 
     async function loadMessages() {
       const loading = document.getElementById('loading');
@@ -579,7 +622,6 @@
       }
     }
 
-    // Stories row now loads immediately on page load (persistent, not a tab)
     async function loadStories() {
       const loading = document.getElementById('storiesLoading');
       const empty = document.getElementById('storiesEmpty');
@@ -655,7 +697,7 @@
     let notificationsLoaded = false;
 
     async function loadNotifications() {
-      if (notificationsLoaded) return; // only fetch once per visit, not every tab switch
+      if (notificationsLoaded) return;
       if (!session) return;
 
       const loading = document.getElementById('notifLoading');
@@ -726,10 +768,6 @@
       window.location.href = '/subscriber-login.html';
     });
 
-    // Discover teaser: a small preview row on the Chats tab. If she
-    // doesn't have an active subscription yet, Discover isn't unlocked —
-    // in that case we just quietly hide this section rather than showing
-    // an error on the main dashboard.
     async function loadDiscoverTeaser() {
       if (!session) return;
 
@@ -737,7 +775,7 @@
         const res = await fetch('/api/subscribers/discover', {
           headers: { 'Authorization': `Bearer ${session.token}` },
         });
-        if (!res.ok) return; // locked or no models — just stay hidden
+        if (!res.ok) return;
 
         const data = await res.json();
         if (!data.models || data.models.length === 0) return;
@@ -767,12 +805,9 @@
         moreLink.textContent = 'See all';
         discoverRow.appendChild(moreLink);
       } catch (err) {
-        // Quietly do nothing — this is a secondary feature, not worth
-        // showing an error for on the main dashboard.
       }
     }
 
-    // ============ Avatar upload flow, entirely in-page ============
     const avatarUploadInput = document.getElementById('avatarUploadInput');
     const uploadPanel = document.getElementById('uploadPanel');
     const uploadPreview = document.getElementById('uploadPreview');
@@ -781,8 +816,6 @@
     let selectedAvatarFile = null;
 
     function openAvatarPicker() {
-      // A direct tap — a genuine user gesture, so the native picker
-      // opens reliably (unlike triggering it from page load).
       avatarUploadInput.click();
     }
     document.getElementById('avatarEditBadge').addEventListener('click', openAvatarPicker);
