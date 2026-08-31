@@ -296,6 +296,18 @@
   </div>
 
   <script>
+    // Feed deliberately doesn't load theme-toggle.js (always-dark design,
+    // independent of the rest of the app's theme system) — so it needs
+    // its own local copy of the XSS-safety escape function, rather than
+    // relying on window.xerelleEscapeHtml from a script that was never
+    // actually loaded on this page.
+    window.xerelleEscapeHtml = function (str) {
+      if (str === null || str === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    };
+
     const modelSession = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
     const subscriberSession = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
     const session = modelSession || subscriberSession;
