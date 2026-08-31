@@ -471,6 +471,7 @@
 
       <div class="bottom-section" id="bottomSection">
         <a class="btn-message" id="messageBtn" href="#">Send a message</a>
+        <a class="btn-message" id="feedLinkBtn" href="#">View Feed</a>
         <button class="btn-primary" id="subscribeBtn">Subscribe</button>
         <div id="message"></div>
       </div>
@@ -574,6 +575,7 @@
         document.getElementById('subscribeBtn').textContent = `Subscribe — ₦${priceNaira}/mo`;
         document.getElementById('likeCount').textContent = data.like_count;
         document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
+        document.getElementById('feedLinkBtn').href = `/feed.html?u=${encodeURIComponent(data.username)}`;
 
         const teaserImg = document.getElementById('teaserImg');
         if (data.teaser_media_url) {
