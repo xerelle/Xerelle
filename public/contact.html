@@ -12,7 +12,42 @@
   nav img { height: 32px; width: auto; }
   .back-link { color: #8A6B76; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
   h1.page-title { font-family: Georgia, 'Times New Roman', serif; font-size: 29px; color: #5C2A3E; margin: 20px 0 20px; }
-  .placeholder-text { font-size: 15.5px; color: #8A6B76; line-height: 1.7; }
+  .intro-text { font-size: 15.5px; color: #8A6B76; line-height: 1.7; margin-bottom: 28px; }
+  .contact-card {
+    background: #FBF3F1;
+    border: 1px solid #E9D5D2;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .contact-card .label {
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #B08494;
+    margin-bottom: 6px;
+  }
+  .contact-card a.email {
+    display: block;
+    font-size: 17px;
+    font-weight: 600;
+    color: #5C2A3E;
+    text-decoration: none;
+    margin-bottom: 8px;
+  }
+  .contact-card .desc {
+    font-size: 14px;
+    color: #8A6B76;
+    line-height: 1.5;
+  }
+  .faq-nudge {
+    font-size: 14.5px;
+    color: #8A6B76;
+    line-height: 1.6;
+    margin-top: 24px;
+  }
+  .faq-nudge a { color: #5C2A3E; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -22,7 +57,21 @@
   </nav>
   <div class="container">
     <h1 class="page-title">Contact &amp; Support</h1>
-    <p class="placeholder-text">Support contact details are being set up and will appear here soon.</p>
+    <p class="intro-text">Have a question, a problem with your account, or need to reach us for any other reason? We're here to help.</p>
+
+    <div class="contact-card">
+      <div class="label">General Support</div>
+      <a class="email" href="mailto:xerelleteam@gmail.com">xerelleteam@gmail.com</a>
+      <div class="desc">For account issues, questions about how Xerelle works, or anything else you need help with.</div>
+    </div>
+
+    <div class="contact-card">
+      <div class="label">Disputes &amp; Refunds</div>
+      <a class="email" href="mailto:xerelleteam@gmail.com">xerelleteam@gmail.com</a>
+      <div class="desc">For billing issues or refund requests. See our <a href="/refund-policy.html" style="color:#5C2A3E;">Refund Policy</a> for what qualifies.</div>
+    </div>
+
+    <p class="faq-nudge">Looking for a quick answer? Check our <a href="/faq.html">Frequently Asked Questions</a> first — you might find what you need right away.</p>
   </div>
 </body>
 </html>
