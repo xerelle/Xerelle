@@ -12,7 +12,26 @@
   nav img { height: 32px; width: auto; }
   .back-link { color: #8A6B76; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
   h1.page-title { font-family: Georgia, 'Times New Roman', serif; font-size: 29px; color: #5C2A3E; margin: 20px 0 20px; }
-  .placeholder-text { font-size: 15.5px; color: #8A6B76; line-height: 1.7; }
+  .placeholder-text { font-size: 15.5px; color: #8A6B76; line-height: 1.7; margin-bottom: 28px; }
+  .legal-links { display: flex; flex-direction: column; gap: 14px; }
+  .legal-link {
+    display: block;
+    background: #FBF3F1;
+    border: 1px solid #E9D5D2;
+    border-radius: 12px;
+    padding: 16px 18px;
+    text-decoration: none;
+    color: #5C2A3E;
+    font-size: 15.5px;
+    font-weight: 600;
+  }
+  .legal-link .sub {
+    display: block;
+    font-size: 13px;
+    font-weight: 400;
+    color: #8A6B76;
+    margin-top: 3px;
+  }
 </style>
 </head>
 <body>
@@ -22,7 +41,21 @@
   </nav>
   <div class="container">
     <h1 class="page-title">Terms &amp; Privacy</h1>
-    <p class="placeholder-text">Our full Terms of Service and Privacy Policy are being finalized with legal counsel and will be published here before public launch.</p>
+    <p class="placeholder-text">Our legal documents are published below. They're currently working drafts pending final legal counsel review, and reflect our current, good-faith policy in the meantime.</p>
+    <div class="legal-links">
+      <a class="legal-link" href="/terms-of-service.html">
+        Terms of Service
+        <span class="sub">The rules for using Xerelle</span>
+      </a>
+      <a class="legal-link" href="/privacy-policy.html">
+        Privacy Policy
+        <span class="sub">How we handle your data</span>
+      </a>
+      <a class="legal-link" href="/refund-policy.html">
+        Refund Policy
+        <span class="sub">When and how refunds work</span>
+      </a>
+    </div>
   </div>
 </body>
 </html>
