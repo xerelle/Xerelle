@@ -520,17 +520,17 @@
     </div>
 
     <div class="bottom-nav">
-      <button class="bottom-nav-item active" id="menuChats" data-tab="chats">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Chats
-      </button>
+      <a class="bottom-nav-item" href="/my-feed.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Feed
+      </a>
       <button class="bottom-nav-item" id="navStoryBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
         Story
       </button>
-      <button class="bottom-nav-item" id="navFeedBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        Feed
+      <button class="bottom-nav-item active" id="menuChats" data-tab="chats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Chats
       </button>
       <button class="bottom-nav-item" id="menuProfile" data-tab="profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
@@ -573,28 +573,6 @@
         </div>
         <button class="upload-post-btn" id="uploadPostBtn">Save Photo</button>
         <div class="upload-status" id="uploadStatus"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Feed post panel — opened directly by a real tap, so the native
-       picker isn't blocked by mobile browsers' restriction on
-       auto-triggering file inputs outside a genuine user gesture. -->
-  <input type="file" id="feedPostInput" accept="image/*,video/*">
-  <div class="upload-panel" id="feedPostPanel">
-    <div class="upload-sheet">
-      <div class="upload-header">
-        <span>Post to Feed</span>
-        <button id="closeFeedPost">✕</button>
-      </div>
-      <div class="upload-body">
-        <div class="upload-preview" id="feedPostPreview" style="border-radius:12px; height:200px;">
-          <span style="color:var(--text-secondary); font-size:13px;">No media selected</span>
-        </div>
-        <input type="text" id="feedPostCaption" placeholder="Say something about this..." style="width:100%; box-sizing:border-box; background:var(--bg-surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; color:var(--text-primary); font-size:14px; margin-bottom:8px;">
-        <div style="font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:18px;">Visible for 30 days to any model you currently subscribe to. If you have no active subscription, nobody sees this.</div>
-        <button class="upload-post-btn" id="feedPostBtn2">Post to Feed</button>
-        <div class="upload-status" id="feedPostStatus"></div>
       </div>
     </div>
   </div>
@@ -1019,78 +997,6 @@
       }
     });
 
-    // ============ Member's own Feed post flow, entirely in-page ============
-    const feedPostInput = document.getElementById('feedPostInput');
-    const feedPostPanel = document.getElementById('feedPostPanel');
-    const feedPostPreview = document.getElementById('feedPostPreview');
-    const feedPostCaption = document.getElementById('feedPostCaption');
-    const feedPostBtn2 = document.getElementById('feedPostBtn2');
-    const feedPostStatus = document.getElementById('feedPostStatus');
-    let selectedFeedFile = null;
-
-    document.getElementById('navFeedBtn').addEventListener('click', () => {
-      feedPostInput.click();
-    });
-
-    feedPostInput.addEventListener('change', () => {
-      const file = feedPostInput.files[0];
-      if (!file) return;
-      selectedFeedFile = file;
-      const url = URL.createObjectURL(file);
-      feedPostPreview.innerHTML = file.type.startsWith('video')
-        ? `<video src="${url}" muted playsinline controls></video>`
-        : `<img src="${url}" alt="">`;
-      feedPostStatus.textContent = '';
-      feedPostStatus.className = 'upload-status';
-      feedPostPanel.style.display = 'flex';
-    });
-
-    document.getElementById('closeFeedPost').addEventListener('click', () => {
-      feedPostPanel.style.display = 'none';
-    });
-
-    feedPostBtn2.addEventListener('click', async () => {
-      if (!selectedFeedFile) {
-        feedPostStatus.className = 'upload-status error';
-        feedPostStatus.textContent = 'Choose a photo or video first.';
-        return;
-      }
-      feedPostBtn2.disabled = true;
-      feedPostBtn2.textContent = 'Posting...';
-      feedPostStatus.textContent = '';
-      feedPostStatus.className = 'upload-status';
-
-      const formData = new FormData();
-      formData.append('media', selectedFeedFile);
-      const caption = feedPostCaption.value.trim();
-      if (caption) formData.append('caption', caption);
-
-      try {
-        const res = await fetch('/api/subscribers/feed/post', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${session.token}` },
-          body: formData,
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          feedPostStatus.className = 'upload-status error';
-          feedPostStatus.textContent = data.message || data.error || 'Something went wrong.';
-          return;
-        }
-        feedPostStatus.className = 'upload-status success';
-        feedPostStatus.textContent = 'Posted!';
-        selectedFeedFile = null;
-        feedPostCaption.value = '';
-        feedPostInput.value = '';
-        setTimeout(() => { feedPostPanel.style.display = 'none'; }, 900);
-      } catch (err) {
-        feedPostStatus.className = 'upload-status error';
-        feedPostStatus.textContent = 'Could not reach the server.';
-      } finally {
-        feedPostBtn2.disabled = false;
-        feedPostBtn2.textContent = 'Post to Feed';
-      }
-    });
 
     // ============ Member's own Story post flow, entirely in-page ============
     const storyPostInput = document.getElementById('storyPostInput');
