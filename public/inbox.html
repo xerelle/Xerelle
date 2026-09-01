@@ -221,6 +221,24 @@
     flex-shrink: 0;
     margin-left: 12px;
   }
+  .thread-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+  .like-subscriber-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--text-secondary);
+    display: flex;
+  }
+  .like-subscriber-btn.liked { color: var(--danger); }
+  .like-subscriber-btn svg { width: 18px; height: 18px; }
 
   #loading, #empty, #notfound {
     padding: 60px 20px;
@@ -406,9 +424,30 @@
               <div class="thread-phone">${window.xerelleEscapeHtml(thread.subscriber_label)}${window.renderStreakBadge(thread.streak || 0)}</div>
               <div class="thread-preview ${thread.last_sender_type === 'model' ? 'you' : ''}">${prefix}${window.xerelleEscapeHtml(thread.last_message)}</div>
             </div>
-            <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
+            <div class="thread-right">
+              <button class="like-subscriber-btn ${thread.model_likes_this_subscriber ? 'liked' : ''}" data-subscriber-id="${thread.subscriber_id}">
+                <svg viewBox="0 0 24 24" fill="${thread.model_likes_this_subscriber ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+              </button>
+              <div class="thread-time">${formatTime(thread.last_sent_at)}</div>
+            </div>
           `;
           item.href = `/model-chat.html?subscriber=${encodeURIComponent(thread.subscriber_id)}&name=${encodeURIComponent(thread.subscriber_label)}&avatar=${encodeURIComponent(thread.avatar_url || '')}`;
+
+          const likeBtn = item.querySelector('.like-subscriber-btn');
+          likeBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const willLike = !likeBtn.classList.contains('liked');
+            likeBtn.classList.toggle('liked', willLike);
+            likeBtn.querySelector('svg').setAttribute('fill', willLike ? 'currentColor' : 'none');
+            try {
+              await fetch(`/api/models/subscribers/${encodeURIComponent(thread.subscriber_id)}/like`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${session.token}` },
+              });
+            } catch (err) {}
+          });
+
           threadList.appendChild(item);
         });
       } catch (err) {
