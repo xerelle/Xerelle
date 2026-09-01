@@ -100,24 +100,19 @@
   h1 { font-size: 20px; margin: 0 0 2px; }
   .username { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
 
-  .stats {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    max-width: 340px;
+  .relation-status {
+    max-width: 320px;
     margin: 0 auto 28px;
-    font-size: 13px;
-    color: var(--text-tertiary);
-  }
-  .stats span {
-    flex: 1;
     text-align: center;
   }
-  .stats b {
+  .relation-line {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .relation-line.active {
     color: var(--text-primary);
-    display: block;
-    font-size: 20px;
-    margin-bottom: 6px;
+    font-weight: 600;
   }
 
   .action-row {
@@ -456,9 +451,9 @@
         <h1 id="displayName"></h1>
         <div class="username" id="usernameLabel"></div>
 
-        <div class="stats">
-          <span><b id="followerCount">0</b>followers</span>
-          <span><b id="likeCount">0</b>likes</span>
+        <div class="relation-status">
+          <div class="relation-line" id="followStatus"></div>
+          <div class="relation-line" id="likeStatus"></div>
         </div>
 
         <div class="action-row" id="actionRow">
@@ -543,6 +538,8 @@
     let allPhotos = [];
     let currentPhotoIndex = 0;
     let isOwnPage = false;
+    let currentModelDisplayName = '';
+    let modelLikesViewer = false;
 
     if (!username) {
       loading.style.display = 'none';
@@ -569,11 +566,11 @@
           ? `${data.display_name}, ${data.age}`
           : data.display_name;
         document.getElementById('usernameLabel').textContent = `@${data.username}`;
-        document.getElementById('followerCount').textContent = data.follower_count;
+        currentModelDisplayName = data.display_name;
+        modelLikesViewer = !!data.model_likes_you;
 
         const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
         document.getElementById('subscribeBtn').textContent = `Subscribe — ₦${priceNaira}/mo`;
-        document.getElementById('likeCount').textContent = data.like_count;
         document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
         document.getElementById('feedLinkBtn').href = `/feed.html?u=${encodeURIComponent(data.username)}`;
 
@@ -627,6 +624,7 @@
             likeBtn.textContent = 'Liked';
             likeBtn.classList.add('active');
           }
+          renderRelationStatus(data.viewer_is_following, data.viewer_has_liked);
         }
 
         loading.style.display = 'none';
@@ -736,7 +734,29 @@
       }
     }
 
-    async function toggleAction(action, btn, countEl, activeLabel, inactiveLabel) {
+    function renderRelationStatus(isFollowing, hasLiked) {
+      const followEl = document.getElementById('followStatus');
+      const likeEl = document.getElementById('likeStatus');
+      const name = currentModelDisplayName || 'her';
+
+      if (isFollowing) {
+        followEl.textContent = `You are following ${name}`;
+        followEl.classList.add('active');
+      } else {
+        followEl.textContent = 'Follow her to get more';
+        followEl.classList.remove('active');
+      }
+
+      if (hasLiked) {
+        likeEl.textContent = modelLikesViewer ? `You Like ${name} 💕💕` : `You Like ${name}`;
+        likeEl.classList.add('active');
+      } else {
+        likeEl.textContent = 'Like her to get more';
+        likeEl.classList.remove('active');
+      }
+    }
+
+    async function toggleAction(action, btn, activeLabel, inactiveLabel) {
       if (!subscriberSession) {
         messageBox.className = 'error';
         messageBox.textContent = 'Log in as a subscriber first to do that.';
@@ -759,11 +779,11 @@
         if (action === 'follow') {
           btn.textContent = data.following ? activeLabel : inactiveLabel;
           btn.classList.toggle('active', data.following);
-          countEl.textContent = data.follower_count;
+          renderRelationStatus(data.following, document.getElementById('likeBtn').classList.contains('active'));
         } else {
           btn.textContent = data.liked ? activeLabel : inactiveLabel;
           btn.classList.toggle('active', data.liked);
-          countEl.textContent = data.like_count;
+          renderRelationStatus(document.getElementById('followBtn').classList.contains('active'), data.liked);
         }
       } catch (err) {
         messageBox.className = 'error';
@@ -772,10 +792,10 @@
     }
 
     document.getElementById('followBtn').addEventListener('click', () => {
-      toggleAction('follow', document.getElementById('followBtn'), document.getElementById('followerCount'), 'Following', 'Follow');
+      toggleAction('follow', document.getElementById('followBtn'), 'Following', 'Follow');
     });
     document.getElementById('likeBtn').addEventListener('click', () => {
-      toggleAction('like', document.getElementById('likeBtn'), document.getElementById('likeCount'), 'Liked', 'Like');
+      toggleAction('like', document.getElementById('likeBtn'), 'Liked', 'Like');
     });
     document.getElementById('subscribeBtn').addEventListener('click', () => {
       messageBox.className = 'error';
