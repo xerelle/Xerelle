@@ -539,6 +539,7 @@
     let currentPhotoIndex = 0;
     let isOwnPage = false;
     let currentModelDisplayName = '';
+    let currentModelId = '';
     let modelLikesViewer = false;
 
     if (!username) {
@@ -572,6 +573,7 @@
           : data.display_name;
         document.getElementById('usernameLabel').textContent = `@${data.username}`;
         currentModelDisplayName = data.display_name;
+        currentModelId = data.id;
         modelLikesViewer = !!data.model_likes_you;
 
         const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
@@ -802,9 +804,48 @@
     document.getElementById('likeBtn').addEventListener('click', () => {
       toggleAction('like', document.getElementById('likeBtn'), 'Liked', 'Like');
     });
-    document.getElementById('subscribeBtn').addEventListener('click', () => {
-      messageBox.className = 'error';
-      messageBox.textContent = 'Checkout isn\'t wired up on this page yet — coming soon.';
+    document.getElementById('subscribeBtn').addEventListener('click', async () => {
+      if (!subscriberSession) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Log in as a subscriber first to subscribe.';
+        return;
+      }
+
+      const subscribeBtn = document.getElementById('subscribeBtn');
+      subscribeBtn.disabled = true;
+      const originalLabel = subscribeBtn.textContent;
+      subscribeBtn.textContent = 'Starting checkout...';
+      messageBox.className = '';
+      messageBox.textContent = '';
+
+      try {
+        const res = await fetch('/api/checkout/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${subscriberSession.token}`,
+          },
+          body: JSON.stringify({ model_id: currentModelId }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          messageBox.className = 'error';
+          messageBox.textContent = data.message || data.error || 'Could not start checkout.';
+          subscribeBtn.disabled = false;
+          subscribeBtn.textContent = originalLabel;
+          return;
+        }
+
+        // Paystack hosts the actual payment page — send her there to
+        // enter card details, rather than trying to collect them here.
+        window.location.href = data.authorization_url;
+      } catch (err) {
+        messageBox.className = 'error';
+        messageBox.textContent = 'Could not reach the server.';
+        subscribeBtn.disabled = false;
+        subscribeBtn.textContent = originalLabel;
+      }
     });
 
     const viewerOverlay = document.getElementById('viewerOverlay');
