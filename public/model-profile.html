@@ -50,6 +50,28 @@
   h1 { font-size: 22px; margin-bottom: 4px; }
   #whoami { color: var(--accent-gold); font-size: 13px; margin-bottom: 28px; }
 
+  .model-avatar-wrap { position: relative; width: 90px; margin: 4px auto 16px; }
+  .model-avatar {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: var(--bg-surface); border: 2px solid var(--border);
+    object-fit: cover; display: block; margin: 0 auto;
+  }
+  .model-avatar-initial {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: var(--bg-surface); border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 600; color: var(--accent-gold);
+    margin: 0 auto;
+  }
+  .model-avatar-edit-badge {
+    position: absolute; bottom: 0; right: -2px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent-gold); color: var(--border-subtle);
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--bg-primary); cursor: pointer;
+  }
+  .model-avatar-edit-badge svg { width: 14px; height: 14px; }
+
   .header-row {
     display: flex;
     align-items: center;
@@ -157,6 +179,15 @@
           <span class="bell-dot" id="bellDot"></span>
         </a>
       </div>
+
+      <div class="model-avatar-wrap">
+        <img class="model-avatar" id="modelAvatarImg" src="" alt="" style="display:none;">
+        <div class="model-avatar-initial" id="modelAvatarInitial" style="display:none;"></div>
+        <button class="model-avatar-edit-badge" id="modelAvatarEditBadge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+      </div>
+
       <div id="whoami"></div>
 
       <div class="section-label">Room</div>
@@ -209,6 +240,23 @@
        native picker isn't blocked by mobile browsers' restriction on
        auto-triggering file inputs outside a genuine user gesture. -->
   <input type="file" id="storyUploadInput" accept="image/*,video/*">
+  <input type="file" id="modelAvatarInput" accept="image/*">
+  <div class="upload-panel" id="modelAvatarPanel">
+    <div class="upload-sheet">
+      <div class="upload-header">
+        <span>Change Photo</span>
+        <button id="closeModelAvatarUpload">✕</button>
+      </div>
+      <div class="upload-body" style="text-align:center;">
+        <div class="upload-preview" id="modelAvatarPreview" style="width:160px; height:160px; border-radius:50%; margin:0 auto 20px;">
+          <span style="color:var(--text-secondary); font-size:13px;">No photo selected</span>
+        </div>
+        <button class="upload-post-btn" id="modelAvatarPostBtn">Save Photo</button>
+        <div class="upload-status" id="modelAvatarStatus"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-sheet">
       <div class="upload-header">
@@ -237,6 +285,7 @@
       whoami.textContent = `${session.display_name} (@${session.username})`;
       document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
       document.getElementById('previewRoomLink').href = `/room.html?u=${encodeURIComponent(session.username)}&preview=true`;
+      loadModelAvatar();
 
       fetch('/api/models/notifications', {
         headers: { 'Authorization': `Bearer ${session.token}` },
@@ -337,6 +386,102 @@
       } finally {
         uploadPostBtn.disabled = false;
         uploadPostBtn.textContent = 'Post Story';
+      }
+    });
+
+    // ============ Main profile photo, entirely in-page ============
+    async function loadModelAvatar() {
+      try {
+        const res = await fetch(`/api/models/${encodeURIComponent(session.username)}`, {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const img = document.getElementById('modelAvatarImg');
+        const initial = document.getElementById('modelAvatarInitial');
+        if (data.teaser_media_url) {
+          img.src = data.teaser_media_url;
+          img.style.display = 'block';
+          initial.style.display = 'none';
+        } else {
+          initial.textContent = session.display_name.trim().charAt(0).toUpperCase();
+          initial.style.display = 'flex';
+          img.style.display = 'none';
+        }
+      } catch (err) {}
+    }
+
+    const modelAvatarInput = document.getElementById('modelAvatarInput');
+    const modelAvatarPanel = document.getElementById('modelAvatarPanel');
+    const modelAvatarPreview = document.getElementById('modelAvatarPreview');
+    const modelAvatarPostBtn = document.getElementById('modelAvatarPostBtn');
+    const modelAvatarStatus = document.getElementById('modelAvatarStatus');
+    let selectedModelAvatarFile = null;
+
+    document.getElementById('modelAvatarEditBadge').addEventListener('click', () => {
+      modelAvatarInput.click();
+    });
+
+    modelAvatarInput.addEventListener('change', () => {
+      const file = modelAvatarInput.files[0];
+      if (!file) return;
+      selectedModelAvatarFile = file;
+      const url = URL.createObjectURL(file);
+      modelAvatarPreview.innerHTML = `<img src="${url}" alt="" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      modelAvatarStatus.textContent = '';
+      modelAvatarStatus.className = 'upload-status';
+      modelAvatarPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeModelAvatarUpload').addEventListener('click', () => {
+      modelAvatarPanel.style.display = 'none';
+    });
+
+    modelAvatarPostBtn.addEventListener('click', async () => {
+      if (!selectedModelAvatarFile) {
+        modelAvatarStatus.className = 'upload-status error';
+        modelAvatarStatus.textContent = 'Choose a photo first.';
+        return;
+      }
+
+      modelAvatarPostBtn.disabled = true;
+      modelAvatarPostBtn.textContent = 'Saving...';
+      modelAvatarStatus.textContent = '';
+      modelAvatarStatus.className = 'upload-status';
+
+      const formData = new FormData();
+      formData.append('photo', selectedModelAvatarFile);
+
+      try {
+        const res = await fetch('/api/models/avatar/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          modelAvatarStatus.className = 'upload-status error';
+          modelAvatarStatus.textContent = data.message || data.error || 'Upload failed.';
+          return;
+        }
+
+        modelAvatarStatus.className = 'upload-status success';
+        modelAvatarStatus.textContent = 'Photo saved!';
+        selectedModelAvatarFile = null;
+        modelAvatarInput.value = '';
+        loadModelAvatar();
+
+        setTimeout(() => {
+          modelAvatarPanel.style.display = 'none';
+        }, 900);
+      } catch (err) {
+        modelAvatarStatus.className = 'upload-status error';
+        modelAvatarStatus.textContent = 'Could not reach the server.';
+      } finally {
+        modelAvatarPostBtn.disabled = false;
+        modelAvatarPostBtn.textContent = 'Save Photo';
       }
     });
   </script>
