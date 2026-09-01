@@ -163,6 +163,9 @@
       <a class="profile-link" href="/room-settings.html">
         Room settings <span class="arrow">›</span>
       </a>
+      <a class="profile-link" href="#" id="previewRoomLink">
+        Preview my Room <span class="arrow">›</span>
+      </a>
 
       <div class="section-label">Account</div>
       <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">
@@ -233,6 +236,7 @@
     } else {
       whoami.textContent = `${session.display_name} (@${session.username})`;
       document.getElementById('feedNavLink').href = `/feed.html?u=${encodeURIComponent(session.username)}`;
+      document.getElementById('previewRoomLink').href = `/room.html?u=${encodeURIComponent(session.username)}&preview=true`;
 
       fetch('/api/models/notifications', {
         headers: { 'Authorization': `Bearer ${session.token}` },
