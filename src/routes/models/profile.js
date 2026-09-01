@@ -5,7 +5,9 @@ import { getActiveStory } from "./stories.js";
 
 // Public data for a model's landing page. Includes follower/like COUNTS
 // (public, aggregate) and — only if the requester is logged in — whether
-// THIS SPECIFIC subscriber is following/liking her. It never returns a
+// THIS SPECIFIC subscriber is following/liking her, AND whether she
+// likes him back (model_likes_you) — the mutual-like signal shown on
+// room.html instead of raw popularity numbers. It never returns a
 // list of who else is following or liking, to anyone, under any
 // circumstance.
 export async function handleModelProfile(username, request, env) {
@@ -37,6 +39,7 @@ export async function handleModelProfile(username, request, env) {
 
   let viewer_is_following = false;
   let viewer_has_liked = false;
+  let model_likes_you = false;
 
   const subscriberId = await getSubscriberIdFromSession(request, env);
   if (subscriberId) {
@@ -53,6 +56,13 @@ export async function handleModelProfile(username, request, env) {
       .bind(subscriberId, model.id)
       .first();
     viewer_has_liked = !!likeRow;
+
+    const modelLikesRow = await env.DB.prepare(
+      "SELECT id FROM model_likes_subscriber WHERE model_id = ? AND subscriber_id = ?"
+    )
+      .bind(model.id, subscriberId)
+      .first();
+    model_likes_you = !!modelLikesRow;
   }
 
   return jsonResponse({
@@ -70,5 +80,6 @@ export async function handleModelProfile(username, request, env) {
     like_count: likeCountRow.count,
     viewer_is_following,
     viewer_has_liked,
+    model_likes_you,
   });
 }
