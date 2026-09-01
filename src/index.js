@@ -16,6 +16,8 @@ import { handlePostSubscriberFeedItem } from "./routes/subscribers/feed-post.js"
 import { handlePostSubscriberStory } from "./routes/subscribers/story-post.js";
 import { handleGetSubscriberStoriesForModel } from "./routes/models/subscriber-stories.js";
 import { handleGetCombinedFeed } from "./routes/subscribers/feed-combined.js";
+import { handleToggleSubscriberLike } from "./routes/models/subscriber-like.js";
+import { handleUpdateModelAvatar } from "./routes/models/avatar.js";
 import { handleGetActivities } from "./routes/models/activities.js";
 import { handleGetEarnings } from "./routes/models/earnings.js";
 import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
@@ -99,6 +101,13 @@ export default {
       }
       if (pathname === "/api/models/subscriber-stories" && method === "GET") {
         return await handleGetSubscriberStoriesForModel(request, env);
+      }
+      if (pathname.match(/^\/api\/models\/subscribers\/[\w-]+\/like$/) && method === "POST") {
+        const subscriberId = pathname.split("/")[4];
+        return await handleToggleSubscriberLike(request, env, subscriberId);
+      }
+      if (pathname === "/api/models/avatar/upload" && method === "POST") {
+        return await handleUpdateModelAvatar(request, env);
       }
       if (pathname === "/api/models/activities" && method === "GET") {
         return await handleGetActivities(request, env);
