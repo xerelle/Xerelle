@@ -15,6 +15,7 @@ import { handlePostFeedItem } from "./routes/models/feed-post.js";
 import { handlePostSubscriberFeedItem } from "./routes/subscribers/feed-post.js";
 import { handlePostSubscriberStory } from "./routes/subscribers/story-post.js";
 import { handleGetSubscriberStoriesForModel } from "./routes/models/subscriber-stories.js";
+import { handleGetCombinedFeed } from "./routes/subscribers/feed-combined.js";
 import { handleGetActivities } from "./routes/models/activities.js";
 import { handleGetEarnings } from "./routes/models/earnings.js";
 import { handleListPendingVerifications, handleReviewVerification } from "./routes/models/admin-verification.js";
@@ -89,6 +90,9 @@ export default {
       }
       if (pathname === "/api/subscribers/feed/post" && method === "POST") {
         return await handlePostSubscriberFeedItem(request, env);
+      }
+      if (pathname === "/api/subscribers/feed/combined" && method === "GET") {
+        return await handleGetCombinedFeed(request, env);
       }
       if (pathname === "/api/subscribers/stories/post" && method === "POST") {
         return await handlePostSubscriberStory(request, env);
