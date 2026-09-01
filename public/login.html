@@ -3,57 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="/theme.css">
 <title>Xerelle — Log In</title>
 <style>
   body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    background: #0F0509;
+    color: #F7F0E6;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0 20px 40px;
+    justify-content: center;
+    padding: 40px 20px;
     margin: 0;
   }
-  nav { display: flex; justify-content: center; padding: 20px; max-width: 420px; width: 100%; }
-  nav img { height: 32px; width: auto; }
   .card { max-width: 420px; width: 100%; }
   h1 { font-size: 24px; margin-bottom: 6px; }
-  p.sub { color: var(--text-secondary); font-size: 14px; margin-bottom: 28px; }
+  p.sub { color: #9C8791; font-size: 14px; margin-bottom: 28px; }
   label {
-    display: block; font-size: 13px; color: var(--text-tertiary);
+    display: block; font-size: 13px; color: #C9B8BF;
     margin-bottom: 6px; margin-top: 16px;
   }
   input {
     width: 100%; box-sizing: border-box;
-    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px 14px; color: var(--text-primary); font-size: 15px;
+    background: #3A1029; border: 1px solid #4A1E36; border-radius: 8px;
+    padding: 12px 14px; color: #F7F0E6; font-size: 15px;
   }
-  input:focus { outline: none; border-color: var(--accent-gold); }
-  #submitBtn {
+  input:focus { outline: none; border-color: #D4A24C; }
+  button {
     width: 100%; margin-top: 26px;
-    background: var(--accent-gold); color: var(--border-subtle); font-weight: 600;
+    background: #D4A24C; color: #2B0A1F; font-weight: 600;
     padding: 14px; border-radius: 10px; border: none;
     font-size: 15px; cursor: pointer;
   }
-  #submitBtn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  button:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
   #message {
     margin-top: 18px; padding: 12px 14px; border-radius: 8px;
     font-size: 14px; display: none; line-height: 1.5;
   }
-  #message.success { background: var(--success-bg); color: var(--accent-green); display: block; }
-  #message.error { background: var(--danger-bg); color: var(--danger); display: block; }
-  a { color: var(--accent-gold); }
+  #message.success { background: rgba(27,77,62,0.2); color: #4E9C82; display: block; }
+  #message.error { background: rgba(232,139,155,0.15); color: #E88B9B; display: block; }
+  a { color: #D4A24C; }
 </style>
 </head>
 <body>
-  <nav>
-    <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
-  </nav>
-  <button onclick="xerelleGoBack()" style="position:fixed; top:16px; left:16px; z-index:20; background:none; border:none; color:var(--text-primary); cursor:pointer; padding:8px; display:flex;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px; height:22px;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-  </button>
   <div class="card">
     <h1>Welcome back</h1>
     <p class="sub">Log in with your username or phone number.</p>
@@ -101,13 +91,12 @@
           messageBox.className = 'error';
           messageBox.textContent = data.error || 'Something went wrong. Please try again.';
         } else {
-          // Store session so other pages know who's logged in without
-          // asking again, then take her to her own Room — not verify.html,
-          // since that should only matter the first time, not every login.
+          // Store session so other pages (verify.html, dashboard, etc.)
+          // know who's logged in without asking again.
           localStorage.setItem('xerelle_model_session', JSON.stringify(data));
           messageBox.className = 'success';
           messageBox.textContent = `Welcome back, ${data.display_name}! Redirecting...`;
-          setTimeout(() => { window.location.href = `/room.html?u=${encodeURIComponent(data.username)}`; }, 1200);
+          setTimeout(() => { window.location.href = '/verify.html'; }, 1200);
         }
       } catch (err) {
         messageBox.className = 'error';
@@ -118,6 +107,5 @@
       }
     });
   </script>
-  <script src="/theme-toggle.js"></script>
 </body>
 </html>
