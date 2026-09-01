@@ -1,8 +1,2 @@
-/*.html
-  Cache-Control: no-cache, no-store, must-revalidate
-
-/*.js
-  Cache-Control: no-cache, no-store, must-revalidate
-
-/
+/*
   Cache-Control: no-cache, no-store, must-revalidate
