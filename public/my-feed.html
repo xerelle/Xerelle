@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — My Feed</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+  }
+  .feed-scroll {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    padding-bottom: 64px;
+  }
+  .post {
+    height: calc(100vh - 64px);
+    scroll-snap-align: start;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    background: #111;
+  }
+  .post img, .post video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .post-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, transparent 30%, transparent 55%, rgba(0,0,0,0.75) 100%);
+  }
+  .post-content {
+    position: relative;
+    width: 100%;
+    padding: 20px 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    z-index: 2;
+  }
+  .post-info { color: #fff; max-width: 72%; }
+  .post-name { font-weight: 700; font-size: 16px; margin-bottom: 6px; }
+  .post-caption { font-size: 14px; line-height: 1.4; opacity: 0.95; }
+
+  .self-badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 3;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 12px;
+  }
+
+  .post-actions { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .action-btn {
+    display: flex; flex-direction: column; align-items: center;
+    color: #fff; gap: 4px; background: none; border: none; cursor: pointer;
+  }
+  .action-btn svg { width: 30px; height: 30px; }
+  .action-count { font-size: 12px; font-weight: 600; }
+  .action-btn.liked svg { fill: #E88B9B; stroke: #E88B9B; }
+
+  .mute-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 3;
+    background: rgba(0,0,0,0.4);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+  }
+  .mute-btn svg { width: 18px; height: 18px; }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 64px;
+    background: rgba(15, 5, 9, 0.9);
+    backdrop-filter: blur(10px);
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 10;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: #9C8791; text-decoration: none;
+    background: none; border: none; cursor: pointer; font: inherit;
+  }
+  .nav-item.active { color: #D4A24C; }
+  .nav-item svg { width: 24px; height: 24px; }
+  .nav-item span { font-size: 10px; }
+
+  input[type="file"] { display: none; }
+
+  .empty-screen {
+    height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center;
+    color: #9C8791; font-size: 14px; text-align: center; padding: 32px;
+  }
+  .empty-screen p { margin-bottom: 20px; max-width: 280px; line-height: 1.5; }
+  .empty-screen button {
+    background: linear-gradient(135deg, #F3DFB0, #D4A24C 45%, #A8762F);
+    color: #2B0A1F; font-weight: 700; padding: 14px 32px;
+    border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
+  }
+  #loadingScreen {
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    color: #9C8791; font-size: 14px;
+  }
+
+  .comment-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 20;
+  }
+  .comment-sheet {
+    background: #1A0710; width: 100%; max-height: 70vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+  }
+  .comment-header {
+    padding: 16px 20px; border-bottom: 1px solid #2B0A1F;
+    display: flex; justify-content: space-between; align-items: center;
+    color: #fff; font-weight: 600; font-size: 15px;
+  }
+  .comment-header button { background: none; border: none; color: #9C8791; font-size: 20px; }
+  .comment-list { overflow-y: auto; padding: 12px 20px; flex: 1; }
+  .comment-item { margin-bottom: 14px; }
+  .comment-author { color: #D4A24C; font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+  .comment-body { color: #F7F0E6; font-size: 13.5px; line-height: 1.4; }
+  .comment-input-row { display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid #2B0A1F; }
+  .comment-input-row input {
+    flex: 1; background: #3A1029; border: 1px solid #4A1E36; border-radius: 20px;
+    padding: 10px 16px; color: #F7F0E6; font-size: 13.5px;
+  }
+  .comment-input-row button {
+    background: #D4A24C; color: #2B0A1F; border: none; border-radius: 20px;
+    padding: 0 18px; font-weight: 600; font-size: 13px;
+  }
+
+  .upload-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 20;
+  }
+  .upload-sheet {
+    background: #1A0710; width: 100%; max-height: 85vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px;
+  }
+  .upload-header {
+    padding: 16px 20px; border-bottom: 1px solid #2B0A1F;
+    display: flex; justify-content: space-between; align-items: center;
+    color: #fff; font-weight: 600; font-size: 15px;
+  }
+  .upload-header button { background: none; border: none; color: #9C8791; font-size: 20px; }
+  .upload-body { padding: 16px 20px; overflow-y: auto; }
+  .upload-preview {
+    width: 100%; height: 220px; border-radius: 12px; overflow: hidden;
+    background: #3A1029; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 16px;
+  }
+  .upload-preview img, .upload-preview video { width: 100%; height: 100%; object-fit: cover; }
+  .upload-caption {
+    width: 100%; background: #3A1029; border: 1px solid #4A1E36; border-radius: 10px;
+    padding: 12px 14px; color: #F7F0E6; font-size: 14px; font-family: inherit;
+    margin-bottom: 8px;
+  }
+  .upload-expiry { font-size: 12px; color: #9C8791; line-height: 1.5; margin-bottom: 18px; }
+  .upload-post-btn {
+    width: 100%; background: #D4A24C; color: #2B0A1F; font-weight: 700;
+    padding: 14px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
+  }
+  .upload-post-btn:disabled { background: #4A1E36; color: #9C8791; cursor: not-allowed; }
+  .upload-status { margin-top: 12px; font-size: 13.5px; text-align: center; color: #9C8791; }
+  .upload-status.success { color: #6FBF73; }
+  .upload-status.error { color: #E88B9B; }
+</style>
+</head>
+<body>
+  <div id="loadingScreen">Loading...</div>
+
+  <div class="empty-screen" id="emptyScreen">
+    <p>Nothing here yet. Post your own update, or subscribe to a model to see her Feed here too.</p>
+    <button id="emptyUploadBtn">Post Something</button>
+  </div>
+
+  <div class="feed-scroll" id="feedScroll" style="display:none;"></div>
+
+  <div class="bottom-nav" id="bottomNav" style="display:none;">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span>Feed</span>
+    </div>
+    <button class="nav-item" id="uploadNavItem">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Upload</span>
+    </button>
+    <a class="nav-item" href="/home.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Message</span>
+    </a>
+    <a class="nav-item" href="/home.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
+  </div>
+
+  <div class="comment-panel" id="commentPanel">
+    <div class="comment-sheet">
+      <div class="comment-header">
+        <span>Comments</span>
+        <button id="closeComments">✕</button>
+      </div>
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-input-row">
+        <input type="text" id="commentInput" placeholder="Add a comment...">
+        <button id="sendComment">Post</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="feedUploadInput" accept="image/*,video/*">
+  <div class="upload-panel" id="uploadPanel">
+    <div class="upload-sheet">
+      <div class="upload-header">
+        <span>Post to Your Feed</span>
+        <button id="closeUpload">✕</button>
+      </div>
+      <div class="upload-body">
+        <div class="upload-preview" id="uploadPreview">
+          <span style="color:#9C8791; font-size:13px;">No media selected</span>
+        </div>
+        <textarea class="upload-caption" id="uploadCaption" placeholder="Say something about this..."></textarea>
+        <div class="upload-expiry">Visible for 30 days to any model you currently subscribe to. If you have no active subscription, nobody sees this.</div>
+        <button class="upload-post-btn" id="uploadPostBtn">Post to Feed</button>
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // This page deliberately doesn't load theme-toggle.js (always-dark
+    // design, independent of the rest of the app's theme system) — so
+    // it needs its own local copy of the XSS-safety escape function.
+    window.xerelleEscapeHtml = function (str) {
+      if (str === null || str === undefined) return '';
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    };
+
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+
+    const loadingScreen = document.getElementById('loadingScreen');
+    const emptyScreen = document.getElementById('emptyScreen');
+    const feedScroll = document.getElementById('feedScroll');
+    const bottomNav = document.getElementById('bottomNav');
+
+    let activePostId = null;
+
+    if (!session) {
+      window.location.href = '/subscriber-login.html';
+    }
+
+    async function loadCombinedFeed() {
+      try {
+        const res = await fetch('/api/subscribers/feed/combined', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+        loadingScreen.style.display = 'none';
+
+        if (!data.posts || data.posts.length === 0) {
+          emptyScreen.style.display = 'flex';
+          return;
+        }
+
+        renderPosts(data.posts);
+        feedScroll.style.display = 'block';
+        bottomNav.style.display = 'flex';
+        setupVideoAutoplay();
+      } catch (err) {
+        loadingScreen.textContent = 'Could not reach the server.';
+      }
+    }
+
+    function renderPosts(posts) {
+      posts.forEach((post) => {
+        const el = document.createElement('div');
+        el.className = 'post';
+        el.dataset.postId = post.id;
+        el.style.position = 'relative';
+
+        const isSelf = post.source_type === 'self';
+        const posterName = isSelf ? 'You' : post.model_display_name;
+
+        const mediaHtml = post.media_type === 'video'
+          ? `<video src="${window.xerelleEscapeHtml(post.media_url)}" loop muted playsinline></video><button class="mute-btn" onclick="toggleMute(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg></button>`
+          : `<img src="${window.xerelleEscapeHtml(post.media_url)}" alt="">`;
+
+        const actionsHtml = isSelf
+          ? '' // his own posts: no like/comment buttons, just displayed
+          : `<div class="post-actions">
+              <button class="action-btn ${post.liked_by_me ? 'liked' : ''}" onclick="toggleLike('${post.id}', this)">
+                <svg viewBox="0 0 24 24" fill="${post.liked_by_me ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                <div class="action-count">${post.like_count}</div>
+              </button>
+              <button class="action-btn" onclick="openComments('${post.id}')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <div class="action-count">${post.comment_count}</div>
+              </button>
+            </div>`;
+
+        el.innerHTML = `
+          ${isSelf ? '<span class="self-badge">Your Post</span>' : ''}
+          ${mediaHtml}
+          <div class="post-overlay"></div>
+          <div class="post-content">
+            <div class="post-info">
+              <div class="post-name">${window.xerelleEscapeHtml(posterName)}</div>
+              <div class="post-caption">${window.xerelleEscapeHtml(post.caption || '')}</div>
+            </div>
+            ${actionsHtml}
+          </div>
+        `;
+
+        if (!isSelf) {
+          let lastTap = 0;
+          el.addEventListener('click', (e) => {
+            if (e.target.closest('.action-btn') || e.target.closest('.mute-btn')) return;
+            const now = Date.now();
+            if (now - lastTap < 300) {
+              const likeBtn = el.querySelector('.action-btn');
+              if (likeBtn && !likeBtn.classList.contains('liked')) {
+                toggleLike(post.id, likeBtn);
+              }
+            }
+            lastTap = now;
+          });
+        }
+
+        feedScroll.appendChild(el);
+      });
+    }
+
+    function setupVideoAutoplay() {
+      const videos = document.querySelectorAll('.post video');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.play().catch(() => {});
+          } else {
+            entry.target.pause();
+          }
+        });
+      }, { threshold: 0.6 });
+      videos.forEach((v) => observer.observe(v));
+    }
+
+    window.toggleMute = function (btn) {
+      const video = btn.previousElementSibling;
+      video.muted = !video.muted;
+    };
+
+    window.toggleLike = async function (postId, btn) {
+      const wasLiked = btn.classList.contains('liked');
+      btn.classList.toggle('liked');
+      const countEl = btn.querySelector('.action-count');
+      const svgEl = btn.querySelector('svg');
+      countEl.textContent = parseInt(countEl.textContent) + (wasLiked ? -1 : 1);
+      svgEl.setAttribute('fill', wasLiked ? 'none' : 'currentColor');
+
+      try {
+        await fetch(`/api/subscribers/feed/post/${postId}/like`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+      } catch (err) {}
+    };
+
+    window.openComments = async function (postId) {
+      activePostId = postId;
+      document.getElementById('commentPanel').style.display = 'flex';
+      const list = document.getElementById('commentList');
+      list.innerHTML = 'Loading...';
+
+      try {
+        const res = await fetch(`/api/subscribers/feed/post/${postId}/comments`);
+        const data = await res.json();
+        list.innerHTML = '';
+        if (!data.comments || data.comments.length === 0) {
+          list.innerHTML = '<div style="color:#9C8791; font-size:13px;">No comments yet.</div>';
+          return;
+        }
+        data.comments.forEach((c) => {
+          const item = document.createElement('div');
+          item.className = 'comment-item';
+          const badge = c.author_type === 'model' ? ' <span style="color:#D4A24C; font-size:10.5px; border:1px solid #D4A24C; border-radius:8px; padding:1px 6px; margin-left:4px;">Model</span>' : '';
+          item.innerHTML = `<div class="comment-author">${window.xerelleEscapeHtml(c.author_name)}${badge}</div><div class="comment-body">${window.xerelleEscapeHtml(c.body)}</div>`;
+          list.appendChild(item);
+        });
+      } catch (err) {
+        list.innerHTML = 'Could not load comments.';
+      }
+    };
+
+    document.getElementById('closeComments').addEventListener('click', () => {
+      document.getElementById('commentPanel').style.display = 'none';
+    });
+
+    document.getElementById('sendComment').addEventListener('click', async () => {
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+      if (!text || !activePostId) return;
+
+      try {
+        const res = await fetch(`/api/subscribers/feed/post/${activePostId}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ comment_body: text }),
+        });
+        if (res.ok) {
+          input.value = '';
+          openComments(activePostId);
+          const postEl = document.querySelector(`[data-post-id="${activePostId}"]`);
+          const countEl = postEl.querySelectorAll('.action-count')[1];
+          if (countEl) countEl.textContent = parseInt(countEl.textContent) + 1;
+        }
+      } catch (err) {}
+    });
+
+    // ============ Upload flow, entirely in-page ============
+    const feedUploadInput = document.getElementById('feedUploadInput');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const uploadPreview = document.getElementById('uploadPreview');
+    const uploadCaption = document.getElementById('uploadCaption');
+    const uploadPostBtn = document.getElementById('uploadPostBtn');
+    const uploadStatus = document.getElementById('uploadStatus');
+    let selectedUploadFile = null;
+
+    function openUploadPicker() {
+      feedUploadInput.click();
+    }
+    document.getElementById('uploadNavItem').addEventListener('click', openUploadPicker);
+    document.getElementById('emptyUploadBtn').addEventListener('click', openUploadPicker);
+
+    feedUploadInput.addEventListener('change', () => {
+      const file = feedUploadInput.files[0];
+      if (!file) return;
+      selectedUploadFile = file;
+
+      const url = URL.createObjectURL(file);
+      uploadPreview.innerHTML = file.type.startsWith('video')
+        ? `<video src="${url}" muted playsinline controls></video>`
+        : `<img src="${url}" alt="">`;
+
+      uploadStatus.textContent = '';
+      uploadStatus.className = 'upload-status';
+      uploadPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeUpload').addEventListener('click', () => {
+      uploadPanel.style.display = 'none';
+    });
+
+    uploadPostBtn.addEventListener('click', async () => {
+      if (!selectedUploadFile) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = 'Please choose a photo or video first.';
+        return;
+      }
+
+      uploadPostBtn.disabled = true;
+      uploadPostBtn.textContent = 'Posting...';
+      uploadStatus.textContent = '';
+      uploadStatus.className = 'upload-status';
+
+      const formData = new FormData();
+      formData.append('media', selectedUploadFile);
+      formData.append('caption', uploadCaption.value.trim());
+
+      try {
+        const res = await fetch('/api/subscribers/feed/post', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${session.token}` },
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          uploadStatus.className = 'upload-status error';
+          uploadStatus.textContent = data.message || data.error || 'Something went wrong.';
+          return;
+        }
+
+        uploadStatus.className = 'upload-status success';
+        uploadStatus.textContent = 'Posted! Refreshing your Feed...';
+        selectedUploadFile = null;
+        uploadCaption.value = '';
+        feedUploadInput.value = '';
+
+        setTimeout(() => {
+          uploadPanel.style.display = 'none';
+          window.location.reload();
+        }, 900);
+      } catch (err) {
+        uploadStatus.className = 'upload-status error';
+        uploadStatus.textContent = 'Could not reach the server.';
+      } finally {
+        uploadPostBtn.disabled = false;
+        uploadPostBtn.textContent = 'Post to Feed';
+      }
+    });
+
+    loadCombinedFeed();
+  </script>
+</body>
+</html>
