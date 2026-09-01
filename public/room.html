@@ -560,7 +560,12 @@
         }
         const data = await res.json();
 
-        isOwnPage = modelSession && modelSession.username === data.username;
+        // ?preview=true forces the public view even for the owner —
+        // lets a model see her own Room the way a subscriber actually
+        // sees it (Follow/Like buttons, relational status text), since
+        // she'd otherwise only ever see her self-view dashboard here.
+        const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true';
+        isOwnPage = modelSession && modelSession.username === data.username && !isPreview;
 
         document.getElementById('displayName').textContent = data.age
           ? `${data.display_name}, ${data.age}`
