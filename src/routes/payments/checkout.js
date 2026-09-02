@@ -5,10 +5,6 @@ const SUBSCRIPTION_PRICE_KOBO = 1000000;
 const MODEL_SHARE_RATE = 0.65;
 
 export async function handleCheckoutStart(request, env) {
-  // subscriber_id now comes ONLY from the real logged-in session, never
-  // from the request body — previously anyone could pay with their own
-  // money but have the resulting subscription attributed to a DIFFERENT
-  // subscriber's account of their choosing.
   const subscriber_id = await getSubscriberIdFromSession(request, env);
   if (!subscriber_id) {
     return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
@@ -59,6 +55,7 @@ export async function handleCheckoutStart(request, env) {
     body: JSON.stringify({
       email: subscriber.email || `${subscriber_id}@placeholder.xerelle.com`,
       amount: SUBSCRIPTION_PRICE_KOBO,
+      currency: "NGN",
       reference: transactionId,
       metadata: { subscriber_id, model_id, type: "subscription" },
     }),
@@ -66,7 +63,15 @@ export async function handleCheckoutStart(request, env) {
 
   const paystackData = await paystackRes.json();
   if (!paystackData.status) {
-    return jsonResponse({ error: "Payment initialization failed" }, 502);
+    // TEMPORARY: surfacing Paystack's actual rejection reason so we can
+    // see the real cause instead of guessing — revert this once the
+    // actual issue is found and fixed, since it's more detail than a
+    // production error response should normally expose.
+    return jsonResponse({
+      error: "Payment initialization failed",
+      paystack_message: paystackData.message || null,
+      paystack_response: paystackData,
+    }, 502);
   }
 
   return jsonResponse({
