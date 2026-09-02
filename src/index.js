@@ -35,6 +35,7 @@ import { handlePostFeedComment, handleGetFeedComments } from "./routes/subscribe
 import { handleCreateBlock, handleListBlocks, handleRemoveBlock } from "./routes/blocks.js";
 import { handleCreateReport } from "./routes/reports.js";
 import { handleCheckoutStart } from "./routes/payments/checkout.js";
+import { handleGiftCheckoutStart } from "./routes/payments/gift-checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
 import { handleServeMedia } from "./routes/media.js";
@@ -193,6 +194,9 @@ export default {
       }
       if (pathname === "/api/checkout/start" && method === "POST") {
         return await handleCheckoutStart(request, env);
+      }
+      if (pathname === "/api/gifts/checkout/start" && method === "POST") {
+        return await handleGiftCheckoutStart(request, env);
       }
       if (pathname === "/api/payments/webhook/paystack" && method === "POST") {
         return await handlePaystackWebhook(request, env);
