@@ -4,6 +4,10 @@ import { getSubscriberIdFromSession } from "../subscribers/login.js";
 const SUBSCRIPTION_PRICE_KOBO = 1000000;
 const MODEL_SHARE_RATE = 0.65;
 
+// subscriber_id comes ONLY from the real logged-in session, never from
+// the request body — prevents a real vulnerability where anyone could
+// pay with their own money but attribute the resulting subscription to
+// a different subscriber's account.
 export async function handleCheckoutStart(request, env) {
   const subscriber_id = await getSubscriberIdFromSession(request, env);
   if (!subscriber_id) {
@@ -63,15 +67,7 @@ export async function handleCheckoutStart(request, env) {
 
   const paystackData = await paystackRes.json();
   if (!paystackData.status) {
-    // TEMPORARY: surfacing Paystack's actual rejection reason so we can
-    // see the real cause instead of guessing — revert this once the
-    // actual issue is found and fixed, since it's more detail than a
-    // production error response should normally expose.
-    return jsonResponse({
-      error: "Payment initialization failed",
-      paystack_message: paystackData.message || null,
-      paystack_response: paystackData,
-    }, 502);
+    return jsonResponse({ error: "Payment initialization failed" }, 502);
   }
 
   return jsonResponse({
