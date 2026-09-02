@@ -18,6 +18,40 @@ export async function handlePaystackWebhook(request, env) {
     const reference = event.data.reference;
     const { subscriber_id, model_id, type } = event.data.metadata;
 
+    if (type === "gift") {
+      // Gifts live in their own table, separate from subscription
+      // transactions — a gift's reference is a gifts.id, not a
+      // transactions.id, so it needs its own update here rather than
+      // falling into the transactions UPDATE below (which would
+      // silently match zero rows for a gift reference).
+      await env.DB.prepare(`UPDATE gifts SET status = 'confirmed' WHERE id = ?`)
+        .bind(reference)
+        .run();
+
+      try {
+        const subscriber = await env.DB.prepare(
+          "SELECT display_name, phone FROM subscribers WHERE id = ?"
+        )
+          .bind(subscriber_id)
+          .first();
+        const label = subscriber.display_name || subscriber.phone;
+        const amountNaira = (event.data.amount / 100).toLocaleString();
+
+        await createNotification({
+          recipientType: "model",
+          recipientId: model_id,
+          type: "gift_received",
+          message: `${label} sent you a gift of ₦${amountNaira}.`,
+          link: `/inbox.html`,
+          env,
+        });
+      } catch (err) {
+        console.error("Failed to create gift notification:", err);
+      }
+
+      return jsonResponse({ received: true });
+    }
+
     await env.DB.prepare(`UPDATE transactions SET status = 'confirmed' WHERE id = ?`)
       .bind(reference)
       .run();
@@ -80,4 +114,3 @@ async function verifyPaystackSignature(rawBody, signature, secretKey) {
     .join("");
   return hex === signature;
 }
-
