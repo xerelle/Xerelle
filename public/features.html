@@ -10,7 +10,6 @@
   .container { max-width: 480px; margin: 0 auto; padding: 0 20px 60px; }
   nav { display: flex; align-items: center; justify-content: space-between; padding: 20px; max-width: 480px; margin: 0 auto; }
   nav img { height: 32px; width: auto; }
-  .back-link { color: #8A6B76; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px; }
   h1.page-title { font-family: Georgia, 'Times New Roman', serif; font-size: 29px; color: #5C2A3E; margin: 20px 0 28px; }
   .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .feature-card { background: #FFF6F9; border: 1px solid #F3D6E2; border-radius: 12px; padding: 18px 16px; }
@@ -20,9 +19,11 @@
 </style>
 </head>
 <body>
+  <a href="/index.html" style="position:fixed; top:16px; left:16px; z-index:20; background:#FBF3F1; border:1px solid #E9D5D2; border-radius:50%; color:#5C2A3E; text-decoration:none; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M15 18l-6-6 6-6"/></svg>
+  </a>
   <nav>
     <a href="/index.html"><img src="/logo.png" alt="Xerelle"></a>
-    <a href="/index.html" class="back-link">&larr; Back</a>
   </nav>
   <div class="container">
     <h1 class="page-title">Built for Real Relationships</h1>
@@ -30,7 +31,7 @@
       <div class="feature-card">
         <div class="feature-icon">💬</div>
         <div class="feature-title">Private Rooms</div>
-        <div class="feature-text">No public browsing. Fans reach you only through your link.</div>
+        <div class="feature-text">No public browsing. Fans reach you only through your link or username.</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">💰</div>
