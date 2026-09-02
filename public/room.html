@@ -169,6 +169,45 @@
     font-size: 15px;
     cursor: pointer;
   }
+
+  .gift-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 25;
+  }
+  .gift-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-height: 80vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px;
+  }
+  .gift-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--text-primary); font-weight: 600; font-size: 15px;
+  }
+  .gift-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
+  .gift-body { padding: 20px; }
+  .gift-quick-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .gift-quick-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 14px 6px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gift-quick-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .gift-custom-label { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+  .gift-custom-input {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    color: var(--text-primary); font-size: 15px; margin-bottom: 18px;
+  }
+  .gift-send-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle);
+    font-weight: 700; padding: 14px; border-radius: 10px; border: none;
+    font-size: 15px; cursor: pointer;
+  }
+  .gift-send-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  .gift-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
+  .gift-status.error { color: var(--danger); }
+
   #message {
     margin-top: 14px;
     padding: 10px 14px;
@@ -468,7 +507,28 @@
         <a class="btn-message" id="messageBtn" href="#">Send a message</a>
         <a class="btn-message" id="feedLinkBtn" href="#">View Feed</a>
         <button class="btn-primary" id="subscribeBtn">Subscribe</button>
+        <button class="btn-message" id="giftBtn">Send a Gift</button>
         <div id="message"></div>
+      </div>
+
+      <div class="gift-panel" id="giftPanel">
+        <div class="gift-sheet">
+          <div class="gift-header">
+            <span>Send a Gift</span>
+            <button id="closeGiftPanel">✕</button>
+          </div>
+          <div class="gift-body">
+            <div class="gift-quick-row">
+              <button class="gift-quick-btn" data-amount="500">₦500</button>
+              <button class="gift-quick-btn" data-amount="1000">₦1,000</button>
+              <button class="gift-quick-btn" data-amount="2500">₦2,500</button>
+            </div>
+            <div class="gift-custom-label">Or enter a custom amount (₦)</div>
+            <input type="number" class="gift-custom-input" id="giftCustomAmount" placeholder="e.g. 5000" min="1">
+            <button class="gift-send-btn" id="giftSendBtn">Send Gift</button>
+            <div class="gift-status" id="giftStatus"></div>
+          </div>
+        </div>
       </div>
 
       <div class="nav-bar" id="navBar">
@@ -845,6 +905,85 @@
         messageBox.textContent = 'Could not reach the server.';
         subscribeBtn.disabled = false;
         subscribeBtn.textContent = originalLabel;
+      }
+    });
+
+    // ============ Send a Gift ============
+    const giftPanel = document.getElementById('giftPanel');
+    const giftCustomAmount = document.getElementById('giftCustomAmount');
+    const giftSendBtn = document.getElementById('giftSendBtn');
+    const giftStatus = document.getElementById('giftStatus');
+    let selectedGiftAmount = null;
+
+    document.getElementById('giftBtn').addEventListener('click', () => {
+      if (!subscriberSession) {
+        messageBox.className = 'error';
+        messageBox.innerHTML = 'Log in as a subscriber first to send a gift. <a href="/subscriber-login.html" style="color:var(--accent-green); text-decoration:underline; font-weight:600;">Log in</a>';
+        return;
+      }
+      giftStatus.textContent = '';
+      giftStatus.className = 'gift-status';
+      giftPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeGiftPanel').addEventListener('click', () => {
+      giftPanel.style.display = 'none';
+    });
+
+    document.querySelectorAll('.gift-quick-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gift-quick-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGiftAmount = parseInt(btn.dataset.amount, 10);
+        giftCustomAmount.value = '';
+      });
+    });
+
+    giftCustomAmount.addEventListener('input', () => {
+      document.querySelectorAll('.gift-quick-btn').forEach((b) => b.classList.remove('active'));
+      selectedGiftAmount = null;
+    });
+
+    giftSendBtn.addEventListener('click', async () => {
+      const customValue = parseInt(giftCustomAmount.value, 10);
+      const amountNaira = selectedGiftAmount || (customValue > 0 ? customValue : null);
+
+      if (!amountNaira) {
+        giftStatus.className = 'gift-status error';
+        giftStatus.textContent = 'Choose an amount or enter a custom one.';
+        return;
+      }
+
+      giftSendBtn.disabled = true;
+      giftSendBtn.textContent = 'Starting checkout...';
+      giftStatus.textContent = '';
+      giftStatus.className = 'gift-status';
+
+      try {
+        const res = await fetch('/api/gifts/checkout/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${subscriberSession.token}`,
+          },
+          body: JSON.stringify({ model_id: currentModelId, amount_kobo: amountNaira * 100 }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          giftStatus.className = 'gift-status error';
+          giftStatus.textContent = data.message || data.error || 'Could not start checkout.';
+          giftSendBtn.disabled = false;
+          giftSendBtn.textContent = 'Send Gift';
+          return;
+        }
+
+        window.location.href = data.authorization_url;
+      } catch (err) {
+        giftStatus.className = 'gift-status error';
+        giftStatus.textContent = 'Could not reach the server.';
+        giftSendBtn.disabled = false;
+        giftSendBtn.textContent = 'Send Gift';
       }
     });
 
