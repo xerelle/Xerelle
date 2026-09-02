@@ -766,7 +766,7 @@
     async function toggleAction(action, btn, activeLabel, inactiveLabel) {
       if (!subscriberSession) {
         messageBox.className = 'error';
-        messageBox.textContent = 'Log in as a subscriber first to do that.';
+        messageBox.innerHTML = 'Log in as a subscriber first to do that. <a href="/subscriber-login.html" style="color:inherit; text-decoration:underline; font-weight:600;">Log in</a>';
         return;
       }
       try {
@@ -807,7 +807,7 @@
     document.getElementById('subscribeBtn').addEventListener('click', async () => {
       if (!subscriberSession) {
         messageBox.className = 'error';
-        messageBox.textContent = 'Log in as a subscriber first to subscribe.';
+        messageBox.innerHTML = 'Log in as a subscriber first to subscribe. <a href="/subscriber-login.html" style="color:inherit; text-decoration:underline; font-weight:600;">Log in</a>';
         return;
       }
 
