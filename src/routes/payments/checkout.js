@@ -22,7 +22,7 @@ export async function handleCheckoutStart(request, env) {
   }
 
   const model = await env.DB.prepare(
-    "SELECT id, verification_status FROM models WHERE id = ?"
+    "SELECT id, username, verification_status FROM models WHERE id = ?"
   )
     .bind(model_id)
     .first();
@@ -61,6 +61,10 @@ export async function handleCheckoutStart(request, env) {
       amount: SUBSCRIPTION_PRICE_KOBO,
       currency: "NGN",
       reference: transactionId,
+      // Without this, Paystack has nowhere to send the browser back to
+      // after payment — it just leaves the person sitting on Paystack's
+      // own confirmation page with no way back to Xerelle.
+      callback_url: `https://xerelle.com/room.html?u=${encodeURIComponent(model.username)}&subscribed=true`,
       metadata: { subscriber_id, model_id, type: "subscription" },
     }),
   });
