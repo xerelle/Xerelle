@@ -165,6 +165,25 @@
     font-size: 12px; color: var(--text-secondary); margin-top: 8px; line-height: 1.4;
   }
 
+  .your-calls-section { padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); }
+  .your-calls-title { font-size: 13.5px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+  .your-call-card {
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .your-call-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .your-call-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .your-call-type {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--accent-gold); background: rgba(212,162,76,0.12); padding: 3px 8px; border-radius: 8px;
+  }
+  .your-call-when { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
+  .your-call-join-btn {
+    display: block; width: 100%; text-align: center; text-decoration: none;
+    background: var(--accent-gold); color: var(--border-subtle); font-weight: 700;
+    padding: 10px; border-radius: 8px; font-size: 13.5px;
+  }
+
   .thread-item {
     display: flex;
     justify-content: space-between;
@@ -530,6 +549,11 @@
 
       <div class="tab-content">
         <div id="chatsTab">
+          <div class="your-calls-section" id="yourCallsSection" style="display:none;">
+            <div class="your-calls-title">Your Calls</div>
+            <div id="yourCallsList"></div>
+          </div>
+
           <div class="find-her-section">
             <div class="find-her-label">Find a model</div>
             <div class="find-her-row">
@@ -1243,10 +1267,51 @@
       }
     });
 
+    async function loadYourCalls() {
+      if (!session) return;
+      const section = document.getElementById('yourCallsSection');
+      const list = document.getElementById('yourCallsList');
+
+      try {
+        const res = await fetch('/api/subscribers/calls/requests', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const accepted = (data.requests || []).filter((r) => r.effective_status === 'accepted');
+        if (accepted.length === 0) return;
+
+        section.style.display = 'block';
+        accepted.forEach((req) => {
+          const card = document.createElement('div');
+          card.className = 'your-call-card';
+          const typeLabel = req.call_type === 'video' ? 'Video' : 'Audio';
+          const when = req.scheduled_at
+            ? new Date(req.scheduled_at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            : '';
+
+          card.innerHTML = `
+            <div class="your-call-top">
+              <div class="your-call-name">${window.xerelleEscapeHtml(req.model_display_name)}</div>
+              <div class="your-call-type">${typeLabel}</div>
+            </div>
+            <div class="your-call-when">Scheduled for ${window.xerelleEscapeHtml(when)}</div>
+            <a class="your-call-join-btn" href="/call.html?id=${req.id}">Join Call</a>
+          `;
+          list.appendChild(card);
+        });
+      } catch (err) {
+        // Quietly do nothing — secondary section, not worth an error
+        // state on the main dashboard.
+      }
+    }
+
     loadMessages();
     loadStories();
     loadDiscoverTeaser();
     checkUnreadDot();
+    loadYourCalls();
   </script>
   <script src="/js/streak-icons.js"></script>
   <script src="/theme-toggle.js"></script>
