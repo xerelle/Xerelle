@@ -718,9 +718,33 @@
         const data = await res.json();
 
         const pending = (data.requests || []).filter((r) => r.effective_status === 'pending');
-        if (pending.length === 0) return;
+        const accepted = (data.requests || []).filter((r) => r.effective_status === 'accepted');
 
+        if (pending.length === 0 && accepted.length === 0) return;
         section.style.display = 'block';
+
+        accepted.forEach((req) => {
+          const card = document.createElement('div');
+          card.className = 'call-request-card';
+          const typeLabel = req.call_type === 'video' ? 'Video' : 'Audio';
+          const when = req.scheduled_at
+            ? new Date(req.scheduled_at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            : '';
+
+          card.innerHTML = `
+            <div class="call-request-top">
+              <div class="call-request-name">${window.xerelleEscapeHtml(req.subscriber_label)}</div>
+              <div class="call-request-type">${typeLabel}</div>
+            </div>
+            <div class="call-request-note">Scheduled for ${window.xerelleEscapeHtml(when)}</div>
+            <div class="call-request-actions">
+              <a class="call-accept-btn" style="display:flex; align-items:center; justify-content:center; text-decoration:none;" href="/call.html?id=${req.id}">Join Call</a>
+            </div>
+          `;
+
+          list.appendChild(card);
+        });
+
         pending.forEach((req) => {
           const card = document.createElement('div');
           card.className = 'call-request-card';
