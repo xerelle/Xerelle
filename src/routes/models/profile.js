@@ -40,6 +40,7 @@ export async function handleModelProfile(username, request, env) {
   let viewer_is_following = false;
   let viewer_has_liked = false;
   let model_likes_you = false;
+  let viewer_is_subscribed = false;
 
   const subscriberId = await getSubscriberIdFromSession(request, env);
   if (subscriberId) {
@@ -63,6 +64,15 @@ export async function handleModelProfile(username, request, env) {
       .bind(model.id, subscriberId)
       .first();
     model_likes_you = !!modelLikesRow;
+
+    const subscriptionRow = await env.DB.prepare(
+      `SELECT id FROM subscriptions
+       WHERE subscriber_id = ? AND model_id = ? AND status = 'active'
+         AND current_period_end > unixepoch()`
+    )
+      .bind(subscriberId, model.id)
+      .first();
+    viewer_is_subscribed = !!subscriptionRow;
   }
 
   return jsonResponse({
@@ -81,5 +91,6 @@ export async function handleModelProfile(username, request, env) {
     viewer_is_following,
     viewer_has_liked,
     model_likes_you,
+    viewer_is_subscribed,
   });
 }
