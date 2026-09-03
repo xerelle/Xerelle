@@ -698,16 +698,21 @@
         currentModelId = data.id;
         modelLikesViewer = !!data.model_likes_you;
 
+        // Reflect real subscription status on the Subscribe button —
+        // this must be the LAST thing that touches its text, since an
+        // unconditional price-label assignment right after this block
+        // would silently overwrite "Subscribed" for every viewer.
+        const subscribeBtn = document.getElementById('subscribeBtn');
         if (data.viewer_is_subscribed) {
-          const subscribeBtn = document.getElementById('subscribeBtn');
           subscribeBtn.textContent = 'Subscribed';
           subscribeBtn.disabled = true;
           subscribeBtn.style.opacity = '0.7';
           subscribeBtn.style.cursor = 'default';
+        } else {
+          const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
+          subscribeBtn.textContent = `Subscribe — ₦${priceNaira}/mo`;
         }
 
-        const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
-        document.getElementById('subscribeBtn').textContent = `Subscribe — ₦${priceNaira}/mo`;
         document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
         document.getElementById('feedLinkBtn').href = `/feed.html?u=${encodeURIComponent(data.username)}`;
 
