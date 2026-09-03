@@ -39,6 +39,10 @@ import { handleGiftCheckoutStart } from "./routes/payments/gift-checkout.js";
 import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
 import { handleServeMedia } from "./routes/media.js";
+import { handleGemPurchaseStart, handleGetGemBalance } from "./routes/subscribers/gem-purchase.js";
+import { handleRequestCall } from "./routes/models/call-request.js";
+import { handleRespondToCall, handleGetModelCallRequests } from "./routes/models/call-response.js";
+import { handleGetCallToken } from "./routes/models/call-token.js";
 import { jsonResponse } from "./lib/http.js";
 
 export default {
@@ -197,6 +201,26 @@ export default {
       }
       if (pathname === "/api/gifts/checkout/start" && method === "POST") {
         return await handleGiftCheckoutStart(request, env);
+      }
+      if (pathname === "/api/gems/purchase/start" && method === "POST") {
+        return await handleGemPurchaseStart(request, env);
+      }
+      if (pathname === "/api/gems/balance" && method === "GET") {
+        return await handleGetGemBalance(request, env);
+      }
+      if (pathname === "/api/calls/request" && method === "POST") {
+        return await handleRequestCall(request, env);
+      }
+      if (pathname === "/api/calls/requests" && method === "GET") {
+        return await handleGetModelCallRequests(request, env);
+      }
+      if (pathname.match(/^\/api\/calls\/[\w-]+\/respond$/) && method === "POST") {
+        const callRequestId = pathname.split("/")[3];
+        return await handleRespondToCall(request, env, callRequestId);
+      }
+      if (pathname.match(/^\/api\/calls\/[\w-]+\/token$/) && method === "GET") {
+        const callRequestId = pathname.split("/")[3];
+        return await handleGetCallToken(request, env, callRequestId);
       }
       if (pathname === "/api/payments/webhook/paystack" && method === "POST") {
         return await handlePaystackWebhook(request, env);
