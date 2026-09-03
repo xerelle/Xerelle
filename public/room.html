@@ -698,6 +698,14 @@
         currentModelId = data.id;
         modelLikesViewer = !!data.model_likes_you;
 
+        if (data.viewer_is_subscribed) {
+          const subscribeBtn = document.getElementById('subscribeBtn');
+          subscribeBtn.textContent = 'Subscribed';
+          subscribeBtn.disabled = true;
+          subscribeBtn.style.opacity = '0.7';
+          subscribeBtn.style.cursor = 'default';
+        }
+
         const priceNaira = ((data.subscription_price_kobo || 1000000) / 100).toLocaleString();
         document.getElementById('subscribeBtn').textContent = `Subscribe — ₦${priceNaira}/mo`;
         document.getElementById('messageBtn').href = `/chat.html?u=${encodeURIComponent(data.username)}`;
