@@ -6,11 +6,11 @@
 
 (function () {
   const STORAGE_KEY = 'xerelle_theme';
-  const saved = localStorage.getItem(STORAGE_KEY) || 'light';
+  const saved = localStorage.getItem(STORAGE_KEY) || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
 
   window.xerelleGetTheme = function () {
-    return localStorage.getItem(STORAGE_KEY) || 'light';
+    return localStorage.getItem(STORAGE_KEY) || 'dark';
   };
 
   window.xerelleSetTheme = function (theme) {
