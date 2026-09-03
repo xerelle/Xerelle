@@ -126,3 +126,34 @@ export async function getCallAcceptanceRate(modelId, env) {
 
   return Math.round((accepted / resolved) * 100);
 }
+
+// Returns the logged-in SUBSCRIBER's own call requests — pending ones
+// still awaiting her response, and critically, ACCEPTED ones with the
+// real scheduled time and the call_request id needed to actually join
+// once it's time (via call.html?id=...).
+export async function handleGetSubscriberCallRequests(request, env) {
+  const subscriber_id = await getSubscriberIdFromSession(request, env);
+  if (!subscriber_id) {
+    return jsonResponse({ error: "login_required", message: "Log in first." }, 401);
+  }
+
+  const { results } = await env.DB.prepare(
+    `SELECT cr.id, cr.call_type, cr.status, cr.note, cr.scheduled_at, cr.expires_at, cr.requested_at,
+       m.username AS model_username, m.display_name AS model_display_name
+     FROM call_requests cr
+     INNER JOIN models m ON m.id = cr.model_id
+     WHERE cr.subscriber_id = ?
+     ORDER BY cr.requested_at DESC
+     LIMIT 100`
+  )
+    .bind(subscriber_id)
+    .all();
+
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  const requests = results.map((row) => ({
+    ...row,
+    effective_status: getEffectiveCallStatus(row, nowSeconds),
+  }));
+
+  return jsonResponse({ requests });
+}
