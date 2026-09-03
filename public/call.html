@@ -3,238 +3,886 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xerelle — Call</title>
-<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+<link rel="stylesheet" href="/theme.css">
+<title>Xerelle — Chat</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
-    background: #000;
-    color: #fff;
+    background: var(--bg-primary);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
     height: 100vh;
     overflow: hidden;
-    position: relative;
   }
-
-  #statusScreen {
-    height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    text-align: center; padding: 32px; gap: 16px;
+  .card {
+    max-width: 460px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
   }
-  #statusScreen p { color: #9C8791; font-size: 14px; line-height: 1.5; max-width: 320px; }
-  #statusScreen a {
-    background: linear-gradient(135deg, #F3DFB0, #D4A24C 45%, #A8762F);
-    color: #2B0A1F; font-weight: 700; padding: 14px 32px;
-    border-radius: 10px; text-decoration: none; font-size: 15px;
+  .header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-primary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
-
-  #callScreen { display: none; height: 100vh; position: relative; }
-
-  #remoteVideoContainer {
-    width: 100%; height: 100%; background: #111;
-    display: flex; align-items: center; justify-content: center;
+  .avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    overflow: hidden;
   }
-  #remoteVideoContainer .placeholder-avatar {
-    width: 100px; height: 100px; border-radius: 50%; background: #3A1029;
-    display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #D4A24C;
+  .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-circle.has-story { border: 2px solid var(--accent-gold); }
+  .header h1 { font-size: 17px; margin: 0; }
+  .header .sub { color: var(--text-secondary); font-size: 12.5px; margin-top: 2px; }
+  .streak-badge { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; font-size: 12.5px; font-weight: 600; vertical-align: middle; }
+  .streak-badge svg { flex-shrink: 0; }
+  .header-menu-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
   }
-  #remotePlayer { width: 100%; height: 100%; }
-
-  #localVideoContainer {
-    position: absolute; top: 20px; right: 20px; width: 100px; height: 140px;
-    background: #222; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);
+  .header-dropdown {
+    display: none;
+    position: absolute;
+    top: 56px;
+    right: 20px;
     z-index: 5;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 3;
   }
-  #localPlayer { width: 100%; height: 100%; }
+  .header-dropdown.open { display: block; }
+  .header-dropdown button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 12px 18px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .header-dropdown button.danger { color: var(--danger); }
+  .header-dropdown button:active { background: var(--border); }
 
-  #callTopBar {
-    position: absolute; top: 0; left: 0; right: 0; padding: 20px;
-    display: flex; justify-content: space-between; align-items: center; z-index: 4;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   }
-  #callTopBar .call-name { font-size: 16px; font-weight: 600; }
-  #callTopBar .call-timer { font-size: 13px; color: #B0A5AA; margin-top: 2px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--bg-surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    max-width: 380px;
+    width: 100%;
+  }
+  .modal-box h2 { font-size: 16px; margin: 0 0 8px; }
+  .modal-box p { font-size: 13px; color: var(--text-secondary); margin: 0 0 14px; line-height: 1.5; }
+  .modal-box textarea {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 70px;
+  }
+  .modal-box textarea:focus { outline: none; border-color: var(--accent-gold); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .modal-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .modal-actions .cancel-btn { background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border); }
+  .modal-actions .confirm-btn { background: var(--danger); color: var(--border-subtle); }
+  .modal-actions .confirm-btn:disabled { background: var(--border); color: var(--text-secondary); }
 
-  #callControls {
-    position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 20px 36px;
-    display: flex; justify-content: center; gap: 20px; z-index: 4;
-    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  .thread {
+    flex: 1;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
   }
-  .control-btn {
-    width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    background: rgba(255,255,255,0.15); color: #fff;
+  .bubble {
+    max-width: 78%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14.5px;
+    line-height: 1.4;
   }
-  .control-btn svg { width: 24px; height: 24px; }
-  .control-btn.muted { background: #fff; color: #000; }
-  .control-btn.end-call { background: #E53950; }
-  .control-btn.end-call svg { transform: rotate(135deg); }
+  .bubble.subscriber {
+    align-self: flex-end;
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.model {
+    align-self: flex-start;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border-bottom-left-radius: 4px;
+  }
+  .empty-state {
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: 40px;
+    font-size: 14px;
+    padding: 0 20px;
+  }
+
+  .paywall {
+    margin: 10px 20px;
+    padding: 14px;
+    background: rgba(212,162,76,0.12);
+    border: 1px solid var(--accent-gold);
+    border-radius: 12px;
+    color: var(--accent-gold);
+    font-size: 13.5px;
+    text-align: center;
+    display: none;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .input-row input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 14.5px;
+  }
+  .input-row input:focus { outline: none; border-color: var(--accent-gold); }
+  .input-row button {
+    background: var(--accent-gold);
+    color: var(--border-subtle);
+    font-weight: 600;
+    padding: 0 20px;
+    border-radius: 20px;
+    border: none;
+    font-size: 14.5px;
+    cursor: pointer;
+  }
+  .input-row button:disabled {
+    background: var(--border);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+  }
+
+  /* Bottom nav bar */
+  .nav-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-primary);
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 11px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  .nav-item svg { width: 21px; height: 21px; }
+  .nav-item.active { color: var(--accent-gold); }
+
+  #loading, #notfound {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  /* Story overlay (for the Story button) */
+  .story-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 11;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .story-overlay.open { display: flex; }
+  .story-overlay img, .story-overlay video {
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+  }
+  .story-caption {
+    position: absolute;
+    bottom: 40px;
+    left: 20px;
+    right: 20px;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 14px;
+    border-radius: 8px;
+  }
+  .story-close {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 12;
+  }
+
+  /* Send a Gift panel — same bottom-sheet pattern used on room.html */
+  .gift-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 25;
+  }
+  .gift-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-height: 80vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px; margin: 0 auto; max-width: 460px;
+  }
+  .gift-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--text-primary); font-weight: 600; font-size: 15px;
+  }
+  .gift-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
+  .gift-body { padding: 20px; }
+  .gift-quick-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .gift-quick-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 14px 6px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .gift-quick-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .gift-custom-label { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+  .gift-custom-input {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    color: var(--text-primary); font-size: 15px; margin-bottom: 18px;
+  }
+  .gift-send-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle);
+    font-weight: 700; padding: 14px; border-radius: 10px; border: none;
+    font-size: 15px; cursor: pointer;
+  }
+  .gift-send-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  .gift-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
+  .gift-status.error { color: var(--danger); }
+
+  .call-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 25;
+  }
+  .call-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-height: 80vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px; margin: 0 auto; max-width: 460px;
+  }
+  .call-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--text-primary); font-weight: 600; font-size: 15px;
+  }
+  .call-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
+  .call-body { padding: 20px; }
+  .call-type-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .call-type-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 16px 6px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .call-type-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .call-note-label { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+  .call-note-input {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    color: var(--text-primary); font-size: 14px; font-family: inherit;
+    resize: vertical; min-height: 60px; margin-bottom: 8px;
+  }
+  .call-hint { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+  .call-send-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle);
+    font-weight: 700; padding: 14px; border-radius: 10px; border: none;
+    font-size: 15px; cursor: pointer;
+  }
+  .call-send-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  .call-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
+  .call-status.error { color: var(--danger); }
+  .call-status.success { color: var(--accent-green); }
 </style>
 </head>
 <body>
-  <div id="statusScreen">
-    <p id="statusMessage">Loading...</p>
-    <a id="statusBackLink" href="/home.html" style="display:none;">Back to Xerelle</a>
-  </div>
+  <div class="card">
+    <div id="loading">Loading...</div>
+    <div id="notfound" style="display:none;"></div>
 
-  <div id="callScreen">
-    <div id="remoteVideoContainer">
-      <div class="placeholder-avatar" id="remotePlaceholder"></div>
-      <div id="remotePlayer" style="display:none;"></div>
-    </div>
+    <div id="chatUI" style="display:none; flex-direction:column; flex:1;">
+      <div class="header">
+        <div class="avatar-circle" id="avatarCircle"></div>
+        <div>
+          <h1><span id="modelNameText"></span><span id="streakBadge"></span></h1>
+          <div class="sub" id="modelUsername"></div>
+        </div>
+        <button class="header-menu-btn" id="headerMenuBtn">⋮</button>
+      </div>
+      <div class="header-dropdown" id="headerDropdown">
+        <button id="blockOptionBtn">Block model</button>
+        <button class="danger" id="reportOptionBtn">Report model</button>
+      </div>
 
-    <div id="localVideoContainer" style="display:none;">
-      <div id="localPlayer"></div>
-    </div>
+      <div class="thread" id="thread">
+        <div class="empty-state" id="emptyState">No messages yet — say hello. Your first message is free.</div>
+      </div>
 
-    <div id="callTopBar">
-      <div>
-        <div class="call-name" id="callPartnerName"></div>
-        <div class="call-timer" id="callTimer">00:00</div>
+      <div class="paywall" id="paywall">
+        You've used your one free message with her. Subscribe to keep talking.
+      </div>
+
+      <div class="input-row">
+        <input type="text" id="messageInput" placeholder="Type a message..." maxlength="1000">
+        <button id="sendBtn">Send</button>
+      </div>
+
+      <div class="nav-bar">
+        <button class="nav-item active" id="navMessage">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Message
+        </button>
+        <button class="nav-item" id="navUpdate">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="13" r="4"/><path d="M4 7h3l2-3h6l2 3h3v13H4z"/></svg>
+          Story
+        </button>
+        <button class="nav-item" id="navGift">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+          Gift
+        </button>
+        <button class="nav-item" id="navCall">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          Call
+        </button>
       </div>
     </div>
+  </div>
 
-    <div id="callControls">
-      <button class="control-btn" id="muteBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-      </button>
-      <button class="control-btn" id="cameraBtn" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-      </button>
-      <button class="control-btn end-call" id="endCallBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-      </button>
+  <div class="story-overlay" id="storyOverlay">
+    <button class="story-close" id="storyClose">&times;</button>
+    <div id="storyMediaContainer"></div>
+    <div class="story-caption" id="storyCaption" style="display:none;"></div>
+  </div>
+
+  <div class="gift-panel" id="giftPanel">
+    <div class="gift-sheet">
+      <div class="gift-header">
+        <span>Send a Gift</span>
+        <button id="closeGiftPanel">✕</button>
+      </div>
+      <div class="gift-body">
+        <div class="gift-quick-row">
+          <button class="gift-quick-btn" data-amount="500">₦500</button>
+          <button class="gift-quick-btn" data-amount="1000">₦1,000</button>
+          <button class="gift-quick-btn" data-amount="2500">₦2,500</button>
+        </div>
+        <div class="gift-custom-label">Or enter a custom amount (₦)</div>
+        <input type="number" class="gift-custom-input" id="giftCustomAmount" placeholder="e.g. 5000" min="1">
+        <button class="gift-send-btn" id="giftSendBtn">Send Gift</button>
+        <div class="gift-status" id="giftStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="call-panel" id="callPanel">
+    <div class="call-sheet">
+      <div class="call-header">
+        <span>Request a Call</span>
+        <button id="closeCallPanel">✕</button>
+      </div>
+      <div class="call-body">
+        <div class="call-type-row">
+          <button class="call-type-btn" data-call-type="audio">Audio Call</button>
+          <button class="call-type-btn" data-call-type="video">Video Call</button>
+        </div>
+        <div class="call-note-label">Optional note (e.g. when you're usually free)</div>
+        <textarea class="call-note-input" id="callNote" placeholder="I'm usually free evenings..."></textarea>
+        <div class="call-hint">She'll review this and set the actual date and time herself. If she hasn't responded within 48 hours, this request will expire and you'll need to send a new one.</div>
+        <button class="call-send-btn" id="callSendBtn">Send Request</button>
+        <div class="call-status" id="callStatus"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <textarea id="modalReason" placeholder="Reason (required)..."></textarea>
+      <div class="modal-actions">
+        <button class="cancel-btn" id="modalCancelBtn">Cancel</button>
+        <button class="confirm-btn" id="modalConfirmBtn">Confirm</button>
+      </div>
     </div>
   </div>
 
   <script>
-    const callRequestId = new URLSearchParams(window.location.search).get('id');
-    const modelSession = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
-    const subscriberSession = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
-    const session = modelSession || subscriberSession;
+    const modelUsername = new URLSearchParams(window.location.search).get('u');
+    const session = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
 
-    const statusMessage = document.getElementById('statusMessage');
-    const statusBackLink = document.getElementById('statusBackLink');
-    const statusScreen = document.getElementById('statusScreen');
-    const callScreen = document.getElementById('callScreen');
+    const loading = document.getElementById('loading');
+    const notfound = document.getElementById('notfound');
+    const chatUI = document.getElementById('chatUI');
+    const thread = document.getElementById('thread');
+    const emptyState = document.getElementById('emptyState');
+    const paywall = document.getElementById('paywall');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
 
-    function showError(message) {
-      statusMessage.textContent = message;
-      statusBackLink.style.display = 'inline-block';
+    let modelId = null;
+    let activeStory = null;
+
+    function showNotFound(message) {
+      loading.style.display = 'none';
+      notfound.textContent = message;
+      notfound.style.display = 'block';
     }
 
-    let agoraClient = null;
-    let localAudioTrack = null;
-    let localVideoTrack = null;
-    let callTimerInterval = null;
-    let callSeconds = 0;
+    function renderMessage(msg) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${msg.sender_type}`;
+      bubble.textContent = msg.body;
+      thread.appendChild(bubble);
+    }
 
     async function init() {
       if (!session) {
-        showError('Please log in first.');
+        window.location.href = '/subscriber-login.html';
         return;
       }
-      if (!callRequestId) {
-        showError('No call specified.');
+      if (!modelUsername) {
+        showNotFound('No model specified. Use a link like chat.html?u=hername');
         return;
       }
 
       try {
-        const res = await fetch(`/api/calls/${callRequestId}/token`, {
+        const profileRes = await fetch(`/api/models/${encodeURIComponent(modelUsername)}`, {
           headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!profileRes.ok) {
+          showNotFound("This Room doesn't exist, or isn't verified yet.");
+          return;
+        }
+        const profile = await profileRes.json();
+        modelId = profile.id;
+        activeStory = profile.active_story || null;
+
+        document.getElementById('modelNameText').textContent = profile.age
+          ? `${profile.display_name}, ${profile.age}`
+          : profile.display_name;
+        document.getElementById('modelUsername').textContent = `@${profile.username}`;
+
+        const avatarCircle = document.getElementById('avatarCircle');
+        const initial = profile.display_name.trim().charAt(0).toUpperCase();
+        avatarCircle.innerHTML = profile.teaser_media_url
+          ? `<img src="${window.xerelleEscapeHtml(profile.teaser_media_url)}" alt="">`
+          : initial;
+        if (activeStory) {
+          avatarCircle.classList.add('has-story');
+        }
+
+        const messagesRes = await fetch(`/api/messages/${session.id}/${modelId}`, {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (messagesRes.ok) {
+          const data = await messagesRes.json();
+          if (data.messages && data.messages.length > 0) {
+            emptyState.style.display = 'none';
+            data.messages.forEach(renderMessage);
+          }
+          document.getElementById('streakBadge').innerHTML = window.renderStreakBadge(data.streak || 0);
+        }
+
+        loading.style.display = 'none';
+        chatUI.style.display = 'flex';
+      } catch (err) {
+        showNotFound('Could not reach the server.');
+      }
+    }
+
+    async function sendMessage() {
+      const body = messageInput.value.trim();
+      if (!body) return;
+
+      sendBtn.disabled = true;
+      paywall.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender_type: 'subscriber',
+            subscriber_id: session.id,
+            model_id: modelId,
+            message_body: body,
+          }),
+        });
+        const data = await res.json();
+
+        if (res.status === 402) {
+          paywall.style.display = 'block';
+          return;
+        }
+        if (!res.ok) {
+          paywall.textContent = data.error || 'Something went wrong.';
+          paywall.style.display = 'block';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        renderMessage({ sender_type: 'subscriber', body });
+        messageInput.value = '';
+      } catch (err) {
+        paywall.textContent = 'Could not reach the server.';
+        paywall.style.display = 'block';
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // Nav bar: Message is the default view (already showing), Story opens
+    // her active Story if she has one, Gift opens the gift panel, Call is
+    // an honest placeholder.
+    document.getElementById('navUpdate').addEventListener('click', () => {
+      if (!activeStory) {
+        alert("She doesn't have an active update right now.");
+        return;
+      }
+      const storyMediaContainer = document.getElementById('storyMediaContainer');
+      const storyCaption = document.getElementById('storyCaption');
+
+      storyMediaContainer.innerHTML = activeStory.media_type === 'video'
+        ? `<video src="${window.xerelleEscapeHtml(activeStory.media_url)}" autoplay controls></video>`
+        : `<img src="${window.xerelleEscapeHtml(activeStory.media_url)}" alt="">`;
+
+      if (activeStory.caption) {
+        storyCaption.textContent = activeStory.caption;
+        storyCaption.style.display = 'block';
+      } else {
+        storyCaption.style.display = 'none';
+      }
+
+      document.getElementById('storyOverlay').classList.add('open');
+    });
+
+    document.getElementById('navCall').addEventListener('click', () => {
+      callStatus.textContent = '';
+      callStatus.className = 'call-status';
+      callPanel.style.display = 'flex';
+    });
+
+    // ============ Request a Call ============
+    const callPanel = document.getElementById('callPanel');
+    const callNote = document.getElementById('callNote');
+    const callSendBtn = document.getElementById('callSendBtn');
+    const callStatus = document.getElementById('callStatus');
+    let selectedCallType = null;
+
+    document.getElementById('closeCallPanel').addEventListener('click', () => {
+      callPanel.style.display = 'none';
+    });
+
+    document.querySelectorAll('.call-type-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.call-type-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCallType = btn.dataset.callType;
+      });
+    });
+
+    callSendBtn.addEventListener('click', async () => {
+      if (!selectedCallType) {
+        callStatus.className = 'call-status error';
+        callStatus.textContent = 'Choose audio or video first.';
+        return;
+      }
+
+      callSendBtn.disabled = true;
+      callSendBtn.textContent = 'Sending...';
+      callStatus.textContent = '';
+      callStatus.className = 'call-status';
+
+      try {
+        const res = await fetch('/api/calls/request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({
+            model_id: modelId,
+            call_type: selectedCallType,
+            note: callNote.value.trim() || undefined,
+          }),
         });
         const data = await res.json();
 
         if (!res.ok) {
-          showError(data.message || data.error || 'Could not join this call.');
+          callStatus.className = 'call-status error';
+          callStatus.textContent = data.message || data.error || 'Could not send request.';
+          callSendBtn.disabled = false;
+          callSendBtn.textContent = 'Send Request';
           return;
         }
 
-        await joinCall(data);
+        callStatus.className = 'call-status success';
+        callStatus.textContent = 'Request sent! She\'ll review it and set a time.';
+        callNote.value = '';
+        selectedCallType = null;
+        document.querySelectorAll('.call-type-btn').forEach((b) => b.classList.remove('active'));
+
+        setTimeout(() => {
+          callPanel.style.display = 'none';
+        }, 1500);
       } catch (err) {
-        showError('Could not reach the server.');
+        callStatus.className = 'call-status error';
+        callStatus.textContent = 'Could not reach the server.';
+      } finally {
+        callSendBtn.disabled = false;
+        callSendBtn.textContent = 'Send Request';
       }
-    }
-
-    async function joinCall(tokenData) {
-      const isVideo = tokenData.call_type !== 'audio';
-
-      agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-
-      agoraClient.on('user-published', async (user, mediaType) => {
-        await agoraClient.subscribe(user, mediaType);
-        if (mediaType === 'video') {
-          document.getElementById('remotePlaceholder').style.display = 'none';
-          const remotePlayer = document.getElementById('remotePlayer');
-          remotePlayer.style.display = 'block';
-          user.videoTrack.play(remotePlayer);
-        }
-        if (mediaType === 'audio') {
-          user.audioTrack.play();
-        }
-      });
-
-      agoraClient.on('user-left', () => {
-        endCall('The other person left the call.');
-      });
-
-      await agoraClient.join(tokenData.app_id, tokenData.channel_name, tokenData.token, tokenData.uid);
-
-      localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-      const tracksToPublish = [localAudioTrack];
-
-      if (isVideo) {
-        localVideoTrack = await AgoraRTC.createCameraVideoTrack();
-        tracksToPublish.push(localVideoTrack);
-        const localContainer = document.getElementById('localVideoContainer');
-        localContainer.style.display = 'block';
-        localVideoTrack.play(document.getElementById('localPlayer'));
-        document.getElementById('cameraBtn').style.display = 'flex';
-      }
-
-      await agoraClient.publish(tracksToPublish);
-
-      statusScreen.style.display = 'none';
-      callScreen.style.display = 'block';
-
-      callTimerInterval = setInterval(() => {
-        callSeconds++;
-        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
-        const secs = String(callSeconds % 60).padStart(2, '0');
-        document.getElementById('callTimer').textContent = `${mins}:${secs}`;
-      }, 1000);
-    }
-
-    let isMuted = false;
-    document.getElementById('muteBtn').addEventListener('click', () => {
-      if (!localAudioTrack) return;
-      isMuted = !isMuted;
-      localAudioTrack.setEnabled(!isMuted);
-      document.getElementById('muteBtn').classList.toggle('muted', isMuted);
     });
 
-    let isCameraOff = false;
-    document.getElementById('cameraBtn').addEventListener('click', () => {
-      if (!localVideoTrack) return;
-      isCameraOff = !isCameraOff;
-      localVideoTrack.setEnabled(!isCameraOff);
-      document.getElementById('cameraBtn').classList.toggle('muted', isCameraOff);
+    function closeStory() {
+      document.getElementById('storyOverlay').classList.remove('open');
+      document.getElementById('storyMediaContainer').innerHTML = '';
+    }
+    document.getElementById('storyClose').addEventListener('click', closeStory);
+    document.getElementById('storyOverlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('storyOverlay')) closeStory();
     });
 
-    async function endCall(message) {
-      if (callTimerInterval) clearInterval(callTimerInterval);
-      if (localAudioTrack) { localAudioTrack.close(); }
-      if (localVideoTrack) { localVideoTrack.close(); }
-      if (agoraClient) { await agoraClient.leave().catch(() => {}); }
+    // ============ Send a Gift ============
+    const giftPanel = document.getElementById('giftPanel');
+    const giftCustomAmount = document.getElementById('giftCustomAmount');
+    const giftSendBtn = document.getElementById('giftSendBtn');
+    const giftStatus = document.getElementById('giftStatus');
+    let selectedGiftAmount = null;
 
-      callScreen.style.display = 'none';
-      statusScreen.style.display = 'flex';
-      showError(message || 'Call ended.');
+    document.getElementById('navGift').addEventListener('click', () => {
+      giftStatus.textContent = '';
+      giftStatus.className = 'gift-status';
+      giftPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeGiftPanel').addEventListener('click', () => {
+      giftPanel.style.display = 'none';
+    });
+
+    document.querySelectorAll('.gift-quick-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gift-quick-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGiftAmount = parseInt(btn.dataset.amount, 10);
+        giftCustomAmount.value = '';
+      });
+    });
+
+    giftCustomAmount.addEventListener('input', () => {
+      document.querySelectorAll('.gift-quick-btn').forEach((b) => b.classList.remove('active'));
+      selectedGiftAmount = null;
+    });
+
+    giftSendBtn.addEventListener('click', async () => {
+      const customValue = parseInt(giftCustomAmount.value, 10);
+      const amountNaira = selectedGiftAmount || (customValue > 0 ? customValue : null);
+
+      if (!amountNaira) {
+        giftStatus.className = 'gift-status error';
+        giftStatus.textContent = 'Choose an amount or enter a custom one.';
+        return;
+      }
+
+      giftSendBtn.disabled = true;
+      giftSendBtn.textContent = 'Starting checkout...';
+      giftStatus.textContent = '';
+      giftStatus.className = 'gift-status';
+
+      try {
+        const res = await fetch('/api/gifts/checkout/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ model_id: modelId, amount_kobo: amountNaira * 100 }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          giftStatus.className = 'gift-status error';
+          giftStatus.textContent = data.message || data.error || 'Could not start checkout.';
+          giftSendBtn.disabled = false;
+          giftSendBtn.textContent = 'Send Gift';
+          return;
+        }
+
+        window.location.href = data.authorization_url;
+      } catch (err) {
+        giftStatus.className = 'gift-status error';
+        giftStatus.textContent = 'Could not reach the server.';
+        giftSendBtn.disabled = false;
+        giftSendBtn.textContent = 'Send Gift';
+      }
+    });
+
+    // Header menu (Block / Report)
+    const headerMenuBtn = document.getElementById('headerMenuBtn');
+    const headerDropdown = document.getElementById('headerDropdown');
+    headerMenuBtn.addEventListener('click', () => {
+      headerDropdown.classList.toggle('open');
+    });
+
+    let pendingAction = null; // 'block' or 'report'
+
+    function openModal(action) {
+      pendingAction = action;
+      headerDropdown.classList.remove('open');
+      document.getElementById('modalTitle').textContent =
+        action === 'block' ? 'Block this model?' : 'Report this model';
+      document.getElementById('modalDesc').textContent =
+        action === 'block'
+          ? "You won't be able to message her again, and she won't be able to message you. This requires a reason."
+          : "Let us know what's going on. Our team will review it.";
+      document.getElementById('modalReason').value = '';
+      document.getElementById('modalOverlay').classList.add('open');
     }
 
-    document.getElementById('endCallBtn').addEventListener('click', () => endCall('Call ended.'));
+    document.getElementById('blockOptionBtn').addEventListener('click', () => openModal('block'));
+    document.getElementById('reportOptionBtn').addEventListener('click', () => openModal('report'));
+
+    document.getElementById('modalCancelBtn').addEventListener('click', () => {
+      document.getElementById('modalOverlay').classList.remove('open');
+    });
+
+    document.getElementById('modalConfirmBtn').addEventListener('click', async () => {
+      const reason = document.getElementById('modalReason').value.trim();
+      if (!reason) {
+        alert('A reason is required.');
+        return;
+      }
+
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      confirmBtn.disabled = true;
+
+      try {
+        const endpoint = pendingAction === 'block' ? '/api/block' : '/api/report';
+        const payload = pendingAction === 'block'
+          ? { blocked_type: 'model', blocked_id: modelId, reason }
+          : { reported_type: 'model', reported_id: modelId, reason };
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.error || data.message || 'Something went wrong.');
+          return;
+        }
+
+        document.getElementById('modalOverlay').classList.remove('open');
+
+        if (pendingAction === 'block') {
+          alert('Model blocked.');
+          window.location.href = '/home.html';
+        } else {
+          alert(data.message || 'Report submitted.');
+        }
+      } catch (err) {
+        alert('Could not reach the server.');
+      } finally {
+        confirmBtn.disabled = false;
+      }
+    });
 
     init();
   </script>
+  <script src="/js/streak-icons.js"></script>
+  <script src="/theme-toggle.js"></script>
 </body>
 </html>
