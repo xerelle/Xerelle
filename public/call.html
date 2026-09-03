@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Xerelle — Call</title>
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.0.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  #statusScreen {
+    height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 32px; gap: 16px;
+  }
+  #statusScreen p { color: #9C8791; font-size: 14px; line-height: 1.5; max-width: 320px; }
+  #statusScreen a {
+    background: linear-gradient(135deg, #F3DFB0, #D4A24C 45%, #A8762F);
+    color: #2B0A1F; font-weight: 700; padding: 14px 32px;
+    border-radius: 10px; text-decoration: none; font-size: 15px;
+  }
+
+  #callScreen { display: none; height: 100vh; position: relative; }
+
+  #remoteVideoContainer {
+    width: 100%; height: 100%; background: #111;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #remoteVideoContainer .placeholder-avatar {
+    width: 100px; height: 100px; border-radius: 50%; background: #3A1029;
+    display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #D4A24C;
+  }
+  #remotePlayer { width: 100%; height: 100%; }
+
+  #localVideoContainer {
+    position: absolute; top: 20px; right: 20px; width: 100px; height: 140px;
+    background: #222; border-radius: 12px; overflow: hidden; border: 2px solid rgba(255,255,255,0.2);
+    z-index: 5;
+  }
+  #localPlayer { width: 100%; height: 100%; }
+
+  #callTopBar {
+    position: absolute; top: 0; left: 0; right: 0; padding: 20px;
+    display: flex; justify-content: space-between; align-items: center; z-index: 4;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+  }
+  #callTopBar .call-name { font-size: 16px; font-weight: 600; }
+  #callTopBar .call-timer { font-size: 13px; color: #B0A5AA; margin-top: 2px; }
+
+  #callControls {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 20px 36px;
+    display: flex; justify-content: center; gap: 20px; z-index: 4;
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+  }
+  .control-btn {
+    width: 56px; height: 56px; border-radius: 50%; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.15); color: #fff;
+  }
+  .control-btn svg { width: 24px; height: 24px; }
+  .control-btn.muted { background: #fff; color: #000; }
+  .control-btn.end-call { background: #E53950; }
+  .control-btn.end-call svg { transform: rotate(135deg); }
+</style>
+</head>
+<body>
+  <div id="statusScreen">
+    <p id="statusMessage">Loading...</p>
+    <a id="statusBackLink" href="/home.html" style="display:none;">Back to Xerelle</a>
+  </div>
+
+  <div id="callScreen">
+    <div id="remoteVideoContainer">
+      <div class="placeholder-avatar" id="remotePlaceholder"></div>
+      <div id="remotePlayer" style="display:none;"></div>
+    </div>
+
+    <div id="localVideoContainer" style="display:none;">
+      <div id="localPlayer"></div>
+    </div>
+
+    <div id="callTopBar">
+      <div>
+        <div class="call-name" id="callPartnerName"></div>
+        <div class="call-timer" id="callTimer">00:00</div>
+      </div>
+    </div>
+
+    <div id="callControls">
+      <button class="control-btn" id="muteBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </button>
+      <button class="control-btn" id="cameraBtn" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      </button>
+      <button class="control-btn end-call" id="endCallBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const callRequestId = new URLSearchParams(window.location.search).get('id');
+    const modelSession = JSON.parse(localStorage.getItem('xerelle_model_session') || 'null');
+    const subscriberSession = JSON.parse(localStorage.getItem('xerelle_subscriber_session') || 'null');
+    const session = modelSession || subscriberSession;
+
+    const statusMessage = document.getElementById('statusMessage');
+    const statusBackLink = document.getElementById('statusBackLink');
+    const statusScreen = document.getElementById('statusScreen');
+    const callScreen = document.getElementById('callScreen');
+
+    function showError(message) {
+      statusMessage.textContent = message;
+      statusBackLink.style.display = 'inline-block';
+    }
+
+    let agoraClient = null;
+    let localAudioTrack = null;
+    let localVideoTrack = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+
+    async function init() {
+      if (!session) {
+        showError('Please log in first.');
+        return;
+      }
+      if (!callRequestId) {
+        showError('No call specified.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/calls/${callRequestId}/token`, {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showError(data.message || data.error || 'Could not join this call.');
+          return;
+        }
+
+        await joinCall(data);
+      } catch (err) {
+        showError('Could not reach the server.');
+      }
+    }
+
+    async function joinCall(tokenData) {
+      const isVideo = tokenData.call_type !== 'audio';
+
+      agoraClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+
+      agoraClient.on('user-published', async (user, mediaType) => {
+        await agoraClient.subscribe(user, mediaType);
+        if (mediaType === 'video') {
+          document.getElementById('remotePlaceholder').style.display = 'none';
+          const remotePlayer = document.getElementById('remotePlayer');
+          remotePlayer.style.display = 'block';
+          user.videoTrack.play(remotePlayer);
+        }
+        if (mediaType === 'audio') {
+          user.audioTrack.play();
+        }
+      });
+
+      agoraClient.on('user-left', () => {
+        endCall('The other person left the call.');
+      });
+
+      await agoraClient.join(tokenData.app_id, tokenData.channel_name, tokenData.token, tokenData.uid);
+
+      localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+      const tracksToPublish = [localAudioTrack];
+
+      if (isVideo) {
+        localVideoTrack = await AgoraRTC.createCameraVideoTrack();
+        tracksToPublish.push(localVideoTrack);
+        const localContainer = document.getElementById('localVideoContainer');
+        localContainer.style.display = 'block';
+        localVideoTrack.play(document.getElementById('localPlayer'));
+        document.getElementById('cameraBtn').style.display = 'flex';
+      }
+
+      await agoraClient.publish(tracksToPublish);
+
+      statusScreen.style.display = 'none';
+      callScreen.style.display = 'block';
+
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const secs = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('callTimer').textContent = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    let isMuted = false;
+    document.getElementById('muteBtn').addEventListener('click', () => {
+      if (!localAudioTrack) return;
+      isMuted = !isMuted;
+      localAudioTrack.setEnabled(!isMuted);
+      document.getElementById('muteBtn').classList.toggle('muted', isMuted);
+    });
+
+    let isCameraOff = false;
+    document.getElementById('cameraBtn').addEventListener('click', () => {
+      if (!localVideoTrack) return;
+      isCameraOff = !isCameraOff;
+      localVideoTrack.setEnabled(!isCameraOff);
+      document.getElementById('cameraBtn').classList.toggle('muted', isCameraOff);
+    });
+
+    async function endCall(message) {
+      if (callTimerInterval) clearInterval(callTimerInterval);
+      if (localAudioTrack) { localAudioTrack.close(); }
+      if (localVideoTrack) { localVideoTrack.close(); }
+      if (agoraClient) { await agoraClient.leave().catch(() => {}); }
+
+      callScreen.style.display = 'none';
+      statusScreen.style.display = 'flex';
+      showError(message || 'Call ended.');
+    }
+
+    document.getElementById('endCallBtn').addEventListener('click', () => endCall('Call ended.'));
+
+    init();
+  </script>
+</body>
+</html>
