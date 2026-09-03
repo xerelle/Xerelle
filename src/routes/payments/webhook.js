@@ -14,6 +14,25 @@ export async function handlePaystackWebhook(request, env) {
 
   const event = JSON.parse(rawBody);
 
+  // A declined or expired card never reaches charge.success at all, so
+  // nothing gets activated either way — this only exists to mark the
+  // original pending row as failed instead of leaving it stuck in
+  // limbo forever, purely for cleaner records.
+  if (event.event === "charge.failed") {
+    const reference = event.data.reference;
+    const type = event.data.metadata?.type;
+
+    if (type === "gift") {
+      await env.DB.prepare(`UPDATE gifts SET status = 'failed' WHERE id = ?`).bind(reference).run();
+    } else if (type === "gem_purchase") {
+      await env.DB.prepare(`UPDATE gem_purchases SET status = 'failed' WHERE id = ?`).bind(reference).run();
+    } else {
+      await env.DB.prepare(`UPDATE transactions SET status = 'failed' WHERE id = ?`).bind(reference).run();
+    }
+
+    return jsonResponse({ received: true });
+  }
+
   if (event.event === "charge.success") {
     const reference = event.data.reference;
     const { subscriber_id, model_id, type } = event.data.metadata;
