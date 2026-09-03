@@ -52,6 +52,38 @@ export async function handlePaystackWebhook(request, env) {
       return jsonResponse({ received: true });
     }
 
+    if (type === "gem_purchase") {
+      // Gems purchases also live in their own table, and credit an
+      // account-wide balance rather than anything tied to a model —
+      // same reasoning as gifts: needs its own handling here, not the
+      // transactions UPDATE below.
+      await env.DB.prepare(`UPDATE gem_purchases SET status = 'confirmed' WHERE id = ?`)
+        .bind(reference)
+        .run();
+
+      const existingBalance = await env.DB.prepare(
+        "SELECT subscriber_id FROM gem_balances WHERE subscriber_id = ?"
+      )
+        .bind(subscriber_id)
+        .first();
+
+      if (existingBalance) {
+        await env.DB.prepare(
+          "UPDATE gem_balances SET balance_kobo = balance_kobo + ? WHERE subscriber_id = ?"
+        )
+          .bind(event.data.amount, subscriber_id)
+          .run();
+      } else {
+        await env.DB.prepare(
+          "INSERT INTO gem_balances (subscriber_id, balance_kobo) VALUES (?, ?)"
+        )
+          .bind(subscriber_id, event.data.amount)
+          .run();
+      }
+
+      return jsonResponse({ received: true });
+    }
+
     await env.DB.prepare(`UPDATE transactions SET status = 'confirmed' WHERE id = ?`)
       .bind(reference)
       .run();
