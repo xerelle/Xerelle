@@ -1,5 +1,5 @@
 import { jsonResponse, badRequest, generateId } from "../../lib/http.js";
-import { getSubscriberIdFromSession } from "./login.js";
+import { getSubscriberIdFromSession } from "../subscribers/login.js";
 import { createNotification } from "../lib/notifications.js";
 
 const REQUEST_EXPIRY_SECONDS = 48 * 60 * 60; // 48 hours
@@ -7,8 +7,8 @@ const REQUEST_EXPIRY_SECONDS = 48 * 60 * 60; // 48 hours
 // Lets a subscriber request a scheduled call (audio or video) with a
 // model she's actively subscribed to. This only creates the REQUEST —
 // she reviews it and picks the actual time when accepting; nothing is
-// scheduled yet at this point. Unanswered requests auto-expire after 7
-// days (checked lazily at read time, same pattern as Feed/Story expiry
+// scheduled yet at this point. Unanswered requests auto-expire after 48
+// hours (checked lazily at read time, same pattern as Feed/Story expiry
 // elsewhere — no background job needed).
 export async function handleRequestCall(request, env) {
   const subscriber_id = await getSubscriberIdFromSession(request, env);
@@ -111,7 +111,7 @@ export async function getCallAcceptanceRate(modelId, env) {
     .all();
 
   let accepted = 0;
-  let resolved = 0; // accepted + declined + expired — NOT genuinely-still-pending ones
+  let resolved = 0;
 
   for (const row of results) {
     const effective = getEffectiveCallStatus(row, nowSeconds);
