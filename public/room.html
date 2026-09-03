@@ -208,6 +208,47 @@
   .gift-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
   .gift-status.error { color: var(--danger); }
 
+  .call-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 25;
+  }
+  .call-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-height: 80vh;
+    border-radius: 16px 16px 0 0; display: flex; flex-direction: column;
+    padding-bottom: 20px;
+  }
+  .call-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--text-primary); font-weight: 600; font-size: 15px;
+  }
+  .call-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
+  .call-body { padding: 20px; }
+  .call-type-row { display: flex; gap: 10px; margin-bottom: 18px; }
+  .call-type-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 16px 6px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .call-type-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .call-note-label { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+  .call-note-input {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+    color: var(--text-primary); font-size: 14px; font-family: inherit;
+    resize: vertical; min-height: 60px; margin-bottom: 8px;
+  }
+  .call-hint { font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px; }
+  .call-send-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle);
+    font-weight: 700; padding: 14px; border-radius: 10px; border: none;
+    font-size: 15px; cursor: pointer;
+  }
+  .call-send-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  .call-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
+  .call-status.error { color: var(--danger); }
+  .call-status.success { color: var(--accent-green); }
+
   #message {
     margin-top: 14px;
     padding: 10px 14px;
@@ -508,6 +549,7 @@
         <a class="btn-message" id="feedLinkBtn" href="#">View Feed</a>
         <button class="btn-primary" id="subscribeBtn">Subscribe</button>
         <button class="btn-message" id="giftBtn">Send a Gift</button>
+        <button class="btn-message" id="requestCallBtn">Request a Call</button>
         <div id="message"></div>
       </div>
 
@@ -527,6 +569,26 @@
             <input type="number" class="gift-custom-input" id="giftCustomAmount" placeholder="e.g. 5000" min="1">
             <button class="gift-send-btn" id="giftSendBtn">Send Gift</button>
             <div class="gift-status" id="giftStatus"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="call-panel" id="callPanel">
+        <div class="call-sheet">
+          <div class="call-header">
+            <span>Request a Call</span>
+            <button id="closeCallPanel">✕</button>
+          </div>
+          <div class="call-body">
+            <div class="call-type-row">
+              <button class="call-type-btn" data-call-type="audio">Audio Call</button>
+              <button class="call-type-btn" data-call-type="video">Video Call</button>
+            </div>
+            <div class="call-note-label">Optional note (e.g. when you're usually free)</div>
+            <textarea class="call-note-input" id="callNote" placeholder="I'm usually free evenings..."></textarea>
+            <div class="call-hint">She'll review this and set the actual date and time herself. Requests you don't hear back on expire after 48 hours.</div>
+            <button class="call-send-btn" id="callSendBtn">Send Request</button>
+            <div class="call-status" id="callStatus"></div>
           </div>
         </div>
       </div>
@@ -984,6 +1046,89 @@
         giftStatus.textContent = 'Could not reach the server.';
         giftSendBtn.disabled = false;
         giftSendBtn.textContent = 'Send Gift';
+      }
+    });
+
+    // ============ Request a Call ============
+    const callPanel = document.getElementById('callPanel');
+    const callNote = document.getElementById('callNote');
+    const callSendBtn = document.getElementById('callSendBtn');
+    const callStatus = document.getElementById('callStatus');
+    let selectedCallType = null;
+
+    document.getElementById('requestCallBtn').addEventListener('click', () => {
+      if (!subscriberSession) {
+        messageBox.className = 'error';
+        messageBox.innerHTML = 'Log in as a subscriber first to request a call. <a href="/subscriber-login.html" style="color:var(--accent-green); text-decoration:underline; font-weight:600;">Log in</a>';
+        return;
+      }
+      callStatus.textContent = '';
+      callStatus.className = 'call-status';
+      callPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeCallPanel').addEventListener('click', () => {
+      callPanel.style.display = 'none';
+    });
+
+    document.querySelectorAll('.call-type-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.call-type-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCallType = btn.dataset.callType;
+      });
+    });
+
+    callSendBtn.addEventListener('click', async () => {
+      if (!selectedCallType) {
+        callStatus.className = 'call-status error';
+        callStatus.textContent = 'Choose audio or video first.';
+        return;
+      }
+
+      callSendBtn.disabled = true;
+      callSendBtn.textContent = 'Sending...';
+      callStatus.textContent = '';
+      callStatus.className = 'call-status';
+
+      try {
+        const res = await fetch('/api/calls/request', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${subscriberSession.token}`,
+          },
+          body: JSON.stringify({
+            model_id: currentModelId,
+            call_type: selectedCallType,
+            note: callNote.value.trim() || undefined,
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          callStatus.className = 'call-status error';
+          callStatus.textContent = data.message || data.error || 'Could not send request.';
+          callSendBtn.disabled = false;
+          callSendBtn.textContent = 'Send Request';
+          return;
+        }
+
+        callStatus.className = 'call-status success';
+        callStatus.textContent = 'Request sent! She\'ll review it and set a time.';
+        callNote.value = '';
+        selectedCallType = null;
+        document.querySelectorAll('.call-type-btn').forEach((b) => b.classList.remove('active'));
+
+        setTimeout(() => {
+          callPanel.style.display = 'none';
+        }, 1500);
+      } catch (err) {
+        callStatus.className = 'call-status error';
+        callStatus.textContent = 'Could not reach the server.';
+      } finally {
+        callSendBtn.disabled = false;
+        callSendBtn.textContent = 'Send Request';
       }
     });
 
