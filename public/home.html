@@ -228,6 +228,50 @@
     text-decoration: none; cursor: pointer;
   }
   .profile-link.danger { border-color: var(--danger); color: var(--danger); }
+  .gems-card {
+    max-width: 280px; margin: 20px auto 0; background: var(--bg-surface);
+    border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center;
+  }
+  .gems-card-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 6px; }
+  .gems-card-amount { font-size: 24px; font-weight: 700; color: var(--accent-gold); margin-bottom: 12px; }
+  .gems-topup-btn {
+    background: var(--accent-gold); color: var(--border-subtle); font-weight: 700;
+    padding: 10px 24px; border-radius: 20px; border: none; font-size: 13.5px; cursor: pointer;
+  }
+
+  .gems-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 30;
+  }
+  .gems-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-width: 460px; margin: 0 auto;
+    border-radius: 16px 16px 0 0; padding: 20px; padding-bottom: 24px;
+  }
+  .gems-sheet-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px; color: var(--text-primary); font-weight: 600; font-size: 15px;
+  }
+  .gems-sheet-header button { background: none; border: none; color: var(--text-secondary); font-size: 20px; }
+  .gems-quick-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .gems-quick-btn {
+    flex: 1; background: var(--bg-surface); border: 1px solid var(--border);
+    color: var(--text-primary); padding: 12px 4px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .gems-quick-btn.active { border-color: var(--accent-gold); color: var(--accent-gold); }
+  .gems-custom-label { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; }
+  .gems-custom-input {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text-primary); font-size: 15px; margin-bottom: 18px;
+  }
+  .gems-buy-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle); font-weight: 700;
+    padding: 14px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
+  }
+  .gems-buy-btn:disabled { background: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+  .gems-status { margin-top: 12px; font-size: 13.5px; text-align: center; }
+  .gems-status.error { color: var(--danger); }
+
   .profile-divider {
     max-width: 280px; margin: 20px auto; border-top: 1px solid var(--border-subtle);
   }
@@ -517,6 +561,13 @@
             </div>
             <div class="profile-name" id="profileName"></div>
             <div class="profile-sub" id="profilePhone"></div>
+
+            <div class="gems-card">
+              <div class="gems-card-label">Gems Balance</div>
+              <div class="gems-card-amount" id="gemsBalanceAmount">₦0</div>
+              <button class="gems-topup-btn" id="gemsTopupBtn">Buy Gems</button>
+            </div>
+
             <div class="profile-divider"></div>
             <a class="profile-link" href="#" onclick="alert('Payment methods — coming soon'); return false;">Payment methods</a>
             <a class="profile-link" href="/change-password.html">Change password</a>
@@ -575,6 +626,24 @@
   </div>
 
   <input type="file" id="avatarUploadInput" accept="image/*">
+  <div class="gems-panel" id="gemsPanel">
+    <div class="gems-sheet">
+      <div class="gems-sheet-header">
+        <span>Buy Gems</span>
+        <button id="closeGemsPanel">✕</button>
+      </div>
+      <div class="gems-quick-row">
+        <button class="gems-quick-btn" data-amount="1000">₦1,000</button>
+        <button class="gems-quick-btn" data-amount="5000">₦5,000</button>
+        <button class="gems-quick-btn" data-amount="10000">₦10,000</button>
+      </div>
+      <div class="gems-custom-label">Or enter a custom amount (₦)</div>
+      <input type="number" class="gems-custom-input" id="gemsCustomAmount" placeholder="e.g. 3000" min="1">
+      <button class="gems-buy-btn" id="gemsBuyBtn">Buy Gems</button>
+      <div class="gems-status" id="gemsStatus"></div>
+    </div>
+  </div>
+
   <div class="upload-panel" id="uploadPanel">
     <div class="upload-sheet">
       <div class="upload-header">
@@ -882,7 +951,96 @@
         avatarInitial.textContent = (session.display_name || '?').trim().charAt(0).toUpperCase();
         avatarInitial.style.display = 'flex';
       }
+
+      loadGemsBalance();
     }
+
+    async function loadGemsBalance() {
+      if (!session) return;
+      try {
+        const res = await fetch('/api/gems/balance', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const naira = Math.floor((data.balance_kobo || 0) / 100).toLocaleString();
+        document.getElementById('gemsBalanceAmount').textContent = `₦${naira}`;
+      } catch (err) {}
+    }
+
+    // ============ Buy Gems ============
+    const gemsPanel = document.getElementById('gemsPanel');
+    const gemsCustomAmount = document.getElementById('gemsCustomAmount');
+    const gemsBuyBtn = document.getElementById('gemsBuyBtn');
+    const gemsStatus = document.getElementById('gemsStatus');
+    let selectedGemsAmount = null;
+
+    document.getElementById('gemsTopupBtn').addEventListener('click', () => {
+      gemsStatus.textContent = '';
+      gemsStatus.className = 'gems-status';
+      gemsPanel.style.display = 'flex';
+    });
+
+    document.getElementById('closeGemsPanel').addEventListener('click', () => {
+      gemsPanel.style.display = 'none';
+    });
+
+    document.querySelectorAll('.gems-quick-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gems-quick-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedGemsAmount = parseInt(btn.dataset.amount, 10);
+        gemsCustomAmount.value = '';
+      });
+    });
+
+    gemsCustomAmount.addEventListener('input', () => {
+      document.querySelectorAll('.gems-quick-btn').forEach((b) => b.classList.remove('active'));
+      selectedGemsAmount = null;
+    });
+
+    gemsBuyBtn.addEventListener('click', async () => {
+      const customValue = parseInt(gemsCustomAmount.value, 10);
+      const amountNaira = selectedGemsAmount || (customValue > 0 ? customValue : null);
+
+      if (!amountNaira) {
+        gemsStatus.className = 'gems-status error';
+        gemsStatus.textContent = 'Choose an amount or enter a custom one.';
+        return;
+      }
+
+      gemsBuyBtn.disabled = true;
+      gemsBuyBtn.textContent = 'Starting checkout...';
+      gemsStatus.textContent = '';
+      gemsStatus.className = 'gems-status';
+
+      try {
+        const res = await fetch('/api/gems/purchase/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ amount_kobo: amountNaira * 100 }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          gemsStatus.className = 'gems-status error';
+          gemsStatus.textContent = data.message || data.error || 'Could not start checkout.';
+          gemsBuyBtn.disabled = false;
+          gemsBuyBtn.textContent = 'Buy Gems';
+          return;
+        }
+
+        window.location.href = data.authorization_url;
+      } catch (err) {
+        gemsStatus.className = 'gems-status error';
+        gemsStatus.textContent = 'Could not reach the server.';
+        gemsBuyBtn.disabled = false;
+        gemsBuyBtn.textContent = 'Buy Gems';
+      }
+    });
 
     document.getElementById('logoutBtn').addEventListener('click', (e) => {
       e.preventDefault();
