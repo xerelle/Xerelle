@@ -40,7 +40,7 @@ import { handlePaystackWebhook } from "./routes/payments/webhook.js";
 import { handleSendMessage, handleGetMessages } from "./routes/chat/messages.js";
 import { handleServeMedia } from "./routes/media.js";
 import { handleGemPurchaseStart, handleGetGemBalance } from "./routes/subscribers/gem-purchase.js";
-import { handleRequestCall } from "./routes/models/call-request.js";
+import { handleRequestCall, handleGetSubscriberCallRequests } from "./routes/models/call-request.js";
 import { handleRespondToCall, handleGetModelCallRequests } from "./routes/models/call-response.js";
 import { handleGetCallToken } from "./routes/models/call-token.js";
 import { jsonResponse } from "./lib/http.js";
@@ -210,6 +210,9 @@ export default {
       }
       if (pathname === "/api/calls/request" && method === "POST") {
         return await handleRequestCall(request, env);
+      }
+      if (pathname === "/api/subscribers/calls/requests" && method === "GET") {
+        return await handleGetSubscriberCallRequests(request, env);
       }
       if (pathname === "/api/calls/requests" && method === "GET") {
         return await handleGetModelCallRequests(request, env);
