@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/theme.css">
+<script src="/theme-toggle.js"></script>
 <title>Xerelle — Chat</title>
 <style>
   * { box-sizing: border-box; }
@@ -620,8 +621,8 @@
     });
 
     // Nav bar: Message is the default view (already showing), Story opens
-    // her active Story if she has one, Gift opens the gift panel, Call is
-    // an honest placeholder.
+    // her active Story if she has one, Gift opens the gift panel, Call
+    // opens the call-request panel.
     document.getElementById('navUpdate').addEventListener('click', () => {
       if (!activeStory) {
         alert("She doesn't have an active update right now.");
@@ -883,6 +884,5 @@
     init();
   </script>
   <script src="/js/streak-icons.js"></script>
-  <script src="/theme-toggle.js"></script>
 </body>
 </html>
