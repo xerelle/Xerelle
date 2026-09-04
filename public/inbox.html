@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/theme.css">
+<script src="/theme-toggle.js"></script>
 <title>Xerelle — Inbox</title>
 <style>
   * { box-sizing: border-box; }
@@ -797,9 +798,6 @@
         if (!res.ok) {
           return data.message || data.error || 'Something went wrong.';
         }
-        // Reload the whole page's call requests section to reflect the
-        // response — simplest way to keep this in sync without manual
-        // DOM surgery for a secondary feature like this.
         window.location.reload();
         return null;
       } catch (err) {
@@ -833,6 +831,5 @@
     loadCallRequests();
   </script>
   <script src="/js/streak-icons.js"></script>
-  <script src="/theme-toggle.js"></script>
 </body>
 </html>
