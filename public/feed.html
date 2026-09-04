@@ -328,6 +328,39 @@
       return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
 
+    // Waits for the FIRST post's actual media (image or video) to
+    // genuinely finish downloading before resolving — this is what lets
+    // us keep "Loading..." visible through that gap, instead of hiding
+    // it the moment the API response arrives and leaving a blank flash
+    // while the browser is still fetching the image/video bytes.
+    function waitForFirstMediaLoad() {
+      return new Promise((resolve) => {
+        const firstMedia = feedScroll.querySelector('.post img, .post video');
+        if (!firstMedia) {
+          resolve();
+          return;
+        }
+        if (firstMedia.tagName === 'IMG') {
+          if (firstMedia.complete) {
+            resolve();
+          } else {
+            firstMedia.addEventListener('load', resolve, { once: true });
+            firstMedia.addEventListener('error', resolve, { once: true });
+          }
+        } else {
+          if (firstMedia.readyState >= 2) {
+            resolve();
+          } else {
+            firstMedia.addEventListener('loadeddata', resolve, { once: true });
+            firstMedia.addEventListener('error', resolve, { once: true });
+          }
+        }
+        // Safety net — never block the reveal for more than 4 seconds
+        // even on a genuinely slow connection.
+        setTimeout(resolve, 4000);
+      });
+    }
+
     async function loadFeed() {
       if (!username) {
         loadingScreen.textContent = 'No model specified.';
@@ -360,7 +393,6 @@
           headers: { 'Authorization': `Bearer ${session.token}` },
         });
         const data = await res.json();
-        loadingScreen.style.display = 'none';
 
         if (data.locked) {
           if (data.preview_post) {
@@ -370,6 +402,8 @@
             // right after it in the same scroll flow.
             renderPreviewPost(data.preview_post, data.model_display_name);
             renderPaywallCard(data.model_display_name, data.model_teaser_url, data.message);
+            await waitForFirstMediaLoad();
+            loadingScreen.style.display = 'none';
             feedScroll.style.display = 'block';
             bottomNav.style.display = 'flex';
             setupVideoAutoplay();
@@ -378,6 +412,7 @@
 
           // No posts at all yet — nothing to preview, show the plain
           // locked screen as before.
+          loadingScreen.style.display = 'none';
           lockedScreen.style.display = 'flex';
           document.getElementById('lockedName').textContent = data.model_display_name || 'This Room';
           document.getElementById('lockedMessage').textContent = data.message || 'Subscribe to unlock her Feed.';
@@ -391,12 +426,15 @@
         }
 
         if (!data.posts || data.posts.length === 0) {
+          loadingScreen.style.display = 'none';
           emptyScreen.style.display = 'flex';
           bottomNav.style.display = 'flex';
           return;
         }
 
         renderPosts(data.posts, data.model_display_name);
+        await waitForFirstMediaLoad();
+        loadingScreen.style.display = 'none';
         feedScroll.style.display = 'block';
         bottomNav.style.display = 'flex';
         setupVideoAutoplay();
