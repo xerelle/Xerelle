@@ -250,6 +250,48 @@
   .call-status.error { color: var(--danger); }
   .call-status.success { color: var(--accent-green); }
 
+  .call-req-card {
+    background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .call-req-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .call-req-name { font-size: 14px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+  .call-req-count-badge {
+    background: var(--danger); color: var(--border-subtle); font-size: 11px; font-weight: 700;
+    padding: 1px 7px; border-radius: 10px;
+  }
+  .call-req-type {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--accent-gold); background: rgba(212,162,76,0.12); padding: 3px 8px; border-radius: 8px;
+  }
+  .call-req-note { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.4; }
+  .call-req-actions { display: flex; gap: 8px; }
+  .call-req-actions button, .call-req-actions a {
+    flex: 1; padding: 10px; border-radius: 8px; border: none; font-size: 13.5px; font-weight: 600;
+    cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center;
+  }
+  .call-req-accept-btn { background: var(--accent-gold); color: var(--border-subtle); }
+  .call-req-decline-btn { background: var(--bg-surface-alt); color: var(--danger); border: 1px solid var(--danger) !important; }
+
+  .accept-call-panel {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: none; align-items: flex-end; z-index: 30;
+  }
+  .accept-call-sheet {
+    background: var(--bg-surface-alt); width: 100%; max-width: 460px; margin: 0 auto;
+    border-radius: 16px 16px 0 0; padding: 20px; padding-bottom: 24px;
+  }
+  .accept-call-sheet h3 { font-size: 15px; margin: 0 0 14px; color: var(--text-primary); }
+  .accept-call-sheet input[type="datetime-local"] {
+    width: 100%; box-sizing: border-box; background: var(--bg-surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text-primary); font-size: 14px; margin-bottom: 16px;
+  }
+  .accept-call-confirm-btn {
+    width: 100%; background: var(--accent-gold); color: var(--border-subtle); font-weight: 700;
+    padding: 14px; border-radius: 10px; border: none; font-size: 15px; cursor: pointer;
+  }
+  .accept-call-status { margin-top: 10px; font-size: 13px; text-align: center; color: var(--danger); }
+
   #message {
     margin-top: 14px;
     padding: 10px 14px;
@@ -511,6 +553,13 @@
             <div id="activitiesEmpty" class="self-view-empty" style="display:none;">No activity yet — once someone follows or likes your Room, it'll show up here.</div>
           </div>
 
+          <div class="self-view-section" id="callRequestsSection" style="display:none;">
+            <div class="self-view-section-header">
+              <div class="self-view-section-title">Call Requests</div>
+            </div>
+            <div id="callRequestsList"></div>
+          </div>
+
           <div class="self-view-section">
             <div class="self-view-section-header">
               <div class="self-view-section-title">Messages</div>
@@ -594,6 +643,15 @@
             <button class="call-send-btn" id="callSendBtn">Send Request</button>
             <div class="call-status" id="callStatus"></div>
           </div>
+        </div>
+      </div>
+
+      <div class="accept-call-panel" id="acceptCallPanel">
+        <div class="accept-call-sheet">
+          <h3>When can you call?</h3>
+          <input type="datetime-local" id="acceptCallDateTime">
+          <button class="accept-call-confirm-btn" id="acceptCallConfirmBtn">Confirm Time</button>
+          <div class="accept-call-status" id="acceptCallStatus"></div>
         </div>
       </div>
 
@@ -757,6 +815,7 @@
           loadActivities(modelSession);
           loadRecentMessages(modelSession);
           loadBalance(modelSession);
+          loadCallRequests(modelSession);
 
           document.getElementById('bottomSection').style.display = 'none';
         } else {
@@ -839,6 +898,132 @@
         // showing an error state for a small header element.
       }
     }
+
+    // ============ Call Requests — shown in Activity, grouped by caller ============
+    let pendingAcceptId = null;
+
+    async function loadCallRequests(session) {
+      const section = document.getElementById('callRequestsSection');
+      const list = document.getElementById('callRequestsList');
+
+      try {
+        const res = await fetch('/api/calls/requests', {
+          headers: { 'Authorization': `Bearer ${session.token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const pending = (data.requests || []).filter((r) => r.effective_status === 'pending');
+        const accepted = (data.requests || []).filter((r) => r.effective_status === 'accepted');
+
+        if (pending.length === 0 && accepted.length === 0) return;
+        section.style.display = 'block';
+
+        accepted.forEach((req) => {
+          const card = document.createElement('div');
+          card.className = 'call-req-card';
+          const typeLabel = req.call_type === 'video' ? 'Video' : 'Audio';
+          const when = req.scheduled_at
+            ? new Date(req.scheduled_at * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            : '';
+
+          card.innerHTML = `
+            <div class="call-req-top">
+              <div class="call-req-name">${window.xerelleEscapeHtml(req.subscriber_label)}</div>
+              <div class="call-req-type">${typeLabel}</div>
+            </div>
+            <div class="call-req-note">Scheduled for ${window.xerelleEscapeHtml(when)}</div>
+            <div class="call-req-actions">
+              <a class="call-req-accept-btn" href="/call.html?id=${req.id}">Join Call</a>
+            </div>
+          `;
+          list.appendChild(card);
+        });
+
+        // Already grouped by the backend — each entry here already
+        // represents one caller, with request_count showing how many
+        // times he's actually asked.
+        pending.forEach((req) => {
+          const card = document.createElement('div');
+          card.className = 'call-req-card';
+          const typeLabel = req.call_type === 'video' ? 'Video' : 'Audio';
+          const countBadge = req.request_count > 1
+            ? `<span class="call-req-count-badge">${req.request_count}</span>`
+            : '';
+          const noteHtml = req.note
+            ? `<div class="call-req-note">"${window.xerelleEscapeHtml(req.note)}"</div>`
+            : '';
+
+          card.innerHTML = `
+            <div class="call-req-top">
+              <div class="call-req-name">${window.xerelleEscapeHtml(req.subscriber_label)}${countBadge}</div>
+              <div class="call-req-type">${typeLabel}</div>
+            </div>
+            ${noteHtml}
+            <div class="call-req-actions">
+              <button class="call-req-accept-btn" data-request-id="${req.id}">Accept</button>
+              <button class="call-req-decline-btn" data-request-id="${req.id}">Decline</button>
+            </div>
+          `;
+
+          card.querySelector('.call-req-accept-btn').addEventListener('click', () => {
+            pendingAcceptId = req.id;
+            document.getElementById('acceptCallStatus').textContent = '';
+            document.getElementById('acceptCallPanel').style.display = 'flex';
+          });
+
+          card.querySelector('.call-req-decline-btn').addEventListener('click', async () => {
+            await respondToCall(session, req.id, 'decline');
+          });
+
+          list.appendChild(card);
+        });
+      } catch (err) {
+        // Quietly do nothing — secondary section, not worth an error
+        // state on the main self-view dashboard.
+      }
+    }
+
+    async function respondToCall(session, requestId, action, scheduledAt) {
+      try {
+        const res = await fetch(`/api/calls/${requestId}/respond`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.token}`,
+          },
+          body: JSON.stringify({ action, scheduled_at: scheduledAt }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return data.message || data.error || 'Something went wrong.';
+        }
+        window.location.reload();
+        return null;
+      } catch (err) {
+        return 'Could not reach the server.';
+      }
+    }
+
+    document.getElementById('acceptCallConfirmBtn').addEventListener('click', async () => {
+      const dateTimeValue = document.getElementById('acceptCallDateTime').value;
+      const statusEl = document.getElementById('acceptCallStatus');
+
+      if (!dateTimeValue) {
+        statusEl.textContent = 'Choose a date and time first.';
+        return;
+      }
+      const scheduledAt = Math.floor(new Date(dateTimeValue).getTime() / 1000);
+      if (scheduledAt <= Math.floor(Date.now() / 1000)) {
+        statusEl.textContent = 'Please choose a time in the future.';
+        return;
+      }
+
+      const error = await respondToCall(modelSession, pendingAcceptId, 'accept', scheduledAt);
+      if (error) {
+        statusEl.textContent = error;
+      }
+    });
 
     async function loadRecentMessages(session) {
       const list = document.getElementById('messagesList');
